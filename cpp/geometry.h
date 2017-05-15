@@ -86,18 +86,52 @@ struct Material {
   float Tr;
 };
 
-struct Object {
-  Object() : smooth(0), v_stride(0) {}
-  Object(int v_stride) : smooth(0), v_stride(v_stride) {}
+/*
+ * Axis-Aligned Bounding Box structrue.
+ */
+struct AABB {
+  AABB() = default;
+  AABB(const Vector3f& llb, const Vector3f& ruf) : llb(llb), ruf(ruf) {}
 
-  int smooth;
-  std::string material;
+  Vector3f llb;  /* The left-lower-back vertex */
+  Vector3f ruf;  /* The right-upper-front vertex */
+};
 
-  std::vector<int> v_id;
-  std::vector<int> vt_id;
-  std::vector<int> vn_id;
+class Object {
+ public:
+  /*
+   * Bounding Volume Hierarchies class.
+   */
+  class BVH {
+  };
 
-  int v_stride;
+  Object() : v_stride_(0), smooth_(0) {}
+  Object(int v_stride) : v_stride_(v_stride), smooth_(0) {}
+
+  int v_stride() const { return v_stride_; }
+  int smooth() const { return smooth_; }
+  const std::string& material() const { return material_; }
+  const std::vector<int>& v_id() const { return v_id_; }
+  const std::vector<int>& vt_id() const { return vt_id_; }
+  const std::vector<int>& vn_id() const { return vn_id_; }
+
+  void set_v_stride(int v_stride) { v_stride_ = v_stride; }
+  void set_smooth(int smooth) { smooth_ = smooth; }
+  void set_material(const std::string& mtl_name) { material_ = mtl_name; }
+  std::vector<int>& v_id() { return v_id_; }
+  std::vector<int>& vt_id() { return vt_id_; }
+  std::vector<int>& vn_id() { return vn_id_; }
+
+ private:
+  int v_stride_;
+  int smooth_;
+  std::string material_;
+
+  std::vector<int> v_id_;
+  std::vector<int> vt_id_;
+  std::vector<int> vn_id_;
+
+  BVH bvh_;
 };
 
 class Scene {

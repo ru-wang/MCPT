@@ -55,17 +55,19 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
       string s;
       ss >> s;
       if (s == "off")
-        current_obj->smooth = 0;
+        current_obj->set_smooth(0);
       else
-        current_obj->smooth = stoi(s);
+        current_obj->set_smooth(stoi(s));
     } else if (specifier == "usemtl") {  /* specifies the material used for the next object */
       assert(current_obj != nullptr);
-      ss >> current_obj->material;
+      string mtl_name;
+      ss >> mtl_name;
+      current_obj->set_material(mtl_name);
     } else if (specifier == "f") {       /* adds a new facet for the current object */
       assert(current_obj != nullptr);
-      vector<int>& v_id = current_obj->v_id;
-      vector<int>& vt_id = current_obj->vt_id;
-      vector<int>& vn_id = current_obj->vn_id;
+      vector<int>& v_id = current_obj->v_id();
+      vector<int>& vt_id = current_obj->vt_id();
+      vector<int>& vn_id = current_obj->vn_id();
 
       int id;
       vector<int> ids;
@@ -86,8 +88,8 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
         vn_id.push_back(*(it + 2));
       }
 
-      if (current_obj->v_stride == 0)
-        current_obj->v_stride = v_id.size();
+      if (current_obj->v_stride() == 0)
+        current_obj->set_v_stride(v_id.size());
     }
   }
 
