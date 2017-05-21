@@ -21,7 +21,7 @@ class Distribution {
 
 
   /*
-   * Compute the PDF for a given value.
+   * Computes the PDF for a given value.
    *
    * All derived classes should override this function.
    */
@@ -48,7 +48,7 @@ class Cosine : public Distribution {
   virtual float operator()() override { return asin(uniform_(generator_)); }
 
   /*
-   * Compute the PDF for a given value.
+   * Computes the PDF for a given value.
    *
    * The input should be in the range of [0, π/2].
    * Otherwise the ouput will be zero.
