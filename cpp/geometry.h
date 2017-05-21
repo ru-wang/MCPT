@@ -1,164 +1,227 @@
 #ifndef MCPT_GEOMETRY_H_
 #define MCPT_GEOMETRY_H_
 
-#include <string>
-#include <unordered_map>
+#include "eigen.h"
+
+#include <cstddef>
+#include <limits>
 #include <vector>
 
-struct Vector2f {
-  Vector2f() : v{0} {}
-  float& operator[](size_t i) { return v[i]; }
-  union {
-    struct { float x, y; };
-    float v[2];
-  };
-};
+/*
+ * Here we define several primitives in P3 space.
+ * All primitives are defined by homogeneous coordinates.
+ */
 
-struct Vector3f {
-  Vector3f() : v{0} {}
-  float& operator[](size_t i) { return v[i]; }
-  union {
-    struct { float x, y, z; };
-    struct { float r, g, b; };
-    float v[3];
-  };
-};
+  /*-------------------------------- Points --------------------------------*/
 
-struct Vector3i {
-  Vector3i() : v{0} {}
-  int& operator[](size_t i) { return v[i]; }
-  union {
-    struct { int x, y, z; };
-    struct { int r, g, b; };
-    int v[3];
-  };
-};
+/*
+ * Points are defined by their homogeneous coordinates in P3 space.
+ */
+typedef Vector4f Point;
 
-struct Vector4i {
-  Vector4i() : v{0} {}
-  int& operator[](size_t i) { return v[i]; }
-  union {
-    struct { int x, y, z, w; };
-    struct { int r, g, b, a; };
-    int v[4];
-  };
-};
-
-struct Material {
-  Material() : illum(0), Ns(0), Ni(0), Tr(0) {}
-
-  /*
-   * Illumination type.
+  /*-------------------------------- Lines ---------------------------------**
    *
-   * Currently we only allow 4, meaning:
-   *   - transparency: glass on
-   *   - reflection: ray trace on
-   */
-  float illum;
+   * "Lines are very awkward to represent in 3-space since a natural
+   *  representation for an object with 4 degrees of freedom would be
+   *  a homogeneous 5-vector."
+   *                            --[Multiple View Geometry 3.2.2, p68]
+   *
+   *------------------------------------------------------------------------*/
 
-  /*
-   * The Kd statement specifies the diffuse reflectivity using RGB values.
-   */
-  Vector3f Kd;
+/*
+ * Here we use the Plücker matrices to represent lines.
+ * Suppose A , B are two(non-coincident) space points. Then the line joining
+ * these points is represented by the 4×4 matrix:
+ *
+ *                          Lᵀ = ABᵀ - BAᵀ,
+ *
+ * where L has rank 2. Its 2-dimensional null-space is spanned by the pencil
+ * of planes with the line as axis(in fact LW*ᵀ=0, with 0 a 4×2 null-matrix).
+ *
+ * Join and incidence properties are very nicely represented in this notation:
+ *  (i) The plane defined by the join of the point X and line L is
+ *
+ *                              π = L*X
+ *
+ *      and L*X=0 if, and only if, X is on L.
+ * (ii) The point defined by the intersection of the line L with the plane π is
+ *
+ *                              X = Lπ
+ *
+ *      and Lπ = 0 if, and only if, L is on π.
+ * And a dual Plücker representation L* can be obtained directly from L by a
+ * simple rewrite rule:
+ *
+ *                    l₁₂ : l₁₃ : l₁₄ : l₂₃ : l₄₂ : l₃₄
+ *                 =  l*₃₄ : l*₄₂ : l*₂₃ : l*₁₄ : l*₁₃ : l*₁₂.
+ *
+ */
+struct Line {
+  Line(const Vector3f& v1, const Vector3f& v2) {
+    A.x() = v1.x(); A.y() = v1.y(); A.z() = v1.z(); A.w() = 1;
+    B.x() = v2.x(); B.y() = v2.y(); B.z() = v2.z(); B.w() = 1;
+  }
 
-  /*
-   * The Ka statement specifies the ambient reflectivity using RGB values.
-   */
-  Vector3f Ka;
+  Line(const Point& x1, const Point& x2) : A(x1), B(x2) {}
 
-  /*
-   * The Ns exponent specifies the specular exponent for the current material.
-   * This defines the focus of the specular highlight.
-   */
-  float Ns;
-
-  /*
-   * The Ni optical density specifies the optical density for the surface.
-   * This is also known as index of refraction.
-   */
-  float Ni;
-
-  /*
-   * The Tr transparency specifies the transparency value for the material.
-   * Unlike real transparency, the result does not depend upon the thickness of the object.
-   * A value of 0.0 is the default and means fully opaque.
-   */
-  float Tr;
+  Vector4f A;
+  Vector4f B;
 };
+
+/*
+ * As for the rays, the degrees of freedom is 5, 4 for the lines and plus 1 for
+ * the endpoint.
+ *
+ * We still use the same data structure with Line here, with A being the endpoint
+ * for the ray.
+ */
+struct Ray : public Line {
+  Ray(const Vector3f& start_v, const Vector3f& dir)
+      : Line(start_v, start_v + dir), dir(dir) {}
+
+  Ray(const Point& start_x, const Vector4f& dir)
+      : Line(start_x, start_x + dir), dir(dir) {}
+
+  Vector4f dir;
+};
+
+/*
+ * The segments have 6 degrees of freedom, 4 for the lines plus 2 for the two
+ * endpoints.
+ *
+ * We still use the same data structure with Line here, with A, B being the two
+ * endpoints for the segment.
+ */
+struct Segment : public Line {
+  Segment(const Vector3f& v1, const Vector3f& v2);
+  Segment(const Point& x1, const Point& x2);
+};
+
+  /*-------------------------------- Planes --------------------------------**
+   *
+   * "A plane has 3 degrees of freedom in 3-space. The homogeneous
+   * representation of the plane is the 4-vector."
+   *                            --[Multiple View Geometry 3.2.1, p66]
+   *------------------------------------------------------------------------*/
+
+/*
+ * Planes are defined by the implicit equation representation.
+ */
+typedef Vector4f Plane;
+
+/*
+ * The convex polygon class.
+ */
+class Polygon : public Plane {
+ public:
+  Polygon() = default;
+
+  Polygon(const Vector3f& v1, const Vector3f& v2, const Vector3f& v3) {
+    Vector3f d1 = v2 - v1;
+    Vector3f d2 = v3 - v1;
+    Vector3f normal = ::Cross(d1, d2).Normalize();
+    float d = v1 * normal;
+    Plane::x() = normal.x();
+    Plane::y() = normal.y();
+    Plane::z() = normal.z();
+    Plane::w() = -d;
+    v_.push_back(Vector4f{v1.x(), v1.y(), v1.z(), 1});
+    v_.push_back(Vector4f{v2.x(), v2.y(), v2.z(), 1});
+    v_.push_back(Vector4f{v3.x(), v3.y(), v3.z(), 1});
+  }
+
+  Polygon(const Vector3f& v1, const Vector3f& v2, const Vector3f& v3, const Vector3f& v4) {
+    Vector3f d1 = v2 - v1;
+    Vector3f d2 = v3 - v1;
+    Vector3f normal = ::Cross(d1, d2);
+    normal.NormalizeInPlace();
+    Plane::x() = normal.x();
+    Plane::y() = normal.y();
+    Plane::z() = normal.z();
+    Plane::w() = -v4 * normal;
+    v_.push_back(Vector4f{v1.x(), v1.y(), v1.z(), 1});
+    v_.push_back(Vector4f{v2.x(), v2.y(), v2.z(), 1});
+    v_.push_back(Vector4f{v3.x(), v3.y(), v3.z(), 1});
+    v_.push_back(Vector4f{v4.x(), v4.y(), v4.z(), 1});
+  }
+
+  std::vector<Point>& v() { return v_; }
+  const std::vector<Point>& v() const { return v_; }
+
+ private:
+  std::vector<Point> v_;
+};
+
+  /*--------------------------------- AABB-- -------------------------------*/
 
 /*
  * Axis-Aligned Bounding Box structrue.
  */
-struct AABB {
-  AABB() = default;
-  AABB(const Vector3f& llb, const Vector3f& ruf) : llb(llb), ruf(ruf) {}
-
-  Vector3f llb;  /* The left-lower-back vertex */
-  Vector3f ruf;  /* The right-upper-front vertex */
-};
-
-class Object {
+class AABB {
  public:
-  /*
-   * Bounding Volume Hierarchies class.
-   */
-  class BVH {
-  };
+  AABB() {
+    llb_.SetAll(std::numeric_limits<float>::max());
+    ruf_.SetAll(std::numeric_limits<float>::min());
+    diag_.SetAll(std::numeric_limits<float>::infinity());
+    ct_.SetZero();
+  }
 
-  Object() : v_stride_(0), smooth_(0) {}
-  Object(int v_stride) : v_stride_(v_stride), smooth_(0) {}
+  AABB(const Vector4f& llb, const Vector4f& ruf)
+      : llb_(llb), ruf_(ruf), diag_(ruf - llb) {
+    ct_ = (llb_ + ruf_) / 2;
+  }
 
-  int v_stride() const { return v_stride_; }
-  int smooth() const { return smooth_; }
-  const std::string& material() const { return material_; }
-  const std::vector<int>& v_id() const { return v_id_; }
-  const std::vector<int>& vt_id() const { return vt_id_; }
-  const std::vector<int>& vn_id() const { return vn_id_; }
+  AABB(float left, float lower, float front, float right, float upper, float back)
+      : llb_{left, lower, front, 1}, ruf_{right, upper, back, 1}, diag_(ruf_ - llb_) {
+    ct_ = (llb_ + ruf_) / 2;
+  }
 
-  void set_v_stride(int v_stride) { v_stride_ = v_stride; }
-  void set_smooth(int smooth) { smooth_ = smooth; }
-  void set_material(const std::string& mtl_name) { material_ = mtl_name; }
-  std::vector<int>& v_id() { return v_id_; }
-  std::vector<int>& vt_id() { return vt_id_; }
-  std::vector<int>& vn_id() { return vn_id_; }
+  Vector4f& llb() { return llb_; }
+  Vector4f& ruf() { return ruf_; }
+  Vector4f& diag() { return diag_; }
+  Vector4f& ct() { return ct_; }
+
+  const Vector4f& llb() const { return llb_; }
+  const Vector4f& ruf() const { return ruf_; }
+  const Vector4f& diag() const { return diag_; }
+  const Vector4f& ct() const { return ct_; }
+
+  void Reset(const Vector3f& llb, const Vector3f& ruf) {
+    llb_.x() = llb.x(); llb_.y() = llb.y(); llb_.z() = llb.z(); llb_.w() = 1;
+    ruf_.x() = ruf.x(); ruf_.y() = ruf.y(); ruf_.z() = ruf.z(); ruf_.w() = 1;
+    diag_ = ruf_ - llb_;
+    ct_ = (llb_ + ruf_) / 2;
+  }
+
+  void Reset(const Vector4f& llb, const Vector4f& ruf) {
+    llb_ = llb;
+    ruf_ = ruf;
+    diag_ = ruf - llb;
+    ct_ = (llb + ruf) / 2;
+  }
+
+  void Reset(float left, float lower, float front, float right, float upper, float back) {
+    llb_ = Vector4f{left, lower, front, 1};
+    ruf_ = Vector4f{right, upper, back, 1};
+    diag_ = ruf_ - llb_;
+    ct_ = (llb_ + ruf_) / 2;
+  }
+
+  bool Envelop(const Point& x) const {
+    if (x.x() >= llb_.x() && x.x() <= ruf_.x() &&
+        x.y() >= llb_.y() && x.y() <= ruf_.y() &&
+        x.z() >= llb_.z() && x.z() <= ruf_.z())
+      return true;
+    else
+      return false;
+  }
 
  private:
-  int v_stride_;
-  int smooth_;
-  std::string material_;
+  Vector4f llb_;   /* the left-lower-back vertex */
+  Vector4f ruf_;   /* the right-upper-front vertex */
+  Vector4f diag_;  /* the diagonal vector from the llb corner to the ruf corner */
 
-  std::vector<int> v_id_;
-  std::vector<int> vt_id_;
-  std::vector<int> vn_id_;
-
-  BVH bvh_;
-};
-
-class Scene {
- public:
-  Scene() : v_(1), vt_(1), vn_(1) {}
-
-  std::unordered_map<std::string, Object>& objects() { return objects_; }
-  std::unordered_map<std::string, Material>& materials() { return materials_; }
-
-  std::vector<Vector3f>& v() { return v_;  }
-  std::vector<Vector2f>& vt() { return vt_; }
-  std::vector<Vector3f>& vn() { return vn_; }
-
-  const std::unordered_map<std::string, Object>& objects() const { return objects_; }
-  const std::unordered_map<std::string, Material>& materials() const { return materials_; }
-
-  const std::vector<Vector3f>& v() const { return v_;  }
-  const std::vector<Vector2f>& vt() const { return vt_; }
-  const std::vector<Vector3f>& vn() const { return vn_; }
-
- private:
-  std::unordered_map<std::string, Object> objects_;      /* all the objects in the scene */
-  std::unordered_map<std::string, Material> materials_;  /* all types of materials used in the scene */
-
-  std::vector<Vector3f> v_;   /* global vertex set, index: [1, N] */
-  std::vector<Vector2f> vt_;  /* global vertex texture set, index: [1, N] */
-  std::vector<Vector3f> vn_;  /* global vertex normal set, index: [1, N] */
+  Vector4f ct_;    /* the center of the bounding box */
 };
 
 #endif  /* MCPT_GEOMETRY_H_ */
