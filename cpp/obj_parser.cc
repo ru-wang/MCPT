@@ -1,5 +1,9 @@
 #include "obj_parser.h"
+
+#include "eigen.h"
 #include "geometry.h"
+#include "object.h"
+#include "scene.h"
 
 #include <cassert>
 #include <fstream>
@@ -11,7 +15,7 @@
 using namespace std;
 
 void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
-  assert(scene != nullptr);
+  assert(scene);
   ifstream ifs(obj_filename);
 
   Object* current_obj = nullptr;
@@ -51,23 +55,20 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
     }
 
     else if (specifier == "s") {         /* specifies the smooth term for the next object */
-      assert(current_obj != nullptr);
+      assert(current_obj);
       string s;
       ss >> s;
       if (s == "off")
         current_obj->set_smooth(0);
       else
         current_obj->set_smooth(stoi(s));
-    } else if (specifier == "usemtl") {  /* specifies the material used for the next object */
-      assert(current_obj != nullptr);
+    } else if (specifier == "usemtl") {  /* specifies the material used for the successive meshes */
+      assert(current_obj);
       string mtl_name;
       ss >> mtl_name;
-      current_obj->set_material(mtl_name);
-    } else if (specifier == "f") {       /* adds a new facet for the current object */
-      assert(current_obj != nullptr);
-      vector<int>& v_id = current_obj->v_id();
-      vector<int>& vt_id = current_obj->vt_id();
-      vector<int>& vn_id = current_obj->vn_id();
+      current_obj->AddMaterial(mtl_name);
+    } else if (specifier == "f") {       /* adds a new polygon for the current object */
+      assert(current_obj);
 
       int id;
       vector<int> ids;
@@ -82,14 +83,23 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
           break;
       }
 
-      for (auto it = ids.cbegin(); it != ids.cend(); it += 3) {
-        v_id.push_back(*it);
-        vt_id.push_back(*(it + 1));
-        vn_id.push_back(*(it + 2));
+      if (ids.size() / 3 == 3) {         /* it is a triangle */
+        TriMesh* triangle = new TriMesh;
+        for (size_t i = 0; i < 3; ++i) {
+          triangle->v_id[i] = ids[i * 3 + 0];
+          triangle->vt_id[i] = ids[i * 3 + 1];
+          triangle->vn_id[i] = ids[i * 3 + 2];
+        }
+        current_obj->mesh_list().push_back(triangle);
+      } else if (ids.size() / 3 == 4) {  /* it is a rectangle */
+        RectMesh* rectangle = new RectMesh;
+        for (size_t i = 0; i < 4; ++i) {
+          rectangle->v_id[i] = ids[i * 3 + 0];
+          rectangle->vt_id[i] = ids[i * 3 + 1];
+          rectangle->vn_id[i] = ids[i * 3 + 2];
+        }
+        current_obj->mesh_list().push_back(rectangle);
       }
-
-      if (current_obj->v_stride() == 0)
-        current_obj->set_v_stride(v_id.size());
     }
   }
 
@@ -97,7 +107,7 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
 }
 
 void OBJParser::LoadMTL(const string& mtl_filename, Scene* scene) {
-  assert(scene != nullptr);
+  assert(scene);
   ifstream ifs(mtl_filename);
 
   Material* current_mtl = nullptr;
@@ -113,24 +123,24 @@ void OBJParser::LoadMTL(const string& mtl_filename, Scene* scene) {
     }
 
     else if (specifier == "illum") {  /* specifies the illumination type */
-      assert(current_mtl != nullptr);
+      assert(current_mtl);
       ss >> current_mtl->illum;
     } else if (specifier == "Kd") {   /* specifies the diffuse reflectivity */
-      assert(current_mtl != nullptr);
+      assert(current_mtl);
       Vector3f& Kd = current_mtl->Kd;
       ss >> Kd[0] >> Kd[1] >> Kd[2];
     } else if (specifier == "Ka") {   /* specifies the ambient reflectivity */
-      assert(current_mtl != nullptr);
+      assert(current_mtl);
       Vector3f& Ka = current_mtl->Ka;
       ss >> Ka[0] >> Ka[1] >> Ka[2];
     } else if (specifier == "Ns") {   /* specifies the specular exponent */
-      assert(current_mtl != nullptr);
+      assert(current_mtl);
       ss >> current_mtl->Ns;
     } else if (specifier == "Tr") {   /* specifies the transparency value */
-      assert(current_mtl != nullptr);
+      assert(current_mtl);
       ss >> current_mtl->Tr;
     } else if (specifier == "Ni") {   /* specifies the optical density */
-      assert(current_mtl != nullptr);
+      assert(current_mtl);
       ss >> current_mtl->Ni;
     }
   }

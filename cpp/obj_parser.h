@@ -1,11 +1,11 @@
 #ifndef MCPT_PATH_TRACER_H_
 #define MCPT_PATH_TRACER_H_
 
-#include "geometry.h"
-
 #include <istream>
 #include <sstream>
 #include <string>
+
+class Scene;
 
 class OBJParser {
  public:
