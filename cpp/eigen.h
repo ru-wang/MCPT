@@ -1,8 +1,8 @@
 #ifndef MCPT_EIGEN_H_
 #define MCPT_EIGEN_H_
 
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <initializer_list>
 
@@ -13,15 +13,15 @@ struct Vector {
   Vector() : v{0} {}
 
   template <typename... Args>
-  Vector(Args... args) : Vector{T(args)...} {}
+  explicit Vector(Args... args) : Vector{T(args)...} {}
 
   template<size_t E>
-  Vector(const Vector<T, E>& other) : v{0} {
+  explicit Vector(const Vector<T, E>& other) : v{0} {
     for (size_t i = 0; i < (D < E ? D : E); ++i)
       v[i] = other[i];
   }
 
-  Vector(const std::initializer_list<T>& args) : v{0} {
+  explicit Vector(const std::initializer_list<T>& args) : v{0} {
     size_t i = 0;
     for (auto e : args) {
       if (i < D)
@@ -61,6 +61,20 @@ struct Vector {
     return result;
   }
 
+  Vector operator+(T scalar) const {
+    Vector result;
+    for (size_t i = 0; i < D; ++i)
+      result[i] = v[i] + scalar;
+    return result;
+  }
+
+  Vector operator-(T scalar) const {
+    Vector result;
+    for (size_t i = 0; i < D; ++i)
+      result[i] = v[i] - scalar;
+    return result;
+  }
+
   T operator*(const Vector& other) const {
     T product = 0;
     for (size_t i = 0; i < D; ++i)
@@ -80,6 +94,18 @@ struct Vector {
     for (size_t i = 0; i < D; ++i)
       result[i] = v[i] / scalar;
     return result;
+  }
+
+  Vector& operator+=(const Vector& other) {
+    for (size_t i = 0; i < D; ++i)
+      v[i] += other[i];
+    return *this;
+  }
+
+  Vector& operator-=(const Vector& other) {
+    for (size_t i = 0; i < D; ++i)
+      v[i] += other[i];
+    return *this;
   }
 
   Vector& operator+=(T scalar) {
@@ -111,7 +137,7 @@ struct Vector {
   }
 
   Vector Cross(const Vector& other) const {
-    assert(D == 3 && "Cross product is only supported by 3-D Vectors!");
+    assert(D == 3 && "Cross product is only support for 3-D vectors!");
     Vector result;
     result.x() = x() * other.z() - z() * other.y();
     result.y() = z() * other.x() - x() * other.z();
@@ -139,7 +165,7 @@ struct Vector {
     T result = 0;
     for (size_t i = 0; i < D; ++i)
       result += v[i] * v[i];
-    return std::sqrt<T>(result);
+    return std::sqrt(result);
   }
 
   void SetAll(T scalar) {
@@ -165,32 +191,39 @@ struct Vector {
 
   Vector Normalize() const {
     Vector result = (*this);
-    return result.NormalizeInPlace();
+    result.NormalizeInPlace();
+    return result;
   }
 
-  T x() const { return assert(D > 0), v[0]; }
-  T y() const { return assert(D > 1 && "y() can only be called by Vectors greater than 1-D!"), v[1]; }
-  T z() const { return assert(D > 2 && "z() can only be called by Vectors greater than 2-D!"), v[2]; }
-  T w() const { return assert(D > 3 && "w() can only be called by Vectors greater than 3-D!"), v[3]; }
-  T& x() { return assert(D > 0), v[0]; }
-  T& y() { return assert(D > 1 && "y() can only be called by Vectors greater than 1-D!"), v[1]; }
-  T& z() { return assert(D > 2 && "z() can only be called by Vectors greater than 2-D!"), v[2]; }
-  T& w() { return assert(D > 3 && "w() can only be called by Vectors greater than 3-D!"), v[3]; }
-  T r() const { return assert(D > 0), v[0]; }
-  T g() const { return assert(D > 1 && "g() can only be called by Vectors greater than 1-D!"), v[1]; }
-  T b() const { return assert(D > 2 && "b() can only be called by Vectors greater than 2-D!"), v[2]; }
-  T a() const { return assert(D > 3 && "a() can only be called by Vectors greater than 3-D!"), v[3]; }
-  T& r() { return assert(D > 0), v[0]; }
-  T& g() { return assert(D > 1 && "g() can only be called by Vectors greater than 1-D!"), v[1]; }
-  T& b() { return assert(D > 2 && "b() can only be called by Vectors greater than 2-D!"), v[2]; }
-  T& a() { return assert(D > 3 && "a() can only be called by Vectors greater than 3-D!"), v[3]; }
+  T x() const { return v[0]; }
+  T y() const { return assert(D > 1 && "y() can only be called by vectors greater than 1-D!"), v[1]; }
+  T z() const { return assert(D > 2 && "z() can only be called by vectors greater than 2-D!"), v[2]; }
+  T w() const { return assert(D > 3 && "w() can only be called by vectors greater than 3-D!"), v[3]; }
+  T& x() { return v[0]; }
+  T& y() { return assert(D > 1 && "y() can only be called by vectors greater than 1-D!"), v[1]; }
+  T& z() { return assert(D > 2 && "z() can only be called by vectors greater than 2-D!"), v[2]; }
+  T& w() { return assert(D > 3 && "w() can only be called by vectors greater than 3-D!"), v[3]; }
+  T r() const { return v[0]; }
+  T g() const { return assert(D > 1 && "g() can only be called by vectors greater than 1-D!"), v[1]; }
+  T b() const { return assert(D > 2 && "b() can only be called by vectors greater than 2-D!"), v[2]; }
+  T a() const { return assert(D > 3 && "a() can only be called by vectors greater than 3-D!"), v[3]; }
+  T& r() { return v[0]; }
+  T& g() { return assert(D > 1 && "g() can only be called by vectors greater than 1-D!"), v[1]; }
+  T& b() { return assert(D > 2 && "b() can only be called by vectors greater than 2-D!"), v[2]; }
+  T& a() { return assert(D > 3 && "a() can only be called by vectors greater than 3-D!"), v[3]; }
 
-  static Vector Zero() {
+  static Vector All(T scalar) {
+    Vector all;
+    all.SetAll(scalar);
+    return all;
+  }
+
+  static const Vector& Zero() {
     static const Vector zero;
     return zero;
   }
 
-  static Vector Ones() {
+  static const Vector& Ones() {
     static const Vector ones = Vector() + 1;
     return ones;
   }
@@ -213,7 +246,7 @@ Vector<T, D> Cos(const Vector<T, D>& v1, const Vector<T, D>& v2) {
 
 template <typename T, size_t D>
 Vector<T, D> Cross(const Vector<T, D>& v1, const Vector<T, D>& v2) {
-  assert(D == 3 && "Cross product is only supported by 3-D Vectors!");
+  assert(D == 3 && "Cross product is only support for 3-D vectors!");
   Vector<T, D> result;
   result.x() = v1.x() * v2.z() - v1.z() * v2.y();
   result.y() = v1.z() * v2.x() - v1.x() * v2.z();
@@ -221,11 +254,67 @@ Vector<T, D> Cross(const Vector<T, D>& v1, const Vector<T, D>& v2) {
   return result;
 }
 
+typedef Vector<float, 1> Vector1f;
 typedef Vector<float, 2> Vector2f;
 typedef Vector<float, 3> Vector3f;
 typedef Vector<float, 4> Vector4f;
+typedef Vector<int, 1> Vector1i;
 typedef Vector<int, 2> Vector2i;
 typedef Vector<int, 3> Vector3i;
 typedef Vector<int, 4> Vector4i;
+
+template <typename T, size_t D>
+struct Matrix {
+  Matrix() = default;
+
+  explicit Matrix(const std::initializer_list<T>& args) : m{0} {
+    size_t i = 0;
+    for (auto e : args) {
+      if (i < D * D) {
+        m[i % D][i / D] = e;
+        ++i;
+      } else {
+        break;
+      }
+    }
+  }
+
+  template <typename... Args>
+  explicit Matrix(Args... args) : Matrix{T(args)...} {}
+
+  Vector<T, D> operator*(const Vector<T, D>& vec) const {
+    Vector<T, D> result;
+    for (size_t i = 0; i < D; ++i)
+      result += vec[i] * m[i];
+    return result;
+  }
+
+  const T& operator()(size_t row, size_t col) const {
+    return m[col][row];
+  }
+
+  T& operator()(size_t row, size_t col) {
+    return m[col][row];
+  }
+
+  static Matrix Diagonal(const Vector<T, D>& diag) {
+    Matrix result;
+    for (size_t i = 0; i < D; ++i)
+      result(i, i) = diag[i];
+    return result;
+  }
+
+  static const Matrix& Identity() {
+    static Matrix identity = Matrix::Diagonal(Vector<T, D>::Ones());
+    return identity;
+  }
+
+  Vector<T, D> m[D];
+};
+
+typedef Matrix<float, 1> Matrix1f;
+typedef Matrix<float, 2> Matrix2f;
+typedef Matrix<float, 3> Matrix3f;
+typedef Matrix<float, 4> Matrix4f;
 
 #endif  /* MCPT_EIGEN_H_ */
