@@ -222,6 +222,9 @@ class Object {
 
   BVH* bvh_root_;
   const Scene* const scene_;
+
+  Object(const Object&) = delete;
+  Object& operator=(const Object&) = delete;
 };
 
 #endif  /* MCPT_OBJECT_H_ */

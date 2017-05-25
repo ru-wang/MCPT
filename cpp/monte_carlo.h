@@ -17,7 +17,7 @@ class MonteCarlo {
   MonteCarlo(const Scene* const scene)
       : are_params_set_(false), result_(nullptr), tracer_(scene), scene_(scene) {}
 
-  ~MonteCarlo() { if (result_) delete result_; }
+  ~MonteCarlo() { if (result_) delete result_, result_ = nullptr; }
 
   const float* result() const { return result_; }
 

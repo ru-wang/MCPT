@@ -4,14 +4,18 @@
 #include "geometry.h"
 #include "object.h"
 #include "scene.h"
+#include "utils.h"
 
 #include <cassert>
 #include <fstream>
-#include <istream>
 #include <sstream>
 #include <streambuf>
 #include <string>
 #include <tuple>
+
+#ifdef VERBOSE
+#include <iostream>
+#endif
 
 using namespace std;
 
@@ -21,14 +25,19 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
 
   int smooth = 0;
   Object* current_obj = nullptr;
-  while (ifs) {
-    stringstream ss = SafelyGetLine(ifs);
+  while (ifs && !ifs.eof()) {
+    stringstream ss = Utils::SafelyGetLine(ifs);
     string specifier;
     ss >> specifier;
 
     if (specifier == "mtllib") {         /* specifies the material library */
+      string dir = Utils::RemoveSuffix(Utils::RemoveSuffix(obj_filename), '/');
       string mtl_filename;
       ss >> mtl_filename;
+      mtl_filename = dir + "/" + mtl_filename;
+#ifdef VERBOSE
+      std::cerr << "| MTL file: " << mtl_filename << "\n";
+#endif
       LoadMTL(mtl_filename, scene);
     } else if (specifier == "g") {       /* specifies the next group name */
       string grp_name;
@@ -36,7 +45,7 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
       if (grp_name != "default") {
         auto entry = scene->objects().find(grp_name);
         if (entry == scene->objects().end())
-          entry = get<0>(scene->objects().emplace(grp_name, Object(scene)));
+          entry = get<0>(scene->objects().emplace(grp_name, scene));
         current_obj = &entry->second;
         current_obj->set_smooth(smooth);
       } else {
@@ -79,7 +88,7 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
       int id;
       vector<int> ids;
       streambuf* sb = ss.rdbuf();
-      while (ss) {
+      while (true) {
         char ch = sb->sgetc();
         if (ch >= '0' && ch <= '9')
           ss >> id, ids.push_back(id);
@@ -117,18 +126,16 @@ void OBJParser::LoadMTL(const string& mtl_filename, Scene* scene) {
   ifstream ifs(mtl_filename);
 
   Material* current_mtl = nullptr;
-  while (ifs) {
-    stringstream ss = SafelyGetLine(ifs);
+  while (ifs && !ifs.eof()) {
+    stringstream ss = Utils::SafelyGetLine(ifs);
     string specifier;
     ss >> specifier;
 
-    if (specifier == "newmtl") {      /* adds new material */
+    if (specifier == "newmtl") {        /* adds new material */
       string mtl_name;
       ss >> mtl_name;
       current_mtl = &scene->materials()[mtl_name];
-    }
-
-    else if (specifier == "illum") {  /* specifies the illumination type */
+    } else if (specifier == "illum") {  /* specifies the illumination type */
       assert(current_mtl && "Wrong .mtl file format!");
       ss >> current_mtl->illum;
     } else if (specifier == "Kd") {   /* specifies the diffuse reflectivity */
@@ -139,6 +146,10 @@ void OBJParser::LoadMTL(const string& mtl_filename, Scene* scene) {
       assert(current_mtl && "Wrong .mtl file format!");
       Vector3f& Ka = current_mtl->Ka;
       ss >> Ka[0] >> Ka[1] >> Ka[2];
+    } else if (specifier == "Ks") {   /* specifies the ambient reflectivity */
+      assert(current_mtl && "Wrong .mtl file format!");
+      Vector3f& Ks = current_mtl->Ks;
+      ss >> Ks[0] >> Ks[1] >> Ks[2];
     } else if (specifier == "Ns") {   /* specifies the specular exponent */
       assert(current_mtl && "Wrong .mtl file format!");
       ss >> current_mtl->Ns;
@@ -152,22 +163,4 @@ void OBJParser::LoadMTL(const string& mtl_filename, Scene* scene) {
   }
 
   ifs.close();
-}
-
-stringstream OBJParser::SafelyGetLine(istream& is) {
-  stringstream ss;
-  streambuf* sb = is.rdbuf();
-  while (true) {
-    char ch = sb->sbumpc();
-    switch (ch) {
-      case '\n': return ss;
-      case '\r': if (sb->sgetc() == '\n')
-                   sb->sbumpc();
-                 return ss;
-      case EOF:  if (ss.rdbuf()->in_avail() == 0)
-                   is.setstate(istream::eofbit);
-                 return ss;
-      default:   ss << ch;
-    }
-  }
 }

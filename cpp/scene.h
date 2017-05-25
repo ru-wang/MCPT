@@ -8,6 +8,10 @@
 #include <unordered_map>
 #include <vector>
 
+#ifdef VERBOSE
+#include <iostream>
+#endif
+
 class Scene {
  public:
   Scene() : v_(1), vt_(1), vn_(1) {}
@@ -25,6 +29,20 @@ class Scene {
   const std::vector<Vector3f>& v() const { return v_;  }
   const std::vector<Vector2f>& vt() const { return vt_; }
   const std::vector<Vector3f>& vn() const { return vn_; }
+
+  void Initialize() {
+    for (auto& entry : objects_) {
+#ifdef VERBOSE
+      std::cerr << "| Constructing BVH for: " << entry.first << " ...";
+#endif
+
+      entry.second.ConstructBVH();
+
+#ifdef VERBOSE
+      std::cerr << " ...\n";
+#endif
+    }
+  }
 
  private:
   std::unordered_map<std::string, Object> objects_;      /* all the objects in the scene */

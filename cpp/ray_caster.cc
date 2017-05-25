@@ -27,7 +27,7 @@ RayCaster::operator()(const Ray& r) const {
     const Object& obj = entry.second;
     tuple<Point, float, size_t> tp = cast(r, obj, intersectant);
     float t = get<1>(tp);
-    if (!Intersection::IsZero(get<0>(tp).w()) && (t < min_t || min_t < 0)) {
+    if (!Utils::IsZero(get<0>(tp).w()) && (t < min_t || min_t < 0)) {
       intersection = get<0>(tp);
       min_t = t;
 
@@ -69,9 +69,9 @@ RayCaster::cast(const Ray& r, const Object& obj, const Intersection& intersectan
   queue.push(obj.bvh_root());
   while (!queue.empty()) {
     const Object::BVH* current_bvh = queue.front();
-    const AABB& aabb = current_bvh->aabb;
     queue.pop();
 
+    const AABB& aabb = current_bvh->aabb;
     if (!intersectant(r, aabb))
       continue;
 
@@ -83,7 +83,7 @@ RayCaster::cast(const Ray& r, const Object& obj, const Intersection& intersectan
       Polygon f = obj.GetPolygonByMeshID(current_bvh->mesh_id);
       Point x = intersectant(r, f);
       float t = (x - r.A) * Vector4f(r.dir);
-      if (!Intersection::IsZero(x.w()) && (t < min_t || min_t < 0)) {
+      if (!Utils::IsZero(x.w()) && (t < min_t || min_t < 0)) {
         intersection = x;
         mesh_id = current_bvh->mesh_id;
         min_t = t;

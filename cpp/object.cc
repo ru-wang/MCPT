@@ -5,15 +5,15 @@
 #include "scene.h"
 
 Object::BVH::~BVH() {
-  if (l_child) delete l_child;
-  if (r_child) delete r_child;
+  if (l_child) delete l_child, l_child = nullptr;
+  if (r_child) delete r_child, r_child = nullptr;
 }
 
 Object::~Object() {
   for (auto* mesh : mesh_list_)
-    delete mesh;
+    delete mesh, mesh = nullptr;
   if (bvh_root_)
-    delete bvh_root_;
+    delete bvh_root_, bvh_root_ = nullptr;
 }
 
 void Object::AddMaterial(const std::string& mtl_name) {
@@ -100,6 +100,7 @@ void Object::ConstructBVH() {
   }
 
   /* constructs the subnodes */
+  bvh_root_ = new BVH;
   SpanBVHTree(bvh_leaves, &bvh_root_);
   if (bvh_root_->l_child)
     UpdateAABB(bvh_root_->l_child->aabb, &bvh_root_);
@@ -119,7 +120,7 @@ void Object::UpdateAABB(const AABB& new_aabb, BVH** const bvh) {
 
 void Object::SpanBVHTree(std::vector<BVH*>& bvh_list, BVH** const bvh_parent) {
   if (bvh_list.size() == 1) {
-    delete *bvh_parent;
+    delete *bvh_parent, *bvh_parent = nullptr;
     *bvh_parent = bvh_list.back();
     bvh_list.pop_back();
     return;
@@ -175,12 +176,12 @@ void Object::SpanBVHTree(std::vector<BVH*>& bvh_list, BVH** const bvh_parent) {
       SpanBVHTree(right_bvh_list, &right_bvh);
       (*bvh_parent)->r_child = right_bvh;
     } else {
-      delete right_bvh;
+      delete right_bvh, right_bvh = nullptr;
     }
   } else {
     SpanBVHTree(right_bvh_list, &right_bvh);
     (*bvh_parent)->l_child = right_bvh;
-    delete left_bvh;
+    delete left_bvh, left_bvh = nullptr;
   }
 
   /* updates AABB */

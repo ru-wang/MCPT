@@ -3,9 +3,7 @@
 
 #include "eigen.h"
 #include "geometry.h"
-
-#include <cmath>
-#include <limits>
+#include "utils.h"
 
 class Intersection {
  public:
@@ -13,16 +11,10 @@ class Intersection {
   Point operator()(const Line& l, const Plane& pi) const;
   Point operator()(const Ray& r, const Plane& pi) const;
   Point operator()(const Ray& r, const Polygon& f) const;
-
-  static bool IsZero(float a) { return std::fabs(a) < kEpsilon; }
-  static bool Equal(float a, float b) { return std::fabs(a - b) < kEpsilon; }
-
- private:
-  static constexpr float kEpsilon = std::numeric_limits<float>::epsilon();
 };
 
 inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
-  if (IsZero(r.dir.x()) && IsZero(r.dir.y()) && IsZero(r.dir.z()))
+  if (Utils::IsZero(r.dir.x()) && Utils::IsZero(r.dir.y()) && Utils::IsZero(r.dir.z()))
     return false;
 
   if (aabb.Envelop(r.A))
@@ -32,7 +24,7 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
   const Point& ruf = aabb.ruf();
 
   /* ray parallels to the Z axis */
-  if (IsZero(r.dir.x()) && IsZero(r.dir.y())) {
+  if (Utils::IsZero(r.dir.x()) && Utils::IsZero(r.dir.y())) {
     if (r.A.x() >= llb.x() && r.A.x() <= ruf.x() &&
         r.A.y() >= llb.y() && r.A.y() <= ruf.y() &&
         ((r.A.z() <= llb.z() && r.dir.z() >= 0) ||
@@ -42,7 +34,7 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
   } else
 
   /* ray parallels to the Y axis */
-  if (IsZero(r.dir.x()) && IsZero(r.dir.z())) {
+  if (Utils::IsZero(r.dir.x()) && Utils::IsZero(r.dir.z())) {
     if (r.A.x() >= llb.x() && r.A.x() <= ruf.x() &&
         r.A.z() >= llb.z() && r.A.z() <= ruf.z() &&
         ((r.A.y() <= llb.y() && r.dir.y() >= 0) ||
@@ -52,7 +44,7 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
   } else
 
   /* ray parallels to the X axis */
-  if (IsZero(r.dir.y()) && IsZero(r.dir.z())) {
+  if (Utils::IsZero(r.dir.y()) && Utils::IsZero(r.dir.z())) {
     if (r.A.y() >= llb.y() && r.A.y() <= ruf.y() &&
         r.A.z() >= llb.z() && r.A.z() <= ruf.z() &&
         ((r.A.x() <= llb.x() && r.dir.x() >= 0) ||
@@ -158,7 +150,7 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
 
 inline Point Intersection::operator()(const Line& l, const Plane& pi) const {
   Point x = l.A * (l.B * pi) - l.B * (l.A * pi);
-  if (IsZero(x.w()))
+  if (Utils::IsZero(x.w()))
     return Point::Zero();
   else
     return x / x.w();
@@ -167,7 +159,7 @@ inline Point Intersection::operator()(const Line& l, const Plane& pi) const {
 inline Point Intersection::operator()(const Ray& r, const Plane& pi) const {
   const Line& l = static_cast<const Line&>(r);
   Point x = (*this)(l, pi);
-  if (IsZero(x.w()))
+  if (Utils::IsZero(x.w()))
     return Point::Zero();
   else if ((x - r.A) * r.B <= 0)
     return Point::Zero();
@@ -179,7 +171,7 @@ inline Point Intersection::operator()(const Ray& r, const Polygon& f) const {
   const Plane& pi = static_cast<const Plane&>(f);
   Point x = (*this)(r, pi);
 
-  if (IsZero(x.w()))
+  if (Utils::IsZero(x.w()))
     return Point::Zero();
 
   if (f.v().size() == 3) {
