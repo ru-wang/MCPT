@@ -1,5 +1,5 @@
-#ifndef MCPT_PATH_TRACER_H_
-#define MCPT_PATH_TRACER_H_
+#ifndef MCPT_OBJ_PARSER_H_
+#define MCPT_OBJ_PARSER_H_
 
 #include <istream>
 #include <sstream>
@@ -15,4 +15,4 @@ class OBJParser {
   static std::stringstream SafelyGetLine(std::istream& is);
 };
 
-#endif  /* MCPT_PATH_TRACER_H_ */
+#endif  /* MCPT_OBJ_PARSER_H_ */

@@ -11,13 +11,15 @@
 #include <sstream>
 #include <streambuf>
 #include <string>
+#include <tuple>
 
 using namespace std;
 
 void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
-  assert(scene);
+  assert(scene && "Should create a scene first!");
   ifstream ifs(obj_filename);
 
+  int smooth = 0;
   Object* current_obj = nullptr;
   while (ifs) {
     stringstream ss = SafelyGetLine(ifs);
@@ -31,44 +33,48 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
     } else if (specifier == "g") {       /* specifies the next group name */
       string grp_name;
       ss >> grp_name;
-      if (grp_name != "default")
-        current_obj = &scene->objects()[grp_name];
-      else
+      if (grp_name != "default") {
+        auto entry = scene->objects().find(grp_name);
+        if (entry == scene->objects().end())
+          entry = get<0>(scene->objects().emplace(grp_name, Object(scene)));
+        current_obj = &entry->second;
+        current_obj->set_smooth(smooth);
+      } else {
         current_obj = nullptr;
+      }
     }
 
     else if (specifier == "v") {         /* adds a new vertex to the default group */
-      assert(current_obj == nullptr);
+      assert(current_obj == nullptr && "Wrong .obj file format!");
       scene->v().push_back(Vector3f());
       Vector3f& v = scene->v().back();
       ss >> v[0] >> v[1] >> v[2];
     } else if (specifier == "vt") {      /* adds a new vertex texture to the default group */
-      assert(current_obj == nullptr);
+      assert(current_obj == nullptr && "Wrong .obj file format!");
       scene->vt().push_back(Vector2f());
       Vector2f& vt = scene->vt().back();
       ss >> vt[0] >> vt[1];
     } else if (specifier == "vn") {      /* adds a new vertex normal to the default group */
-      assert(current_obj == nullptr);
+      assert(current_obj == nullptr && "Wrong .obj file format!");
       scene->vn().push_back(Vector3f());
       Vector3f& vn = scene->vn().back();
       ss >> vn[0] >> vn[1] >> vn[2];
     }
 
     else if (specifier == "s") {         /* specifies the smooth term for the next object */
-      assert(current_obj);
       string s;
       ss >> s;
       if (s == "off")
-        current_obj->set_smooth(0);
+        smooth = 0;
       else
-        current_obj->set_smooth(stoi(s));
+        smooth = stoi(s);
     } else if (specifier == "usemtl") {  /* specifies the material used for the successive meshes */
-      assert(current_obj);
+      assert(current_obj && "Wrong .obj file format!");
       string mtl_name;
       ss >> mtl_name;
       current_obj->AddMaterial(mtl_name);
     } else if (specifier == "f") {       /* adds a new polygon for the current object */
-      assert(current_obj);
+      assert(current_obj && "Wrong .obj file format!");
 
       int id;
       vector<int> ids;
@@ -107,7 +113,7 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
 }
 
 void OBJParser::LoadMTL(const string& mtl_filename, Scene* scene) {
-  assert(scene);
+  assert(scene && "Should create a scene first!");
   ifstream ifs(mtl_filename);
 
   Material* current_mtl = nullptr;
@@ -123,24 +129,24 @@ void OBJParser::LoadMTL(const string& mtl_filename, Scene* scene) {
     }
 
     else if (specifier == "illum") {  /* specifies the illumination type */
-      assert(current_mtl);
+      assert(current_mtl && "Wrong .mtl file format!");
       ss >> current_mtl->illum;
     } else if (specifier == "Kd") {   /* specifies the diffuse reflectivity */
-      assert(current_mtl);
+      assert(current_mtl && "Wrong .mtl file format!");
       Vector3f& Kd = current_mtl->Kd;
       ss >> Kd[0] >> Kd[1] >> Kd[2];
     } else if (specifier == "Ka") {   /* specifies the ambient reflectivity */
-      assert(current_mtl);
+      assert(current_mtl && "Wrong .mtl file format!");
       Vector3f& Ka = current_mtl->Ka;
       ss >> Ka[0] >> Ka[1] >> Ka[2];
     } else if (specifier == "Ns") {   /* specifies the specular exponent */
-      assert(current_mtl);
+      assert(current_mtl && "Wrong .mtl file format!");
       ss >> current_mtl->Ns;
     } else if (specifier == "Tr") {   /* specifies the transparency value */
-      assert(current_mtl);
+      assert(current_mtl && "Wrong .mtl file format!");
       ss >> current_mtl->Tr;
     } else if (specifier == "Ni") {   /* specifies the optical density */
-      assert(current_mtl);
+      assert(current_mtl && "Wrong .mtl file format!");
       ss >> current_mtl->Ni;
     }
   }
