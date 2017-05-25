@@ -1,6 +1,5 @@
 #include "object.h"
 
-#include "brdf.h"
 #include "eigen.h"
 #include "geometry.h"
 #include "scene.h"
@@ -21,20 +20,24 @@ void Object::AddMaterial(const std::string& mtl_name) {
   material_table_.push_back(std::make_pair(mtl_name, mesh_list_.size()));
 }
 
-std::string Object::GetMaterialNameByMeshID(size_t mesh_id) const {
-  std::string mtl_name = material_table_.front().first;
+const std::string& Object::GetMaterialNameByMeshID(size_t mesh_id) const {
+  const std::string* mtl_name = &material_table_.front().first;
   for (auto it = material_table_.cbegin() + 1; it != material_table_.cend(); ++it) {
     size_t start_id = it->second;
     if (mesh_id < start_id)
-      return mtl_name;
+      return *mtl_name;
     else
-      mtl_name = it->first;
+      mtl_name = &it->first;
   }
-  return mtl_name;
+  return *mtl_name;
 }
 
 const Material& Object::GetMaterialByMeshID(size_t mesh_id) const {
-  return scene_->materials()[GetMaterialNameByMeshID(mesh_id)];
+  return scene_->materials().find(GetMaterialNameByMeshID(mesh_id))->second;
+}
+
+const Mesh& Object::GetMeshByMeshID(size_t mesh_id) const {
+  return *mesh_list_[mesh_id];
 }
 
 Polygon Object::GetPolygonByMeshID(size_t mesh_id) const {
