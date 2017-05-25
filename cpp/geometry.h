@@ -77,12 +77,16 @@ struct Line {
  */
 struct Ray : public Line {
   Ray(const Vector3f& start_v, const Vector3f& dir)
-      : Line(start_v, start_v + dir), dir(dir) {}
+      : Line(start_v, start_v + dir), dir(dir.Normalize()) {}
 
-  Ray(const Point& start_x, const Vector4f& dir)
-      : Line(start_x, start_x + dir), dir(dir) {}
+  Ray(const Point& start_x, const Vector3f& dir)
+      : Line(start_x, start_x + Vector4f(dir)), dir(dir.Normalize()) {}
 
-  Vector4f dir;
+  void NormalizeInPlace() {
+    dir.NormalizeInPlace();
+  }
+
+  Vector3f dir;
 };
 
 /*
