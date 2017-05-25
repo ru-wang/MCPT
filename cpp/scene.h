@@ -1,7 +1,6 @@
 #ifndef MCPT_SCENE_H_
 #define MCPT_SCENE_H_
 
-#include "brdf.h"
 #include "eigen.h"
 #include "object.h"
 
