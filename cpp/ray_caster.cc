@@ -67,12 +67,12 @@ RayCaster::cast(const Ray& r, const Object& obj, const Intersection& intersectan
   /* traverses the BVH tree using BFS */
   queue<const Object::BVH*> queue;
   queue.push(obj.bvh_root());
-  while (!queue.empty()) {
+  while (not queue.empty()) {
     const Object::BVH* current_bvh = queue.front();
     queue.pop();
 
     const AABB& aabb = current_bvh->aabb;
-    if (!intersectant(r, aabb))
+    if (not intersectant(r, aabb))
       continue;
 
     if (current_bvh->nonleaf()) {

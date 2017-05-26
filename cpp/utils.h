@@ -54,7 +54,7 @@ class Utils {
 
   static void SaveRGBToPPM(const float* image, int w, int h, const std::string& str) {
     std::ofstream ofs(str);
-    ofs << "P3\n" << w << " " << h << "\n";
+    ofs << "P3\n" << w << " " << h << " 255\n";
 
     int r, g, b;
     for (int i = 0; i < w * h; ++i) {

@@ -158,7 +158,13 @@ class Object {
     /*
      * Creates a BVH tree node with its type undecided.
      */
-    BVH() : l_child(nullptr), mesh_id(0) {}
+    BVH() : l_child(nullptr), r_child(nullptr) {}
+
+    /*
+     * Creates a BVH tree node with AABB but its type undecided.
+     */
+    BVH(const AABB& aabb)
+        : aabb(aabb), l_child(nullptr), r_child(nullptr) {}
 
     /*
      * Creates a non-leaf BVH tree node with 1/2 subnodes.
@@ -169,7 +175,7 @@ class Object {
     /*
      * Creates a leaf BVH tree node.
      */
-    BVH(const AABB& aabb, int mesh_id)
+    BVH(const AABB& aabb, size_t mesh_id)
         : aabb(aabb), l_child(nullptr), mesh_id(mesh_id) {}
 
     ~BVH();
@@ -209,8 +215,8 @@ class Object {
   void ConstructBVH();
 
  private:
+  void SplitBVHTree(std::vector<BVH*>& bvh_list, BVH** const bvh_parent);
   void UpdateAABB(const AABB& new_aabb, BVH** const bvh);
-  void SpanBVHTree(std::vector<BVH*>& bvh_list, BVH** const bvh_parent);
 
   int smooth_;
 

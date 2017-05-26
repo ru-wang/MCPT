@@ -16,10 +16,11 @@ using namespace std;
 
 namespace {
 
-const int w = 640, h = 480;
-const Matrix4f MVP_inv = Matrix4f::Identity();
-const int k_max = 1000, n_max = 1000;
-const int rays_per_pixel = 4;
+const int w = 40, h = 30;
+const int k_max = 10, n_max = 100;
+const int rays_per_pixel = 1;
+
+static Matrix4f MVP_inv = Matrix4f::Identity();
 
 }
 
@@ -27,7 +28,8 @@ int main(int argc, char* argv[]) {
   assert(argc > 1);
 
 #ifdef VERBOSE
-  std::cerr << "+++++++++++++++++++++ Verbose +++++++++++++++++++++\n";
+  std::cerr << "\n"
+            << "+++++++++++++++++++++ Reports +++++++++++++++++++++\n";
 #endif
 
   string obj_name = argv[1];
@@ -64,16 +66,17 @@ int main(int argc, char* argv[]) {
 
   scene.Initialize();
 
+  MonteCarlo monte_carlo(&scene);
+  monte_carlo.SetParameters(w, h, MVP_inv, k_max, n_max, rays_per_pixel);
+  monte_carlo();
+
+  const float* image = monte_carlo.result();
+  Utils::SaveRGBToPPM(image, w, h, out_name);
+
 #ifdef VERBOSE
   std::cerr << "+                        -                        |\n"
             << "+                    -* End *-                    +\n\n";
 #endif
-
-  MonteCarlo monte_carlo(&scene);
-  monte_carlo.SetParameters(w, h, MVP_inv, k_max, n_max, rays_per_pixel);
-  monte_carlo();
-  const float* image = monte_carlo.result();
-  Utils::SaveRGBToPPM(image, 640, 480, out_name);
 
   return 0;
 }

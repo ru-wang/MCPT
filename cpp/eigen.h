@@ -240,7 +240,7 @@ Vector<T, D> operator*(T scalar, const Vector<T, D>& vec) {
 }
 
 template <typename T, size_t D>
-Vector<T, D> Cos(const Vector<T, D>& v1, const Vector<T, D>& v2) {
+T Cos(const Vector<T, D>& v1, const Vector<T, D>& v2) {
   return v1 * v2 / (v1.L2() * v2.L2());
 }
 
@@ -289,7 +289,7 @@ struct Matrix {
     return result;
   }
 
-  const T& operator()(size_t row, size_t col) const {
+  const T operator()(size_t row, size_t col) const {
     return m[col][row];
   }
 

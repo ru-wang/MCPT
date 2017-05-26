@@ -4,7 +4,6 @@
 #include "eigen.h"
 
 #include <cstddef>
-#include <limits>
 #include <vector>
 
 /*
@@ -163,52 +162,44 @@ class Polygon : public Plane {
  */
 class AABB {
  public:
-  AABB() {
-    llb_.SetAll(std::numeric_limits<float>::max());
-    ruf_.SetAll(std::numeric_limits<float>::min());
-    diag_.SetAll(std::numeric_limits<float>::infinity());
-    ct_.SetZero();
-  }
+  AABB() {}
 
   AABB(const Vector4f& llb, const Vector4f& ruf)
       : llb_(llb), ruf_(ruf), diag_(ruf - llb) {
     ct_ = (llb_ + ruf_) / 2;
+    ct_ /= ct_.w();
   }
 
   AABB(float left, float lower, float front, float right, float upper, float back)
       : llb_{left, lower, front, 1}, ruf_{right, upper, back, 1}, diag_(ruf_ - llb_) {
     ct_ = (llb_ + ruf_) / 2;
+    ct_ /= ct_.w();
   }
 
   Vector4f& llb() { return llb_; }
   Vector4f& ruf() { return ruf_; }
-  Vector4f& diag() { return diag_; }
+  Vector3f& diag() { return diag_; }
   Vector4f& ct() { return ct_; }
 
   const Vector4f& llb() const { return llb_; }
   const Vector4f& ruf() const { return ruf_; }
-  const Vector4f& diag() const { return diag_; }
+  const Vector3f& diag() const { return diag_; }
   const Vector4f& ct() const { return ct_; }
-
-  void Reset(const Vector3f& llb, const Vector3f& ruf) {
-    llb_.x() = llb.x(); llb_.y() = llb.y(); llb_.z() = llb.z(); llb_.w() = 1;
-    ruf_.x() = ruf.x(); ruf_.y() = ruf.y(); ruf_.z() = ruf.z(); ruf_.w() = 1;
-    diag_ = ruf_ - llb_;
-    ct_ = (llb_ + ruf_) / 2;
-  }
 
   void Reset(const Vector4f& llb, const Vector4f& ruf) {
     llb_ = llb;
     ruf_ = ruf;
-    diag_ = ruf - llb;
-    ct_ = (llb + ruf) / 2;
+    diag_ = Vector3f(ruf - llb);
+    ct_ = (llb_ + ruf_) / 2;
+    ct_ /= ct_.w();
   }
 
   void Reset(float left, float lower, float front, float right, float upper, float back) {
-    llb_ = Vector4f{left, lower, front, 1};
-    ruf_ = Vector4f{right, upper, back, 1};
-    diag_ = ruf_ - llb_;
+    llb_ = Vector4f(left, lower, front, 1);
+    ruf_ = Vector4f(right, upper, back, 1);
+    diag_ = Vector3f(ruf_ - llb_);
     ct_ = (llb_ + ruf_) / 2;
+    ct_ /= ct_.w();
   }
 
   bool Envelop(const Point& x) const {
@@ -223,7 +214,7 @@ class AABB {
  private:
   Vector4f llb_;   /* the left-lower-back vertex */
   Vector4f ruf_;   /* the right-upper-front vertex */
-  Vector4f diag_;  /* the diagonal vector from the llb corner to the ruf corner */
+  Vector3f diag_;  /* the diagonal vector from the llb corner to the ruf corner */
 
   Vector4f ct_;    /* the center of the bounding box */
 };

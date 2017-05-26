@@ -9,6 +9,10 @@
 #include <cassert>
 #include <cmath>
 
+#ifdef VERBOSE
+#include <iostream>
+#endif
+
 using namespace std;
 
 void MonteCarlo::operator()() {
@@ -16,6 +20,9 @@ void MonteCarlo::operator()() {
 
   result_ = new float[w_ * h_ * 3]{0};
   for (int n = 0; n < n_max_; ++n) {
+#ifdef VERBOSE
+    std::cerr << "| <Iteration " << n + 1 << "> [=========";
+#endif
     for (int k = 0; k < k_max_; ++k) {
       for (int u = 0; u < w_; ++u) {
         for (int v = 0; v < h_; ++v) {
@@ -29,6 +36,10 @@ void MonteCarlo::operator()() {
         }
       }
     }
+#ifdef VERBOSE
+    float progress = (n + 1.0) / n_max_ * 100;
+    std::cerr << "========= " << progress << "%]\n";
+#endif
   }
   for (int p = 0; p < w_ * h_ * 3; p += 3)
     result_[p] /= n_max_;
