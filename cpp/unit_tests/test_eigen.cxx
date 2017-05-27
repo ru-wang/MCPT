@@ -53,9 +53,9 @@ int main() {
        << ToString(Vector<float, 4>(1, 2, 3, 4) / 10) << "\n"
        << Vector<float, 4>::Ones() * Vector<float, 4>(1, 2, 3, 4) << "\n"
        << ToString(Cross(Vector<float, 3>(0, 1, 0),
-                               Vector<float, 3>(1, 0, 0))) << "\n"
+                         Vector<float, 3>(1, 0, 0))) << "\n"
        << ToString(Vector<float, 3>(1, 0, 0).Cross(
-                         Vector<float, 3>(0, 1, 0))) << "\n"
+                   Vector<float, 3>(0, 1, 0))) << "\n"
        << "\n"
        << Vector<float, 3>(1, 0, 1).L0() << "\n"
        << Vector<float, 3>(1, -1, 1).L1() << "\n"

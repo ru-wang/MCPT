@@ -32,7 +32,7 @@ typedef Vector4f Point;
  * Suppose A , B are two(non-coincident) space points. Then the line joining
  * these points is represented by the 4×4 matrix:
  *
- *                          Lᵀ = ABᵀ - BAᵀ,
+ *                           L = ABᵀ - BAᵀ,
  *
  * where L has rank 2. Its 2-dimensional null-space is spanned by the pencil
  * of planes with the line as axis(in fact LW*ᵀ=0, with 0 a 4×2 null-matrix).

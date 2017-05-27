@@ -161,7 +161,7 @@ inline Point Intersection::operator()(const Ray& r, const Plane& pi) const {
   Point x = (*this)(l, pi);
   if (Utils::IsZero(x.w()))
     return Point::Zero();
-  else if ((x - r.A) * r.B <= 0)
+  else if (Vector3f(x - r.A) * r.dir <= 0)
     return Point::Zero();
   else
     return x;

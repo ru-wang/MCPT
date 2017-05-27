@@ -106,17 +106,18 @@ class CosineWeightedHemisphere {
    * Returns a (φ,θ,p) tuple where p=p(φ,θ)=p(φ)p(θ).
    */
   std::tuple<float, float, float> operator()() {
-    float u1 = u1_(), p1 = u1_(u1);
-    float u2 = u2_(), p2 = u2_(u2);
+    float u1 = u_();
+    float u2 = u_();
     float phi = 2 * M_PI * u1;
     float theta = asin(sqrt(u2));
+    float p1 = 1 / (2 * M_PI);
+    float p2 = 2 * cos(theta) * sin(theta);
     float p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }
 
  private:
-  Uniform u1_;  /* uniform generator for φ */
-  Uniform u2_;  /* uniform generator for θ */
+  Uniform u_;  /* uniform generator for φ and θ */
 };
 
 #endif  /* MCPT_RANDOM_H_ */

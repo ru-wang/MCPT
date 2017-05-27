@@ -21,11 +21,14 @@ class MonteCarlo {
 
   const float* result() const { return result_; }
 
-  void SetParameters(int width, int height,
-                     const Matrix4f& MVP_inverse,
+  void SetParameters(int w, int h,
+                     float fx, float fy, float cx, float cy,
+                     const Vector3f& t,
+                     const Matrix3f& R,
                      int k_max, int n_max, int rays_per_pixel) {
-    w_ = width; h_ = height;
-    MVP_inv_ = MVP_inverse;
+    cam_.w = w; cam_.h = h;
+    cam_.fx = fx; cam_.fy = fy; cam_.cx = cx; cam_.cy = cy;
+    cam_.t = t; cam_.R = R;
     k_max_ = k_max; n_max_ = n_max;
     rays_per_pixel_ = rays_per_pixel;
     are_params_set_ = true;
@@ -42,8 +45,12 @@ class MonteCarlo {
   /*
    * Parameters for the virtual camera.
    */
-  int w_, h_;
-  Matrix4f MVP_inv_;
+  struct {
+    int w, h;
+    float fx, fy, cx, cy;
+    Vector3f t;
+    Matrix3f R;
+  } cam_;
 
   /*
    * Parameters used by the Monte Carlo integrator.

@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cstddef>
 #include <initializer_list>
+#include <iomanip>
+#include <ostream>
 
 template <typename T, size_t D>
 struct Vector {
@@ -254,6 +256,16 @@ Vector<T, D> Cross(const Vector<T, D>& v1, const Vector<T, D>& v2) {
   return result;
 }
 
+template <typename T, size_t D>
+std::ostream& operator<<(std::ostream& os, const Vector<T, D>& v) {
+  os << "[ ";
+  for (size_t i = 0; i < D; ++i)
+    os << std::setprecision(2) << std::fixed
+       << std::setw(5) << v[i] << " ";
+  os << "]";
+  return os;
+}
+
 typedef Vector<float, 1> Vector1f;
 typedef Vector<float, 2> Vector2f;
 typedef Vector<float, 3> Vector3f;
@@ -265,9 +277,12 @@ typedef Vector<int, 4> Vector4i;
 
 template <typename T, size_t D>
 struct Matrix {
-  Matrix() = default;
+  Matrix() {
+    for (size_t i = 0; i < D; ++i)
+      m[i].SetZero();
+  }
 
-  explicit Matrix(const std::initializer_list<T>& args) : m{0} {
+  explicit Matrix(const std::initializer_list<T>& args) {
     size_t i = 0;
     for (auto e : args) {
       if (i < D * D) {

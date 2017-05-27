@@ -10,6 +10,11 @@
 #include <queue>
 #include <tuple>
 
+#ifdef VERBOSE
+#include <iomanip>
+#include <iostream>
+#endif
+
 using namespace std;
 
 tuple<Point, Vector3f, string>
@@ -36,19 +41,21 @@ RayCaster::operator()(const Ray& r) const {
     }
   }
 
+#ifdef VERBOSE
+  //std::cout << fixed << setprecision(2) << "(" << min_t << ")";
+#endif
+
   if (min_t > 0) {
     /* computes the normal vector */
     Vector3f normal = Vector3f::Zero();
     if (mesh->v_num() == 3) {
       const TriMesh* tri = dynamic_cast<const TriMesh*>(mesh);
       for (size_t i = 0; i < mesh->v_num(); ++i)
-        normal += scene_->vn()[tri->vn_id[0]];
-      normal /= mesh->v_num();
+        normal += scene_->vn()[tri->vn_id[i]];
     } else if (mesh->v_num() == 4) {
       const RectMesh* rect = dynamic_cast<const RectMesh*>(mesh);
       for (size_t i = 0; i < mesh->v_num(); ++i)
-        normal += scene_->vn()[rect->vn_id[0]];
-      normal /= mesh->v_num();
+        normal += scene_->vn()[rect->vn_id[i]];
     }
     normal.NormalizeInPlace();
     return make_tuple(intersection, normal, mtl_name);
