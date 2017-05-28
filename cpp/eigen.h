@@ -141,7 +141,7 @@ struct Vector {
   Vector Cross(const Vector& other) const {
     assert(D == 3 && "Cross product is only support for 3-D vectors!");
     Vector result;
-    result.x() = x() * other.z() - z() * other.y();
+    result.x() = y() * other.z() - z() * other.y();
     result.y() = z() * other.x() - x() * other.z();
     result.z() = x() * other.y() - y() * other.x();
     return result;
@@ -250,7 +250,7 @@ template <typename T, size_t D>
 Vector<T, D> Cross(const Vector<T, D>& v1, const Vector<T, D>& v2) {
   assert(D == 3 && "Cross product is only support for 3-D vectors!");
   Vector<T, D> result;
-  result.x() = v1.x() * v2.z() - v1.z() * v2.y();
+  result.x() = v1.y() * v2.z() - v1.z() * v2.y();
   result.y() = v1.z() * v2.x() - v1.x() * v2.z();
   result.z() = v1.x() * v2.y() - v1.y() * v2.x();
   return result;
@@ -260,8 +260,7 @@ template <typename T, size_t D>
 std::ostream& operator<<(std::ostream& os, const Vector<T, D>& v) {
   os << "[ ";
   for (size_t i = 0; i < D; ++i)
-    os << std::setprecision(2) << std::fixed
-       << std::setw(5) << v[i] << " ";
+    os << std::setw(5) << v[i] << " ";
   os << "]";
   return os;
 }

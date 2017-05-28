@@ -32,7 +32,7 @@ RayCaster::operator()(const Ray& r) const {
     const Object& obj = entry.second;
     tuple<Point, float, size_t> tp = cast(r, obj, intersectant);
     float t = get<1>(tp);
-    if (!Utils::IsZero(get<0>(tp).w()) && (t < min_t || min_t < 0)) {
+    if ((not Utils::IsZero(get<0>(tp).w())) && (t < min_t || min_t < 0)) {
       intersection = get<0>(tp);
       min_t = t;
 
@@ -40,10 +40,6 @@ RayCaster::operator()(const Ray& r) const {
       mtl_name = obj.GetMaterialNameByMeshID(get<2>(tp));
     }
   }
-
-#ifdef VERBOSE
-  //std::cout << fixed << setprecision(2) << "(" << min_t << ")";
-#endif
 
   if (min_t > 0) {
     /* computes the normal vector */
@@ -89,8 +85,8 @@ RayCaster::cast(const Ray& r, const Object& obj, const Intersection& intersectan
     } else if (current_bvh->leaf()) {
       Polygon f = obj.GetPolygonByMeshID(current_bvh->mesh_id);
       Point x = intersectant(r, f);
-      float t = (x - r.A) * Vector4f(r.dir);
-      if (!Utils::IsZero(x.w()) && (t < min_t || min_t < 0)) {
+      float t = Vector3f(x - r.A) * r.dir;
+      if ((not Utils::IsZero(x.w())) && (t < min_t || min_t < 0)) {
         intersection = x;
         mesh_id = current_bvh->mesh_id;
         min_t = t;

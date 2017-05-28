@@ -58,9 +58,9 @@ class Utils {
 
     int r, g, b;
     for (int i = 0; i < w * h; ++i) {
-      r = (int)image[i * 3 + 0] * 255;
-      g = (int)image[i * 3 + 1] * 255;
-      b = (int)image[i * 3 + 2] * 255;
+      r = image[i * 3 + 0] * 255;
+      g = image[i * 3 + 1] * 255;
+      b = image[i * 3 + 2] * 255;
 
       r = r < 0 ? 0 : (r > 255 ? 255 : r);
       g = g < 0 ? 0 : (g > 255 ? 255 : g);

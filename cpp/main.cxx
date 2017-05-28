@@ -16,13 +16,13 @@ using namespace std;
 
 namespace {
 
-const int k_max = 10, n_max = 1;
-const int rays_per_pixel = 1;
+int k_max = 50, n_max = 20;
+int rays_per_pixel = 1;
 
 /* camera parameters */
-const int w = 50, h = 50;
-const float fx = 30;
-const float fy = 30;
+const int w = 400, h = 300;
+const float fx = 500;
+const float fy = 500;
 const float cx = w / 2.0;
 const float cy = h / 2.0;
 const Vector3f t = Vector3f(0, 5, 20);
@@ -34,6 +34,9 @@ const Matrix3f R = Matrix3f(1,  0,  0,
 
 int main(int argc, char* argv[]) {
   assert(argc > 1);
+
+  if (argc > 2) k_max = stoi(argv[2]);
+  if (argc > 3) n_max = stoi(argv[3]);
 
 #ifdef VERBOSE
   std::cerr << "\n"
@@ -87,6 +90,9 @@ int main(int argc, char* argv[]) {
 
 #ifdef VERBOSE
   std::cerr << "+                        -                        |\n"
+            << "| Result written to: " << out_name << "\n"
+            << "+                    _________                    |\n"
+            << "+                        -                        |\n"
             << "+                    -* End *-                    +\n\n";
 #endif
 

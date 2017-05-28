@@ -19,7 +19,8 @@ PathTracer::Path PathTracer::operator()(const Ray& r, float Ni) {
   Vector3f normal;
   string mtl_name;
   tie(intersection, normal, mtl_name) = caster_(r);
-  const Material& mtl = scene_->materials().find(mtl_name)->second;
+  const auto& entry = scene_->materials().find(mtl_name);
+  const Material* mtl = entry != scene_->materials().cend() ? &entry->second : nullptr;
 
   /* No intersection, returns an invalid path with -1 probability. */
   if (isnan(normal.x()) || isnan(normal.y()) || isnan(normal.z())) {
@@ -34,7 +35,7 @@ PathTracer::Path PathTracer::operator()(const Ray& r, float Ni) {
   float cos_omega = -(L * N);
 
   /* opaque */
-  if (mtl.Tr == 0) {
+  if (mtl->Tr == 0) {
     Vector3f Nz = cos_omega < 0 ? -N : N;
     Vector3f Nx = (L + N * cos_omega).Normalize();
     Vector3f Ny = Cross(Nz, Nx).Normalize();
@@ -59,7 +60,7 @@ PathTracer::Path PathTracer::operator()(const Ray& r, float Ni) {
     if (cos_omega > 0) {
       /* enters a transparent object */
       float sin_omega = sqrt(1 - cos_omega * cos_omega);
-      float sin_theta = sin_omega * Ni / mtl.Ni;
+      float sin_theta = sin_omega * Ni / mtl->Ni;
       float cos_theta = sqrt(1 - sin_theta * sin_theta);
 
       Vector3f Npar = N;

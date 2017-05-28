@@ -5,17 +5,16 @@
 
 #include <cassert>
 #include <fstream>
-#include <queue>
-#include <string>
-
 #include <iomanip>
 #include <iostream>
+#include <queue>
+#include <string>
 
 using namespace std;
 
 namespace {
 
-void BFS(const Object::BVH* const root) {
+void BFS(const Object& obj, const Object::BVH* const root) {
   size_t nonleaves = 0;
   size_t leaves = 0;
   size_t invalid = 0;
@@ -36,6 +35,15 @@ void BFS(const Object::BVH* const root) {
         assert(current_bvh->aabb.diag().L2() >= queue.back()->aabb.diag().L2());
         assert(current_bvh->aabb.Envelop(queue.back()->aabb.llb()));
         assert(current_bvh->aabb.Envelop(queue.back()->aabb.ruf()));
+      }
+    } else if (current_bvh->leaf()) {
+      size_t mesh_id = current_bvh->mesh_id;
+      const Polygon& polygon = obj.GetPolygonByMeshID(mesh_id);
+      cerr << "|_Mesh_|" << setw(2) << mesh_id << " "
+           << setprecision(2) << fixed << polygon << "\n";
+      for (const auto& v : polygon.v()) {
+        assert(current_bvh->aabb.Envelop(v));
+        cerr << "|______" << setprecision(2) << fixed << v << "\n";
       }
     }
 
@@ -89,7 +97,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "+                    _________                    |\n"
               << "+                        -                        |\n"
               << "| Object name:   [" << entry.first << "]\n";
-    BFS(entry.second.bvh_root());
+    BFS(entry.second, entry.second.bvh_root());
   }
 
   std::cerr << "+                        -                        |\n"

@@ -58,13 +58,13 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
     bool xy_intersectant = false;
     if ((r.A.x() <= llb.x() && r.dir.x() <= 0) ||
         (r.A.x() >= ruf.x() && r.dir.x() >= 0) ||
-        (r.A.y() <= llb.y() && r.dir.x() <= 0) ||
+        (r.A.y() <= llb.y() && r.dir.y() <= 0) ||
         (r.A.y() >= ruf.y() && r.dir.y() >= 0)) {
       xy_intersectant = false;
     } else {
-      Vector3f l_r = Cross(Vector3f{r.A.x(), r.A.y(), 1},
-                           Vector3f{r.B.x(), r.B.y(), 1});
-      Vector3f l1{1, 0, -llb.x()}, l2{1, 0, -ruf.x()};
+      Vector3f l_r = Cross(Vector3f(r.A.x(), r.A.y(), 1),
+                           Vector3f(r.B.x(), r.B.y(), 1));
+      Vector3f l1(1, 0, -llb.x()), l2(1, 0, -ruf.x());
       Vector3f c1 = Cross(l_r, l1);
       Vector3f c2 = Cross(l_r, l2);
       float t1 = c1.y() / c1.z();
@@ -73,7 +73,7 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
           (t2 >= llb.y() && t2 <= ruf.y())) {
         xy_intersectant = true;
       } else {
-        Vector3f l3{0, 1, -llb.y()}, l4{0, 1, -ruf.y()};
+        Vector3f l3(0, 1, -llb.y()), l4(0, 1, -ruf.y());
         Vector3f c3 = Cross(l_r, l3);
         Vector3f c4 = Cross(l_r, l4);
         float t3 = c3.x() / c3.z();
@@ -92,9 +92,9 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
         (r.A.z() >= ruf.z() && r.dir.z() >= 0)) {
       xz_intersectant = false;
     } else {
-      Vector3f l_r = Cross(Vector3f{r.A.x(), r.A.z(), 1},
-                           Vector3f{r.B.x(), r.B.z(), 1});
-      Vector3f l1{1, 0, -llb.x()}, l2{1, 0, -ruf.x()};
+      Vector3f l_r = Cross(Vector3f(r.A.x(), r.A.z(), 1),
+                           Vector3f(r.B.x(), r.B.z(), 1));
+      Vector3f l1(1, 0, -llb.x()), l2(1, 0, -ruf.x());
       Vector3f c1 = Cross(l_r, l1);
       Vector3f c2 = Cross(l_r, l2);
       float t1 = c1.y() / c1.z();
@@ -103,7 +103,7 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
           (t2 >= llb.z() && t2 <= ruf.z())) {
         xz_intersectant = true;
       } else {
-        Vector3f l3{0, 1, -llb.z()}, l4{0, 1, -ruf.z()};
+        Vector3f l3(0, 1, -llb.z()), l4(0, 1, -ruf.z());
         Vector3f c3 = Cross(l_r, l3);
         Vector3f c4 = Cross(l_r, l4);
         float t3 = c3.x() / c3.z();
@@ -133,7 +133,7 @@ inline bool Intersection::operator()(const Ray& r, const AABB& aabb) const {
           (t2 >= llb.z() && t2 <= ruf.z())) {
         yz_intersectant = true;
       } else {
-        Vector3f l3{0, 1, -llb.z()}, l4{0, 1, -ruf.z()};
+        Vector3f l3(0, 1, -llb.z()), l4(0, 1, -ruf.z());
         Vector3f c3 = Cross(l_r, l3);
         Vector3f c4 = Cross(l_r, l4);
         float t3 = c3.x() / c3.z();
@@ -161,7 +161,7 @@ inline Point Intersection::operator()(const Ray& r, const Plane& pi) const {
   Point x = (*this)(l, pi);
   if (Utils::IsZero(x.w()))
     return Point::Zero();
-  else if (Vector3f(x - r.A) * r.dir <= 0)
+  else if (Vector3f(x - r.A) * r.dir < 0)
     return Point::Zero();
   else
     return x;

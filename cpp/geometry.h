@@ -57,11 +57,13 @@ typedef Vector4f Point;
  */
 struct Line {
   Line(const Vector3f& v1, const Vector3f& v2) {
-    A.x() = v1.x(); A.y() = v1.y(); A.z() = v1.z(); A.w() = 1;
-    B.x() = v2.x(); B.y() = v2.y(); B.z() = v2.z(); B.w() = 1;
+    A = Vector4f(v1); A.w() = 1;
+    B = Vector4f(v2); B.w() = 1;
   }
 
-  Line(const Point& x1, const Point& x2) : A(x1), B(x2) {}
+  Line(const Point& x1, const Point& x2) : A(x1), B(x2) {
+    A /= A.w(); B /= B.w();
+  }
 
   Vector4f A;
   Vector4f B;
@@ -123,29 +125,27 @@ class Polygon : public Plane {
     Vector3f d1 = v2 - v1;
     Vector3f d2 = v3 - v1;
     Vector3f normal = ::Cross(d1, d2).Normalize();
-    float d = v1 * normal;
     Plane::x() = normal.x();
     Plane::y() = normal.y();
     Plane::z() = normal.z();
-    Plane::w() = -d;
-    v_.push_back(Vector4f{v1.x(), v1.y(), v1.z(), 1});
-    v_.push_back(Vector4f{v2.x(), v2.y(), v2.z(), 1});
-    v_.push_back(Vector4f{v3.x(), v3.y(), v3.z(), 1});
+    Plane::w() = -v1 * normal;
+    v_.push_back(Vector4f(v1.x(), v1.y(), v1.z(), 1));
+    v_.push_back(Vector4f(v2.x(), v2.y(), v2.z(), 1));
+    v_.push_back(Vector4f(v3.x(), v3.y(), v3.z(), 1));
   }
 
   Polygon(const Vector3f& v1, const Vector3f& v2, const Vector3f& v3, const Vector3f& v4) {
     Vector3f d1 = v2 - v1;
     Vector3f d2 = v3 - v1;
-    Vector3f normal = ::Cross(d1, d2);
-    normal.NormalizeInPlace();
+    Vector3f normal = ::Cross(d1, d2).Normalize();
     Plane::x() = normal.x();
     Plane::y() = normal.y();
     Plane::z() = normal.z();
     Plane::w() = -v4 * normal;
-    v_.push_back(Vector4f{v1.x(), v1.y(), v1.z(), 1});
-    v_.push_back(Vector4f{v2.x(), v2.y(), v2.z(), 1});
-    v_.push_back(Vector4f{v3.x(), v3.y(), v3.z(), 1});
-    v_.push_back(Vector4f{v4.x(), v4.y(), v4.z(), 1});
+    v_.push_back(Vector4f(v1.x(), v1.y(), v1.z(), 1));
+    v_.push_back(Vector4f(v2.x(), v2.y(), v2.z(), 1));
+    v_.push_back(Vector4f(v3.x(), v3.y(), v3.z(), 1));
+    v_.push_back(Vector4f(v4.x(), v4.y(), v4.z(), 1));
   }
 
   std::vector<Point>& v() { return v_; }

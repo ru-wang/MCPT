@@ -12,13 +12,13 @@ struct Material;
 class PathTracer {
  public:
   struct Path {
-    Path(const Ray& r, const Vector3f& N, float p, const Material& mtl)
+    Path(const Ray& r, const Vector3f& N, float p, const Material* mtl)
         : r(r), N(N), p(p), mtl(mtl) {}
 
     Ray r;       /* the ray of the path */
     Vector3f N;  /* the normal at the interface */
     float p;     /* the probability */
-    const Material& mtl;
+    const Material* mtl;
   };
 
   PathTracer(const Scene* const scene) : caster_(scene), scene_(scene) {}

@@ -4,6 +4,7 @@
 #include "geometry.h"
 #include "scene.h"
 
+#include <cassert>
 #include <limits>
 #include <iostream>
 
@@ -61,7 +62,7 @@ Polygon Object::GetPolygonByMeshID(size_t mesh_id) const {
     const Vector3f& v4 = scene_->v()[rect->v_id[3]];
     return Polygon(v1, v2, v3, v4);
   } else {
-    return Polygon();
+    assert(false && "No corresponding polygon!");
   }
 }
 
