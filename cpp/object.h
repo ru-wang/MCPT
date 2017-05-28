@@ -81,7 +81,8 @@ struct Material {
 
   /*
    * The Ns exponent specifies the specular exponent for the current material.
-   * This defines the focus of the specular highlight.
+   * This defines the focus of the specular highlight. Ns values normally range
+   * from 0 to 1000.
    */
   float Ns;
 

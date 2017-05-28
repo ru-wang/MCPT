@@ -3,7 +3,6 @@
 
 #include "eigen.h"
 
-#include <cstddef>
 #include <vector>
 
 /*

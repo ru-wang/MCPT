@@ -159,9 +159,9 @@ inline Point Intersection::operator()(const Line& l, const Plane& pi) const {
 inline Point Intersection::operator()(const Ray& r, const Plane& pi) const {
   const Line& l = static_cast<const Line&>(r);
   Point x = (*this)(l, pi);
-  if (Utils::IsZero(x.w()))
+  if (Utils::IsZero(x.w()) || Utils::IsZero(x.L1()))
     return Point::Zero();
-  else if (Vector3f(x - r.A) * r.dir < 0)
+  else if (Vector3f(x - r.A) * r.dir <= 0)
     return Point::Zero();
   else
     return x;
@@ -174,33 +174,16 @@ inline Point Intersection::operator()(const Ray& r, const Polygon& f) const {
   if (Utils::IsZero(x.w()))
     return Point::Zero();
 
-  if (f.v().size() == 3) {
-    Vector4f v0 = f.v()[1] - f.v()[0];
-    Vector4f v1 = f.v()[2] - f.v()[0];
-    Vector4f v2 = x - f.v()[0];
-    float v2v0 = v2 * v0;
-    float v1v1 = v1 * v1;
-    float v2v1 = v2 * v1;
-    float v1v0 = v1 * v0;
-    float v0v0 = v0 * v0;
-    float u = (v2v0 * v1v1 - v2v1 * v1v0) / (v0v0 * v1v1 - v1v0 * v1v0);
-    float v = (v2v1 * v0v0 - v2v0 * v1v0) / (v1v1 * v0v0 - v1v0 * v1v0);
-    if (u >= 0 && v >= 0 && u + v <= 1)
-      return x;
-    else
+  for (size_t i = 0; i < f.v().size(); ++i) {
+    size_t j = i + 1 < f.v().size() ? i + 1 : 0;
+    size_t k = j + 1 < f.v().size() ? j + 1 : 0;
+    Vector3f AB(f.v()[j] - f.v()[i]);
+    Vector3f PA(f.v()[i] - x);
+    Vector3f CA(f.v()[i] - f.v()[k]);
+    if (Cross(PA, AB) * Cross(CA, AB) < 0)
       return Point::Zero();
-  } else {
-    for (size_t i = 0; i < f.v().size(); ++i) {
-      size_t j = i + 1 < f.v().size() ? i + 1 : 0;
-      size_t k = j + 1 < f.v().size() ? j + 1 : 0;
-      Vector3f AB(f.v()[j] - f.v()[i]);
-      Vector3f PA(f.v()[i] - x);
-      Vector3f CA(f.v()[i] - f.v()[k]);
-      if (Cross(PA, AB) * Cross(CA, AB) < 0)
-        return Point::Zero();
-    }
-    return x;
   }
+  return x;
 }
 
 #endif  /* MCPT_INTERSECTION_H_ */
