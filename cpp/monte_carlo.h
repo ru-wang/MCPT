@@ -17,30 +17,32 @@ class MonteCarlo {
   MonteCarlo(const Scene* const scene)
       : are_params_set_(false), result_(nullptr), tracer_(scene), scene_(scene) {}
 
-  ~MonteCarlo() { if (result_) delete result_, result_ = nullptr; }
+  ~MonteCarlo() { if (result_) delete [] result_, result_ = nullptr; }
 
   const float* result() const { return result_; }
 
   void SetParameters(int w, int h,
                      float fx, float fy, float cx, float cy,
-                     const Vector3f& t,
-                     const Matrix3f& R,
-                     int k_max, int n_max, int rays_per_pixel) {
+                     const Vector3f& t, const Matrix3f& R,
+                     float pdf_epsilon) {
     cam_.w = w; cam_.h = h;
     cam_.fx = fx; cam_.fy = fy; cam_.cx = cx; cam_.cy = cy;
     cam_.t = t; cam_.R = R;
-    k_max_ = k_max; n_max_ = n_max;
-    rays_per_pixel_ = rays_per_pixel;
+    pdf_epsilon_ = pdf_epsilon;
+    result_ = new float[cam_.w * cam_.h * 3]{0};
     are_params_set_ = true;
   }
 
-  void operator()();
+  void operator()(int n_max);
 
  private:
   /*
    * Samples a path with k points and returns the color at the pixel (u, v).
    */
-  Vector3f sample(int u, int v, int k);
+  Vector3f sample(float u, float v);
+
+  void backtrace(float u, float v, std::vector<PathTracer::Path>* paths);
+  void propagate(const std::vector<PathTracer::Path>& paths, Vector3f* estimator);
 
   /*
    * Parameters for the virtual camera.
@@ -52,13 +54,7 @@ class MonteCarlo {
     Matrix3f R;
   } cam_;
 
-  /*
-   * Parameters used by the Monte Carlo integrator.
-   */
-  int k_max_;           /* maximum path length for path tracer */
-  int n_max_;           /* maximum sampling times for Monte Carlo integrator */
-  int rays_per_pixel_;  /* eye rays per pixel */
-
+  float pdf_epsilon_;
   bool are_params_set_;
   float* result_;
 

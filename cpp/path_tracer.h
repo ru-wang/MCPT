@@ -5,6 +5,9 @@
 #include "geometry.h"
 #include "random.h"
 #include "ray_caster.h"
+#include "utils.h"
+
+#include <tuple>
 
 class Scene;
 struct Material;
@@ -31,12 +34,68 @@ class PathTracer {
    * The optional Ni specifies the index of refraction of the space where
    * the light is traveling. The default value is 1, meaning the vacuo.
    */
-  Path operator()(const Ray& r, float Ni = 1);
+  Path operator()(const Ray& r);
 
  private:
+  Vector4f GenDirWithP(const Vector3f& L, const Vector3f& N, const Material& mtl);
+
+  Vector4f GenCosinePowerDirWithP(const Vector3f& Nz, const Vector3f L, float Ns);
+  Vector4f GenCosineDirWithP(const Vector3f& Nz);
+
   RayCaster caster_;
-  CosineWeightedHemisphere random_;
+  CosinePowerWeightedHemisphere cpwh_;
+  CosineWeightedHemisphere cwh_;
   const Scene* const scene_;
 };
+
+inline Vector4f PathTracer::GenCosinePowerDirWithP(const Vector3f& Nz, const Vector3f L, float Ns) {
+  Vector3f aux;
+  if (Utils::IsZero(Nz.x()) && Utils::IsZero(Nz.y()))
+    aux = Vector3f(1, 0, 0);
+  else
+    aux = Vector3f(0, 0, 1);
+  Vector3f Nx = (aux - aux * Nz).Normalize();
+  Vector3f Ny = Cross(Nz, Nx).Normalize();
+
+  Vector3f V;
+  float phi, theta, p;
+  do {
+    std::tie(phi, theta, p) = cpwh_(Ns);
+    float sin_theta = std::sin(theta);
+    Vector3f H = std::cos(phi) * sin_theta * Nx +
+                 std::sin(phi) * sin_theta * Ny +
+                 std::cos(theta) * Nz;
+    H.NormalizeInPlace();
+    V = L - 2 * (L * H) * H;
+  } while (V * Nz <= 0);
+
+  Vector4f V_with_p(V.Normalize());
+  V_with_p.w() = p;
+  return V_with_p;
+}
+
+inline Vector4f PathTracer::GenCosineDirWithP(const Vector3f& Nz) {
+  Vector3f aux;
+  if (Utils::IsZero(Nz.x()) && Utils::IsZero(Nz.y()))
+    aux = Vector3f(1, 0, 0);
+  else
+    aux = Vector3f(0, 0, 1);
+  Vector3f Nx = (aux - aux * Nz).Normalize();
+  Vector3f Ny = Cross(Nz, Nx).Normalize();
+
+  Vector3f V;
+  float phi, theta, p;
+  do {
+    std::tie(phi, theta, p) = cwh_();
+    float sin_theta = sin(theta);
+    V = std::cos(phi) * sin_theta * Nx +
+        std::sin(phi) * sin_theta * Ny +
+        std::cos(theta) * Nz;
+  } while (V * Nz <= 0);
+
+  Vector4f V_with_p(V.Normalize());
+  V_with_p.w() = p;
+  return V_with_p;
+}
 
 #endif  /* MCPT_PATH_TRACER_H_ */

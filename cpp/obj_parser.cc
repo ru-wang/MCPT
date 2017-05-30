@@ -36,7 +36,7 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
       ss >> mtl_filename;
       mtl_filename = dir + "/" + mtl_filename;
 #ifdef VERBOSE
-      std::cerr << "| MTL file: " << mtl_filename << "\n";
+      std::cout << "| MTL file: " << mtl_filename << "\n";
 #endif
       LoadMTL(mtl_filename, scene);
     } else if (specifier == "g") {       /* specifies the next group name */

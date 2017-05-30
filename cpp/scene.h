@@ -33,13 +33,13 @@ class Scene {
   void Initialize() {
     for (auto& entry : objects_) {
 #ifdef VERBOSE
-      std::cerr << "| Constructing BVH for: " << entry.first << " ...";
+      std::cout << "| Constructing BVH for: " << entry.first << " ...";
 #endif
 
       entry.second.ConstructBVH();
 
 #ifdef VERBOSE
-      std::cerr << " ...\n";
+      std::cout << " ...\n";
 #endif
     }
   }

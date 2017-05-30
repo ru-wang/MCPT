@@ -10,11 +10,6 @@
 #include <queue>
 #include <tuple>
 
-#ifdef VERBOSE
-#include <iomanip>
-#include <iostream>
-#endif
-
 using namespace std;
 
 tuple<Point, Vector3f, string>
@@ -32,12 +27,14 @@ RayCaster::operator()(const Ray& r) const {
     const Object& obj = entry.second;
     tuple<Point, float, size_t> tp = cast(r, obj, intersectant);
     float t = get<1>(tp);
-    if ((not Utils::IsZero(get<0>(tp).w())) && (t < min_t || min_t < 0)) {
-      intersection = get<0>(tp);
-      min_t = t;
+    if (not Utils::IsZero(get<0>(tp).w())) {
+      if (t < min_t || min_t < 0) {
+        intersection = get<0>(tp);
+        min_t = t;
 
-      mesh = &obj.GetMeshByMeshID(get<2>(tp));
-      mtl_name = obj.GetMaterialNameByMeshID(get<2>(tp));
+        mesh = &obj.GetMeshByMeshID(get<2>(tp));
+        mtl_name = obj.GetMaterialNameByMeshID(get<2>(tp));
+      }
     }
   }
 
@@ -86,10 +83,12 @@ RayCaster::cast(const Ray& r, const Object& obj, const Intersection& intersectan
       Polygon f = obj.GetPolygonByMeshID(current_bvh->mesh_id);
       Point x = intersectant(r, f);
       float t = Vector3f(x - r.A) * r.dir;
-      if ((not Utils::IsZero(x.w())) && (t < min_t || min_t < 0)) {
-        intersection = x;
-        mesh_id = current_bvh->mesh_id;
-        min_t = t;
+      if (not Utils::IsZero(x.w())) {
+        if (t < min_t || min_t < 0) {
+          intersection = x;
+          mesh_id = current_bvh->mesh_id;
+          min_t = t;
+        }
       }
     }
   }

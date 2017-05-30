@@ -52,29 +52,81 @@ class Utils {
     }
   }
 
-  static void SaveRGBToPPM(const float* image, int w, int h, const std::string& str) {
+  static void SaveRGBToPPM(const float* image, float n, int w, int h, const std::string& str) {
+    static constexpr float kKernal[9] = {0.0625, 0.125, 0.0625,
+                                          0.125,  0.25,  0.125,
+                                         0.0625, 0.125, 0.0625};
+
     std::ofstream ofs(str);
     ofs << "P3\n" << w << " " << h << " 255\n";
 
-    int r, g, b;
+    float* before_image = new float[w * h * 3]{0};
+    float* after_image = new float[w * h * 3]{0};
+
+#pragma omp parallel for
     for (int i = 0; i < w * h; ++i) {
-      r = image[i * 3 + 0] * 255;
-      g = image[i * 3 + 1] * 255;
-      b = image[i * 3 + 2] * 255;
+      float& r = before_image[i * 3 + 0] = image[i * 3 + 0] / n;
+      float& g = before_image[i * 3 + 1] = image[i * 3 + 1] / n;
+      float& b = before_image[i * 3 + 2] = image[i * 3 + 2] / n;
 
-      r = r < 0 ? 0 : (r > 255 ? 255 : r);
-      g = g < 0 ? 0 : (g > 255 ? 255 : g);
-      b = b < 0 ? 0 : (b > 255 ? 255 : b);
+      r = r > 1 ? 255 : r * 255;
+      g = g > 1 ? 255 : g * 255;
+      b = b > 1 ? 255 : b * 255;
 
-      ofs << std::setw(3) << r << " " << std::setw(3) << g << " " << std::setw(3) << b;
+      if (r > 1 && r >= g && r >= b) {
+        g *= (255 / r);
+        b *= (255 / r);
+        r = 255;
+      } else
+      if (g > 1 && g >= r && g >= b) {
+        r *= (255 / g);
+        b *= (255 / g);
+        g = 255;
+      } else
+      if (b > 1 && b >= r && b >= g) {
+        r *= (255 / b);
+        g *= (255 / b);
+        b = 255;
+      } else {
+        r *= 255;
+        g *= 255;
+        b *= 255;
+      }
+    }
+
+    /* Gaussian filter */
+#pragma omp parallel for
+    for (int i = 1; i < h - 1; ++i) {
+      for (int j = 1; j < w - 1; ++j) {
+        int p = i * w + j;
+        for (int ki = -1; ki < 2; ++ki) {
+          for (int kj = -1; kj < 2; ++kj) {
+            int pk = (i + ki) * w + j + kj;
+            int kk = (1 + ki) * 3 + (1 + kj);
+            after_image[p * 3 + 0] += before_image[pk * 3 + 0] * kKernal[kk];
+            after_image[p * 3 + 1] += before_image[pk * 3 + 1] * kKernal[kk];
+            after_image[p * 3 + 2] += before_image[pk * 3 + 2] * kKernal[kk];
+          }
+        }
+      }
+    }
+
+    for (int i = 0; i < w * h; ++i) {
+      ofs << std::setw(8) << (int)after_image[i * 3 + 0] << " "
+          << std::setw(8) << (int)after_image[i * 3 + 1] << " "
+          << std::setw(8) << (int)after_image[i * 3 + 2];
       if ((i + 1) % w == 0)
         ofs << "\n";
       else
         ofs << " ";
     }
 
+    delete [] before_image, before_image = nullptr;
+    delete [] after_image, after_image = nullptr;
     ofs.close();
   }
+
+  static constexpr float Epsilon() { return kEpsilon; }
 
  private:
   static constexpr float kEpsilon = std::numeric_limits<float>::epsilon();

@@ -2,6 +2,7 @@
 #define MCPT_RANDOM_H_
 
 #include <cmath>
+#include <ctime>
 #include <random>
 #include <tuple>
 
@@ -57,7 +58,7 @@ class Uniform : public Distribution {
   virtual float operator()(float /* y */) const override { return 1 / range_; }
 
  private:
-  float range_;
+  const float range_;
 };
 
 /*
@@ -92,6 +93,35 @@ class Cosine : public Distribution {
 };
 
 /*
+ * The uniform weigted distribution for float.
+ *
+ * Generates a (φ,θ) in a hemisphere surface region.
+ * p(φ,θ)=p(φ)p(θ) where
+ *   p(φ)=1/(2π), p(θ)=2/π.
+ */
+class UniformWeightedHemisphere {
+ public:
+  UniformWeightedHemisphere(int seed = std::time(nullptr)) : u_(1, seed) {}
+
+  /*
+   * Returns a (φ,θ,p) tuple where p=p(φ,θ)=p(φ)p(θ).
+   */
+  std::tuple<float, float, float> operator()() {
+    float u1 = u_();
+    float u2 = u_();
+    float phi = 2 * M_PI * u1;
+    float theta = M_PI / 2 * u2;
+    float p1 = 1 / (2 * M_PI);
+    float p2 = 2 / M_PI;
+    float p = p1 * p2;
+    return std::make_tuple(phi, theta, p);
+  }
+
+ private:
+  Uniform u_;  /* uniform generator for φ and θ */
+};
+
+/*
  * The consine weigted distribution for float.
  *
  * Generates a (φ,θ) in a hemisphere surface region.
@@ -100,7 +130,7 @@ class Cosine : public Distribution {
  */
 class CosineWeightedHemisphere {
  public:
-  CosineWeightedHemisphere() = default;
+  CosineWeightedHemisphere(int seed = std::time(nullptr)) : u_(1, seed) {}
 
   /*
    * Returns a (φ,θ,p) tuple where p=p(φ,θ)=p(φ)p(θ).
@@ -111,7 +141,37 @@ class CosineWeightedHemisphere {
     float phi = 2 * M_PI * u1;
     float theta = asin(sqrt(u2));
     float p1 = 1 / (2 * M_PI);
-    float p2 = 2 * cos(theta) * sin(theta);
+    float p2 = sin(2 * theta);
+    float p = p1 * p2;
+    return std::make_tuple(phi, theta, p);
+  }
+
+ private:
+  Uniform u_;  /* uniform generator for φ and θ */
+};
+
+/*
+ * The cosᵃ weigted distribution for float.
+ *
+ * Generates a (φ,θ) in a hemisphere surface region.
+ * p(φ,θ)=p(φ)p(θ) where
+ *   p(φ)=1/(2π), p(θ)=(a+1)sinθcosᵃθ.
+ *
+ */
+class CosinePowerWeightedHemisphere {
+ public:
+  CosinePowerWeightedHemisphere(int seed = std::time(nullptr)) : u_(1, seed) {}
+
+  /*
+   * Returns a (φ,θ,p) tuple where p=p(φ,θ)=p(φ)p(θ).
+   */
+  std::tuple<float, float, float> operator()(float a) {
+    float u1 = u_();
+    float u2 = u_();
+    float phi = 2 * M_PI * u1;
+    float theta = acos(pow(u2, 1 / (a + 1)));
+    float p1 = 1 / (2 * M_PI);
+    float p2 = (a + 1) * sin(theta) * pow(cos(theta), a);
     float p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }

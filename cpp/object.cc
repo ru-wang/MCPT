@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <limits>
-#include <iostream>
 
 Object::BVH::~BVH() {
   if (nonleaf()) {

@@ -18,7 +18,7 @@ class RayCaster {
    * Returns the intersection and the normal at the intersection of the ray
    * and the objects in the scene, as well as the material name of the mesh.
    */
-  std::tuple<Point, Vector3f, std::string> operator()(const Ray& r) const;
+  std::tuple<Point, Vector3f, std::string> operator()(const Ray& r0) const;
 
  private:
 

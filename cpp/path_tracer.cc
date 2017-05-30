@@ -2,19 +2,15 @@
 
 #include "geometry.h"
 #include "scene.h"
+#include "utils.h"
 
 #include <cmath>
 #include <string>
 #include <tuple>
 
-#ifdef VERBOSE
-#include <iomanip>
-#include <iostream>
-#endif
-
 using namespace std;
 
-PathTracer::Path PathTracer::operator()(const Ray& r, float Ni) {
+PathTracer::Path PathTracer::operator()(const Ray& r) {
   Point intersection;
   Vector3f normal;
   string mtl_name;
@@ -22,71 +18,58 @@ PathTracer::Path PathTracer::operator()(const Ray& r, float Ni) {
   const auto& entry = scene_->materials().find(mtl_name);
   const Material* mtl = entry != scene_->materials().cend() ? &entry->second : nullptr;
 
-  /* No intersection, returns an invalid path with -1 probability. */
-  if (isnan(normal.x()) || isnan(normal.y()) || isnan(normal.z())) {
-#ifdef VERBOSE
-//    std::cout << r.A << " ==> " << r.dir << "\n";
-#endif
+  /* No intersection, returns an invalid path with pdf=-1. */
+  if (isnan(normal.x()) || isnan(normal.y()) || isnan(normal.z()))
     return PathTracer::Path(r, normal, -1, mtl);
-  }
 
-  const Vector3f& L = r.dir;
-  const Vector3f& N = normal;
+  Vector4f V_with_p = GenDirWithP(r.dir, normal, *mtl);
+  Vector3f V(V_with_p);
+  float p = V_with_p.w();
+  if (mtl->Tr == 0)
+    return PathTracer::Path(Ray(intersection, V), normal, p, mtl);
+  else
+    return PathTracer::Path(Ray(intersection, V), V, p, mtl);
+}
+
+Vector4f PathTracer::GenDirWithP(const Vector3f& L, const Vector3f& N, const Material& mtl) {
   float cos_omega = -(L * N);
 
   /* opaque */
-  if (mtl->Tr == 0) {
+  if (mtl.Tr == 0) {
     Vector3f Nz = cos_omega < 0 ? -N : N;
-    Vector3f Nx = (L + N * cos_omega).Normalize();
-    Vector3f Ny = Cross(Nz, Nx).Normalize();
-
-    Vector3f V;
-    float phi, theta, p;
-    do {
-      tie(phi, theta, p) = random_();
-      float sin_theta = sin(theta);
-      Vector3f H = cos(phi) * sin_theta * Nx +
-                   sin(phi) * sin_theta * Ny +
-                   cos(theta) * Nz;
-      H.NormalizeInPlace();
-      V = L - 2 * (L * H) * H;
-    } while (V * Nz <= 0);
-
-    return PathTracer::Path(Ray(intersection, V), N, p, mtl);
+    if (mtl.Ks.r() > 0 || mtl.Ks.g() > 0 || mtl.Ks.b() > 0)
+      /* glossy */
+      return GenCosinePowerDirWithP(Nz, L, mtl.Ns);
+    else
+      /* lambert */
+      return GenCosineDirWithP(Nz);
   }
 
   /* transparent */
   else {
+    float sin_omega = sqrt(1 - cos_omega * cos_omega);
+    Vector3f Npar = N;
+    Vector3f Nper = (L + N * cos_omega).Normalize();
+
+    Vector3f R, V;
+    float sin_theta, cos_theta;
     if (cos_omega > 0) {
-      /* enters a transparent object */
-      float sin_omega = sqrt(1 - cos_omega * cos_omega);
-      float sin_theta = sin_omega * Ni / mtl->Ni;
-      float cos_theta = sqrt(1 - sin_theta * sin_theta);
-
-      Vector3f Npar = N;
-      Vector3f Nper = (L + N * cos_omega).Normalize();
-      Vector3f V = Nper * sin_theta - Npar * cos_theta;
-      float p = 1;
-
-      return PathTracer::Path(Ray(intersection, V), N, p, mtl);
+      /* on entering a transparent object */
+      sin_theta = sin_omega / mtl.Ni;
+      cos_theta = sqrt(1 - sin_theta * sin_theta);
+      R = (Nper * sin_theta - Npar * cos_theta).Normalize();
+      return Vector4f(R.x(), R.y(), R.z(), 1);
     } else {
-      /* leaves a transparent object */
-      Vector3f Nz = N;
-      Vector3f Nx = (L + N * cos_omega).Normalize();
-      Vector3f Ny = Cross(Nz, Nx).Normalize();
-
-      Vector3f V;
-      float phi, theta, p;
-
-      do {
-        tie(phi, theta, p) = random_();
-        float sin_theta = sin(theta);
-        V = cos(phi) * sin_theta * Nx +
-            sin(phi) * sin_theta * Ny +
-            cos(theta) * Nz;
-      } while (V * N <= 0);
-
-      return PathTracer::Path(Ray(intersection, V), N, p, mtl);
+      /* on leaving a transparent object */
+      sin_theta = sin_omega * mtl.Ni;
+      if (sin_theta >= 1)
+        /* total reflection */
+        cos_theta = 0;
+      /* refraction */
+      else
+        cos_theta = sqrt(1 - sin_theta * sin_theta);
+      R = (Nper * sin_theta + Npar * cos_theta).Normalize();
+      return GenCosineDirWithP(R);
     }
   }
 }
