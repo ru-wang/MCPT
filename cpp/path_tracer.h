@@ -54,7 +54,7 @@ inline Vector4f PathTracer::GenCosinePowerDirWithP(const Vector3f& Nz, const Vec
     aux = Vector3f(1, 0, 0);
   else
     aux = Vector3f(0, 0, 1);
-  Vector3f Nx = (aux - aux * Nz).Normalize();
+  Vector3f Nx = (aux - aux * Nz * aux).Normalize();
   Vector3f Ny = Cross(Nz, Nx).Normalize();
 
   Vector3f V;
@@ -80,14 +80,14 @@ inline Vector4f PathTracer::GenCosineDirWithP(const Vector3f& Nz) {
     aux = Vector3f(1, 0, 0);
   else
     aux = Vector3f(0, 0, 1);
-  Vector3f Nx = (aux - aux * Nz).Normalize();
+  Vector3f Nx = (aux - aux * Nz * aux).Normalize();
   Vector3f Ny = Cross(Nz, Nx).Normalize();
 
   Vector3f V;
   float phi, theta, p;
   do {
     std::tie(phi, theta, p) = cwh_();
-    float sin_theta = sin(theta);
+    float sin_theta = std::sin(theta);
     V = std::cos(phi) * sin_theta * Nx +
         std::sin(phi) * sin_theta * Ny +
         std::cos(theta) * Nz;
