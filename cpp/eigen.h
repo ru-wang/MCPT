@@ -63,20 +63,6 @@ struct Vector {
     return result;
   }
 
-  Vector operator+(T scalar) const {
-    Vector result;
-    for (size_t i = 0; i < D; ++i)
-      result[i] = v[i] + scalar;
-    return result;
-  }
-
-  Vector operator-(T scalar) const {
-    Vector result;
-    for (size_t i = 0; i < D; ++i)
-      result[i] = v[i] - scalar;
-    return result;
-  }
-
   T operator*(const Vector& other) const {
     T product = 0;
     for (size_t i = 0; i < D; ++i)
@@ -110,18 +96,6 @@ struct Vector {
     return *this;
   }
 
-  Vector& operator+=(T scalar) {
-    for (size_t i = 0; i < D; ++i)
-      v[i] += scalar;
-    return *this;
-  }
-
-  Vector& operator-=(T scalar) {
-    for (size_t i = 0; i < D; ++i)
-      v[i] -= scalar;
-    return *this;
-  }
-
   Vector& operator*=(T scalar) {
     for (size_t i = 0; i < D; ++i)
       v[i] *= scalar;
@@ -145,6 +119,11 @@ struct Vector {
     result.y() = z() * other.x() - x() * other.z();
     result.z() = x() * other.y() - y() * other.x();
     return result;
+  }
+
+  T Cross2D(const Vector& other) const {
+    assert(D == 2 && "2-D Cross product is only support for 2-D vectors!");
+    return x() * other.y() - y() * other.x();
   }
 
   int L0() const {
@@ -226,7 +205,7 @@ struct Vector {
   }
 
   static const Vector& Ones() {
-    static const Vector ones = Vector() + 1;
+    static const Vector ones = All(1);
     return ones;
   }
 
@@ -254,6 +233,12 @@ Vector<T, D> Cross(const Vector<T, D>& v1, const Vector<T, D>& v2) {
   result.y() = v1.z() * v2.x() - v1.x() * v2.z();
   result.z() = v1.x() * v2.y() - v1.y() * v2.x();
   return result;
+}
+
+template <typename T, size_t D>
+T Cross2D(const Vector<T, D> v1, const Vector<T, D>& v2) {
+  assert(D == 2 && "2-D Cross product is only support for 2-D vectors!");
+  return v1.x() * v2.y() - v1.y() * v2.x();
 }
 
 template <typename T, size_t D>

@@ -27,7 +27,7 @@ void MonteCarlo::operator()(int n_max) {
 #endif
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) num_threads(8)
+#pragma omp parallel for schedule(dynamic) num_threads(16)
 #endif
   for (int n = 0; n < n_max; ++n) {
 #ifdef VERBOSE
@@ -46,7 +46,7 @@ void MonteCarlo::operator()(int n_max) {
 #ifdef VERBOSE
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double, std::ratio<1, 1000>> milliseconds = end - start;
-  std::cout << '\r'
+  std::cout << '\n'
             << "| <Iteration " << std::setw(setw) << n + 1 << "/" << n_max << ">"
             << " [==============] " << milliseconds.count() << "ms";
 #endif
@@ -76,15 +76,24 @@ void MonteCarlo::backtrace(float u, float v, std::vector<PathTracer::Path>* path
                                         (v - cam_.cy) / cam_.fy, 1);
   Vector4f view_point = Vector4f(cam_.t);
   view_point.w() = 1;
+
   PathTracer::Path path(Ray(view_point, view_dir), view_dir.Normalize(), 1, nullptr);
 
-  float pdf = path.p;
-  PathTracer::Path next_path = path;
-  while (pdf > pdf_epsilon_) {
-    next_path = tracer_(path.r);
-    paths->push_back(path);
+  float path_pdf = path.p;
+  paths->push_back(path);
+  for (int i = 0; i < k_max_; ++i) {
+    PathTracer::Path next_path = tracer_(path.r);
     path = next_path;
-    pdf *= next_path.p;
+
+    path_pdf *= next_path.p;
+    if (path_pdf <= Utils::Epsilon())
+      break;
+
+    paths->push_back(next_path);
+    if (next_path.mtl->Ka.r() > 0 ||
+        next_path.mtl->Ka.g() > 0 ||
+        next_path.mtl->Ka.b() > 0)
+      break;
   }
 }
 
@@ -102,7 +111,7 @@ void MonteCarlo::propagate(const std::vector<PathTracer::Path>& paths, Vector3f*
     if (mtl->Tr == 0) {
       V = -(rit + 1)->r.dir;
       H = (-L + V).Normalize();
-      N = rit->N * L > 0 ? -rit->N : rit->N;
+      N = rit->N * V < 0 ? -rit->N : rit->N;
 
       Ia = mtl->Ka;
       Id.SetZero();
@@ -133,6 +142,8 @@ void MonteCarlo::propagate(const std::vector<PathTracer::Path>& paths, Vector3f*
 
       Ia = mtl->Ka;
       Id.SetZero();
+
+      /* lambert */
       float cos_phi = N * (-L);
       if (cos_phi > 0) {  /* on entering a transparent object */
         Id = Vector3f(Ii.r() * mtl->Kd.r(),
@@ -143,11 +154,12 @@ void MonteCarlo::propagate(const std::vector<PathTracer::Path>& paths, Vector3f*
                                 Ii.g() * mtl->Kd.g(),
                                 Ii.b() * mtl->Kd.b()) * -cos_phi;
       }
-      Ii = Ia + Id;
 
+      Ii = Ia + Id;
       L = V;
       pdf *= ((rit + 1)->p);
     }
   }
+
   *estimator = Ii / pdf;
 }

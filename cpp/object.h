@@ -12,6 +12,9 @@ class Scene;
 struct Mesh {
   virtual ~Mesh() {}
   virtual size_t v_num() const = 0;
+
+  Polygon f;
+  Vector3f n;
 };
 
 struct TriMesh : public Mesh {
@@ -203,12 +206,13 @@ class Object {
   void set_smooth(int smooth) { smooth_ = smooth; }
   std::vector<Mesh*>& mesh_list() { return mesh_list_; }
   BVH* bvh_root() { return bvh_root_; }
+  const std::vector<BVH*>& bvh_leaves() const { return bvh_leaves_; }
 
   void AddMaterial(const std::string& mtl_name);
   const std::string& GetMaterialNameByMeshID(size_t mesh_id) const;
   const Material& GetMaterialByMeshID(size_t mesh_id) const;
   const Mesh& GetMeshByMeshID(size_t mesh_id) const;
-  Polygon GetPolygonByMeshID(size_t mesh_id) const;
+  const Polygon& GetPolygonByMeshID(size_t mesh_id) const;
 
   /*
    * Construct a BVH tree for itself.
@@ -228,6 +232,7 @@ class Object {
   std::vector<std::pair<std::string, size_t>> material_table_;
 
   BVH* bvh_root_;
+  std::vector<BVH*> bvh_leaves_;
   const Scene* const scene_;
 
   Object(const Object&) = delete;

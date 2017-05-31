@@ -105,6 +105,13 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
           triangle->vt_id[i] = ids[i * 3 + 1];
           triangle->vn_id[i] = ids[i * 3 + 2];
         }
+        const Vector3f& v1 = scene->v()[triangle->v_id[0]];
+        const Vector3f& v2 = scene->v()[triangle->v_id[1]];
+        const Vector3f& v3 = scene->v()[triangle->v_id[2]];
+        triangle->f = Polygon(v1, v2, v3);
+        for (size_t i = 0; i < 3; ++i)
+          triangle->n += scene->vn()[triangle->vn_id[i]];
+        triangle->n.NormalizeInPlace();
         current_obj->mesh_list().push_back(triangle);
       } else if (ids.size() / 3 == 4) {  /* it is a rectangle */
         RectMesh* rectangle = new RectMesh;
@@ -113,6 +120,14 @@ void OBJParser::LoadOBJ(const string& obj_filename, Scene* scene) {
           rectangle->vt_id[i] = ids[i * 3 + 1];
           rectangle->vn_id[i] = ids[i * 3 + 2];
         }
+        const Vector3f& v1 = scene->v()[rectangle->v_id[0]];
+        const Vector3f& v2 = scene->v()[rectangle->v_id[1]];
+        const Vector3f& v3 = scene->v()[rectangle->v_id[2]];
+        const Vector3f& v4 = scene->v()[rectangle->v_id[3]];
+        rectangle->f = Polygon(v1, v2, v3, v4);
+        for (size_t i = 0; i < 4; ++i)
+          rectangle->n += scene->vn()[rectangle->vn_id[i]];
+        rectangle->n.NormalizeInPlace();
         current_obj->mesh_list().push_back(rectangle);
       }
     }

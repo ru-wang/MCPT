@@ -62,37 +62,6 @@ class Uniform : public Distribution {
 };
 
 /*
- * Consine distribution for float.
- * Y~p(Y) where p(y)=cos(y).
- *
- * Generates a consine distributed variable from [0, π/2].
- * Also provides a function to compute the PDF for a given value.
- */
-class Cosine : public Distribution {
- public:
-  Cosine(int seed = 0) : Distribution(seed) {}
-
-  virtual ~Cosine() override {}
-
-  /*
-   * When no parameter is given, generates the next random value.
-   *
-   * Assuem X~p(X) is a uniform distributed variable,
-   * where p(x)=1, then Y=arcsin(X) is subjected to the
-   * new distribution Y~p(Y), where p(y) = cos(y).
-   */
-  virtual float operator()() override { return asin(uniform_(generator_)); }
-
-  /*
-   * Computes the PDF for a given value.
-   *
-   * The input should be in the range of [0, π/2].
-   * Otherwise the ouput will be zero.
-   */
-  virtual float operator()(float y) const override { return cos(y); }
-};
-
-/*
  * The uniform weigted distribution for float.
  *
  * Generates a (φ,θ) in a hemisphere surface region.
@@ -109,16 +78,21 @@ class UniformWeightedHemisphere {
   std::tuple<float, float, float> operator()() {
     float u1 = u_();
     float u2 = u_();
-    float phi = 2 * M_PI * u1;
-    float theta = M_PI / 2 * u2;
-    float p1 = 1 / (2 * M_PI);
-    float p2 = 2 / M_PI;
+    float phi = kDoublePi * u1;
+    float theta = kHalfPi * u2;
+    float p1 = kDoublePiInv;
+    float p2 = kHalfPiInv;
     float p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }
 
  private:
   Uniform u_;  /* uniform generator for φ and θ */
+
+  static constexpr float kDoublePi = 2 * M_PI;
+  static constexpr float kDoublePiInv = 1 / kDoublePi;
+  static constexpr float kHalfPi = M_PI / 2;
+  static constexpr float kHalfPiInv = 1 / kHalfPi;
 };
 
 /*
@@ -138,16 +112,19 @@ class CosineWeightedHemisphere {
   std::tuple<float, float, float> operator()() {
     float u1 = u_();
     float u2 = u_();
-    float phi = 2 * M_PI * u1;
-    float theta = asin(sqrt(u2));
-    float p1 = 1 / (2 * M_PI);
-    float p2 = sin(2 * theta);
+    float phi = kDoublePi * u1;
+    float theta = std::asin(std::sqrt(u2));
+    float p1 = kDoublePiInv;
+    float p2 = 2 * std::sin(theta) * std::cos(theta);
     float p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }
 
  private:
   Uniform u_;  /* uniform generator for φ and θ */
+
+  static constexpr float kDoublePi = 2 * M_PI;
+  static constexpr float kDoublePiInv = 1 / kDoublePi;
 };
 
 /*
@@ -168,16 +145,20 @@ class CosinePowerWeightedHemisphere {
   std::tuple<float, float, float> operator()(float a) {
     float u1 = u_();
     float u2 = u_();
-    float phi = 2 * M_PI * u1;
-    float theta = acos(pow(u2, 1 / (a + 1)));
-    float p1 = 1 / (2 * M_PI);
-    float p2 = (a + 1) * sin(theta) * pow(cos(theta), a);
+    float phi = kDoublePi * u1;
+    float cos_theta = pow(u2, 1 / (a + 1));
+    float theta = acos(cos_theta);
+    float p1 = kDoublePiInv;
+    float p2 = (a + 1) * sin(theta) * pow(cos_theta, a);
     float p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }
 
  private:
   Uniform u_;  /* uniform generator for φ and θ */
+
+  static constexpr float kDoublePi = 2 * M_PI;
+  static constexpr float kDoublePiInv = 1 / kDoublePi;
 };
 
 #endif  /* MCPT_RANDOM_H_ */

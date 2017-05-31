@@ -68,8 +68,7 @@ Vector4f PathTracer::GenDirWithP(const Vector3f& L, const Vector3f& N, const Mat
       /* refraction */
       else
         cos_theta = sqrt(1 - sin_theta * sin_theta);
-      R = (Nper * sin_theta + Npar * cos_theta).Normalize();
-      return GenCosineDirWithP(R);
+      return GenCosineDirWithP(N);
     }
   }
 }

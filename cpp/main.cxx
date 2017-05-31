@@ -16,13 +16,10 @@ using namespace std;
 
 namespace {
 
-/* Monte Carlo path pdf epsilon */
-const float pdf_epsilon = 0.00005;
-
 /* camera parameters */
-const int w = 200, h = 180;
-const float fx = 200;
-const float fy = 200;
+const int w = 500, h = 500;
+const float fx = 500;
+const float fy = 500;
 const float cx = w / 2.0;
 const float cy = h / 2.0;
 const Vector3f t = Vector3f(0, 5, 15);
@@ -33,7 +30,7 @@ const Matrix3f R = Matrix3f(1,  0,  0,
 }
 
 int main(int argc, char* argv[]) {
-  assert(argc > 2);
+  assert(argc > 3);
 
 #ifdef VERBOSE
   std::cout << "\n"
@@ -52,7 +49,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef VERBOSE
   std::cout << "| Out file: " << raw_name << "_{";
-  for (int i = 2; i < argc - 1; ++i)
+  for (int i = 3; i < argc - 1; ++i)
     std::cout << argv[i] << ",";
   std::cout << argv[argc - 1] << "}.ppm\n";
 #endif
@@ -82,10 +79,11 @@ int main(int argc, char* argv[]) {
             << "+                                                 |\n";
 #endif
 
+  int k_max = stoi(argv[2]);
   int n_max = 0, last_n_max = 0;
   MonteCarlo monte_carlo(&scene);
-  monte_carlo.SetParameters(w, h, fx, fy, cx, cy, t, R, pdf_epsilon);
-  for (int i = 2; i < argc; last_n_max = n_max, ++i) {
+  monte_carlo.SetParameters(w, h, fx, fy, cx, cy, t, R, k_max);
+  for (int i = 3; i < argc; last_n_max = n_max, ++i) {
     n_max = stoi(argv[i]);
     monte_carlo(n_max - last_n_max);
     const float* image = monte_carlo.result();

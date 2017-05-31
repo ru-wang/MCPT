@@ -46,7 +46,7 @@ int main() {
        << ToString(Vector<float, 4>{1, 2, 3, 4}) << "\n"
        << "\n"
        << ToString(Vector<float, 4>::Zero())     << "\n"
-       << ToString(Vector<float, 4>::Zero() + 8) << "\n"
+       << ToString(Vector<float, 4>::Zero() + Vector<float, 4>::All(8)) << "\n"
        << ToString(Vector<float, 4>::Ones())     << "\n"
        << "\n"
        << ToString(Vector<float, 4>(1, 2, 3, 4) * 10) << "\n"

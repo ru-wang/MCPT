@@ -72,26 +72,6 @@ class Utils {
       r = r > 1 ? 255 : r * 255;
       g = g > 1 ? 255 : g * 255;
       b = b > 1 ? 255 : b * 255;
-
-      if (r > 1 && r >= g && r >= b) {
-        g *= (255 / r);
-        b *= (255 / r);
-        r = 255;
-      } else
-      if (g > 1 && g >= r && g >= b) {
-        r *= (255 / g);
-        b *= (255 / g);
-        g = 255;
-      } else
-      if (b > 1 && b >= r && b >= g) {
-        r *= (255 / b);
-        g *= (255 / b);
-        b = 255;
-      } else {
-        r *= 255;
-        g *= 255;
-        b *= 255;
-      }
     }
 
     /* Gaussian filter */
@@ -112,9 +92,9 @@ class Utils {
     }
 
     for (int i = 0; i < w * h; ++i) {
-      ofs << std::setw(8) << (int)after_image[i * 3 + 0] << " "
-          << std::setw(8) << (int)after_image[i * 3 + 1] << " "
-          << std::setw(8) << (int)after_image[i * 3 + 2];
+      ofs << std::setw(8) << (int)before_image[i * 3 + 0] << " "
+          << std::setw(8) << (int)before_image[i * 3 + 1] << " "
+          << std::setw(8) << (int)before_image[i * 3 + 2];
       if ((i + 1) % w == 0)
         ofs << "\n";
       else

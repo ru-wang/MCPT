@@ -24,11 +24,11 @@ class MonteCarlo {
   void SetParameters(int w, int h,
                      float fx, float fy, float cx, float cy,
                      const Vector3f& t, const Matrix3f& R,
-                     float pdf_epsilon) {
+                     int k_max) {
     cam_.w = w; cam_.h = h;
     cam_.fx = fx; cam_.fy = fy; cam_.cx = cx; cam_.cy = cy;
     cam_.t = t; cam_.R = R;
-    pdf_epsilon_ = pdf_epsilon;
+    k_max_ = k_max;
     result_ = new float[cam_.w * cam_.h * 3]{0};
     are_params_set_ = true;
   }
@@ -54,7 +54,7 @@ class MonteCarlo {
     Matrix3f R;
   } cam_;
 
-  float pdf_epsilon_;
+  int k_max_;
   bool are_params_set_;
   float* result_;
 

@@ -161,7 +161,7 @@ inline Point Intersection::operator()(const Ray& r, const Plane& pi) const {
   Point x = (*this)(l, pi);
   if (Utils::IsZero(x.w()))
     return Point::Zero();
-  else if (Vector3f(x - r.A) * r.dir < Utils::Epsilon())
+  else if (Vector3f(x - r.A) * r.dir <= Utils::Epsilon())
     return Point::Zero();
   else
     return x;
@@ -180,7 +180,7 @@ inline Point Intersection::operator()(const Ray& r, const Polygon& f) const {
     Vector3f AB(f.v()[j] - f.v()[i]);
     Vector3f PA(f.v()[i] - x);
     Vector3f CA(f.v()[i] - f.v()[k]);
-    if (Cross(PA, AB) * Cross(CA, AB) <= 0)
+    if (Cross(PA, AB) * Cross(CA, AB) <= Utils::Epsilon())
       return Point::Zero();
   }
   return x;

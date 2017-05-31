@@ -45,24 +45,9 @@ const Mesh& Object::GetMeshByMeshID(size_t mesh_id) const {
   return *mesh_list_[mesh_id];
 }
 
-Polygon Object::GetPolygonByMeshID(size_t mesh_id) const {
+const Polygon& Object::GetPolygonByMeshID(size_t mesh_id) const {
   const Mesh* mesh = mesh_list_[mesh_id];
-  if (mesh->v_num() == 3) {
-    const TriMesh* tri = dynamic_cast<const TriMesh*>(mesh);
-    const Vector3f& v1 = scene_->v()[tri->v_id[0]];
-    const Vector3f& v2 = scene_->v()[tri->v_id[1]];
-    const Vector3f& v3 = scene_->v()[tri->v_id[2]];
-    return Polygon(v1, v2, v3);
-  } else if (mesh->v_num() == 4) {
-    const RectMesh* rect = dynamic_cast<const RectMesh*>(mesh);
-    const Vector3f& v1 = scene_->v()[rect->v_id[0]];
-    const Vector3f& v2 = scene_->v()[rect->v_id[1]];
-    const Vector3f& v3 = scene_->v()[rect->v_id[2]];
-    const Vector3f& v4 = scene_->v()[rect->v_id[3]];
-    return Polygon(v1, v2, v3, v4);
-  } else {
-    assert(false && "No corresponding polygon!");
-  }
+  return mesh->f;
 }
 
 void Object::ConstructBVH() {
@@ -107,6 +92,7 @@ void Object::ConstructBVH() {
     obj_ruf.z() = ruf.z() > obj_ruf.z() ? ruf.z() : obj_ruf.z();
   }
   obj_llb.w() = 1; obj_ruf.w() = 1;
+  bvh_leaves_ = bvh_leaves;
 
   /* constructs the subnodes */
   bvh_root_ = new BVH(AABB(obj_llb, obj_ruf));
