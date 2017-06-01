@@ -32,7 +32,7 @@ void MonteCarlo::operator()(int n_max) {
 #endif
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic, cam_.w * cam_.h / 16) num_threads(16)
+#pragma omp parallel for schedule(dynamic, cam_.w * cam_.h / 16) num_threads(8)
 #endif
     for (int p = 0; p < cam_.w * cam_.h; ++p) {
       int u = p % cam_.w;
@@ -87,7 +87,7 @@ void MonteCarlo::backtrace(double u, double v, std::vector<PathTracer::Path>* pa
     path = next_path;
 
     path_pdf *= next_path.p;
-    if (path_pdf <= 1e-5)           /* too litte path PDF, stops to avoid divided by 0 */
+    if (path_pdf <= 5e-5)           /* too litte path PDF, stops to avoid divided by 0 */
       break;
 
     paths->push_back(next_path);

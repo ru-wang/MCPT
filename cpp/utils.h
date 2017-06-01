@@ -65,13 +65,25 @@ class Utils {
 
 #pragma omp parallel for
     for (int i = 0; i < w * h; ++i) {
-      double& r = before_image[i * 3 + 0] = image[i * 3 + 0] / n;
-      double& g = before_image[i * 3 + 1] = image[i * 3 + 1] / n;
-      double& b = before_image[i * 3 + 2] = image[i * 3 + 2] / n;
+      double& r = before_image[i * 3 + 0] = image[i * 3 + 0] * 255 / n;
+      double& g = before_image[i * 3 + 1] = image[i * 3 + 1] * 255 / n;
+      double& b = before_image[i * 3 + 2] = image[i * 3 + 2] * 255 / n;
 
-      r = r > 1 ? 255 : r * 255;
-      g = g > 1 ? 255 : g * 255;
-      b = b > 1 ? 255 : b * 255;
+      if (r > 255 && r >= g && r >= b) {
+        g *= (255 / r);
+        b *= (255 / r);
+        r = 255;
+      } else
+      if (g > 255 && g >= r && g >= b) {
+        r *= (255 / g);
+        b *= (255 / g);
+        g = 255;
+      } else
+      if (b > 255 && b >= r && b >= g) {
+        r *= (255 / b);
+        g *= (255 / b);
+        b = 255;
+      }
     }
 
     /* Gaussian filter */

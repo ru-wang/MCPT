@@ -93,6 +93,8 @@ int main(int argc, char* argv[]) {
     t = Vector3f(0, 5, 16);
   else if (raw_name.back() == '2')
     t = Vector3f(2, 3, 20);
+  else
+    t = Vector3f(0, 5, 16);
 
   int k_max = stoi(argv[2]);
   int n_max = 0, last_n_max = 0;
