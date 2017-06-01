@@ -169,7 +169,7 @@ class AABB {
     ct_ /= ct_.w();
   }
 
-  AABB(float left, float lower, float front, float right, float upper, float back)
+  AABB(double left, double lower, double front, double right, double upper, double back)
       : llb_{left, lower, front, 1}, ruf_{right, upper, back, 1}, diag_(ruf_ - llb_) {
     ct_ = (llb_ + ruf_) / 2;
     ct_ /= ct_.w();
@@ -193,7 +193,7 @@ class AABB {
     ct_ /= ct_.w();
   }
 
-  void Reset(float left, float lower, float front, float right, float upper, float back) {
+  void Reset(double left, double lower, double front, double right, double upper, double back) {
     llb_ = Vector4f(left, lower, front, 1);
     ruf_ = Vector4f(right, upper, back, 1);
     diag_ = Vector3f(ruf_ - llb_);

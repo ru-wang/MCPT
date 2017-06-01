@@ -15,12 +15,12 @@ struct Material;
 class PathTracer {
  public:
   struct Path {
-    Path(const Ray& r, const Vector3f& N, float p, const Material* mtl)
+    Path(const Ray& r, const Vector3f& N, double p, const Material* mtl)
         : r(r), N(N), p(p), mtl(mtl) {}
 
     Ray r;       /* the ray of the path */
     Vector3f N;  /* the normal at the interface */
-    float p;     /* the probability */
+    double p;     /* the probability */
     const Material* mtl;
   };
 
@@ -39,7 +39,7 @@ class PathTracer {
  private:
   Vector4f GenDirWithP(const Vector3f& L, const Vector3f& N, const Material& mtl);
 
-  Vector4f GenCosinePowerDirWithP(const Vector3f& Nz, const Vector3f L, float Ns);
+  Vector4f GenCosinePowerDirWithP(const Vector3f& Nz, const Vector3f L, double Ns);
   Vector4f GenCosineDirWithP(const Vector3f& Nz);
 
   RayCaster caster_;
@@ -48,7 +48,7 @@ class PathTracer {
   const Scene* const scene_;
 };
 
-inline Vector4f PathTracer::GenCosinePowerDirWithP(const Vector3f& Nz, const Vector3f L, float Ns) {
+inline Vector4f PathTracer::GenCosinePowerDirWithP(const Vector3f& Nz, const Vector3f L, double Ns) {
   Vector3f aux;
   if (Utils::IsZero(Nz.x()) && Utils::IsZero(Nz.y()))
     aux = Vector3f(1, 0, 0);
@@ -58,16 +58,16 @@ inline Vector4f PathTracer::GenCosinePowerDirWithP(const Vector3f& Nz, const Vec
   Vector3f Ny = Cross(Nz, Nx).Normalize();
 
   Vector3f V;
-  float phi, theta, p;
+  double phi, theta, p;
   do {
     std::tie(phi, theta, p) = cpwh_(Ns);
-    float sin_theta = std::sin(theta);
+    double sin_theta = std::sin(theta);
     Vector3f H = std::cos(phi) * sin_theta * Nx +
                  std::sin(phi) * sin_theta * Ny +
                  std::cos(theta) * Nz;
     H.NormalizeInPlace();
     V = L - 2 * (L * H) * H;
-  } while (V * Nz <= 0);
+  } while (V * Nz <= Utils::Epsilon());
 
   Vector4f V_with_p(V.Normalize());
   V_with_p.w() = p;
@@ -84,14 +84,14 @@ inline Vector4f PathTracer::GenCosineDirWithP(const Vector3f& Nz) {
   Vector3f Ny = Cross(Nz, Nx).Normalize();
 
   Vector3f V;
-  float phi, theta, p;
+  double phi, theta, p;
   do {
     std::tie(phi, theta, p) = cwh_();
-    float sin_theta = std::sin(theta);
+    double sin_theta = std::sin(theta);
     V = std::cos(phi) * sin_theta * Nx +
         std::sin(phi) * sin_theta * Ny +
         std::cos(theta) * Nz;
-  } while (V * Nz <= 0);
+  } while (V * Nz <= Utils::Epsilon());
 
   Vector4f V_with_p(V.Normalize());
   V_with_p.w() = p;

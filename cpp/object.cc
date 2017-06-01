@@ -52,12 +52,12 @@ const Polygon& Object::GetPolygonByMeshID(size_t mesh_id) const {
 
 void Object::ConstructBVH() {
   /* constructs the root node */
-  Vector4f obj_llb = Vector4f::All(std::numeric_limits<float>::max());
-  Vector4f obj_ruf = Vector4f::All(std::numeric_limits<float>::min());
+  Vector4f obj_llb = Vector4f::All(std::numeric_limits<double>::max());
+  Vector4f obj_ruf = Vector4f::All(std::numeric_limits<double>::min());
   std::vector<BVH*> bvh_leaves;
   for (size_t i = 1; i < mesh_list_.size(); ++i) {
-    Vector4f llb = Vector4f::All(std::numeric_limits<float>::max());
-    Vector4f ruf = Vector4f::All(std::numeric_limits<float>::min());
+    Vector4f llb = Vector4f::All(std::numeric_limits<double>::max());
+    Vector4f ruf = Vector4f::All(std::numeric_limits<double>::min());
     const Mesh* mesh = mesh_list_[i];
     if (mesh->v_num() == 3) {
       const TriMesh* tri = dynamic_cast<const TriMesh*>(mesh);

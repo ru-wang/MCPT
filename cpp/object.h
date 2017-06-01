@@ -65,7 +65,7 @@ struct Material {
    *   - transparency: glass on
    *   - reflection: ray trace on
    */
-  float illum;
+  double illum;
 
   /*
    * The Kd statement specifies the diffuse reflectivity using RGB values.
@@ -87,20 +87,20 @@ struct Material {
    * This defines the focus of the specular highlight. Ns values normally range
    * from 0 to 1000.
    */
-  float Ns;
+  double Ns;
 
   /*
    * The Ni optical density specifies the optical density for the surface.
    * This is also known as index of refraction.
    */
-  float Ni;
+  double Ni;
 
   /*
    * The Tr transparency specifies the transparency value for the material.
    * Unlike real transparency, the result does not depend upon the thickness of the object.
    * A value of 0.0 is the default and means fully opaque.
    */
-  float Tr;
+  double Tr;
 };
 
 class Object {

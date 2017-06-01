@@ -121,11 +121,6 @@ struct Vector {
     return result;
   }
 
-  T Cross2D(const Vector& other) const {
-    assert(D == 2 && "2-D Cross product is only support for 2-D vectors!");
-    return x() * other.y() - y() * other.x();
-  }
-
   int L0() const {
     int result = 0;
     for (size_t i = 0; i < D; ++i) {
@@ -236,12 +231,6 @@ Vector<T, D> Cross(const Vector<T, D>& v1, const Vector<T, D>& v2) {
 }
 
 template <typename T, size_t D>
-T Cross2D(const Vector<T, D> v1, const Vector<T, D>& v2) {
-  assert(D == 2 && "2-D Cross product is only support for 2-D vectors!");
-  return v1.x() * v2.y() - v1.y() * v2.x();
-}
-
-template <typename T, size_t D>
 std::ostream& operator<<(std::ostream& os, const Vector<T, D>& v) {
   os << "[ ";
   for (size_t i = 0; i < D; ++i)
@@ -250,10 +239,10 @@ std::ostream& operator<<(std::ostream& os, const Vector<T, D>& v) {
   return os;
 }
 
-typedef Vector<float, 1> Vector1f;
-typedef Vector<float, 2> Vector2f;
-typedef Vector<float, 3> Vector3f;
-typedef Vector<float, 4> Vector4f;
+typedef Vector<double, 1> Vector1f;
+typedef Vector<double, 2> Vector2f;
+typedef Vector<double, 3> Vector3f;
+typedef Vector<double, 4> Vector4f;
 typedef Vector<int, 1> Vector1i;
 typedef Vector<int, 2> Vector2i;
 typedef Vector<int, 3> Vector3i;
@@ -311,9 +300,9 @@ struct Matrix {
   Vector<T, D> m[D];
 };
 
-typedef Matrix<float, 1> Matrix1f;
-typedef Matrix<float, 2> Matrix2f;
-typedef Matrix<float, 3> Matrix3f;
-typedef Matrix<float, 4> Matrix4f;
+typedef Matrix<double, 1> Matrix1f;
+typedef Matrix<double, 2> Matrix2f;
+typedef Matrix<double, 3> Matrix3f;
+typedef Matrix<double, 4> Matrix4f;
 
 #endif  /* MCPT_EIGEN_H_ */

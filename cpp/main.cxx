@@ -4,10 +4,14 @@
 #include "utils.h"
 
 #include <cassert>
+#include <cstring>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 #include <string>
 
 #ifdef VERBOSE
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #endif
@@ -17,12 +21,13 @@ using namespace std;
 namespace {
 
 /* camera parameters */
-const int w = 500, h = 500;
-const float fx = 500;
-const float fy = 500;
-const float cx = w / 2.0;
-const float cy = h / 2.0;
-const Vector3f t = Vector3f(0, 5, 15);
+const int w = 640, h = 480;
+const double fx = 480;
+const double fy = 480;
+const double cx = w / 2.0;
+const double cy = h / 2.0;
+//const Vector3f t = Vector3f(0, 5, 16);
+//const Vector3f t = Vector3f(2, 3, 20);
 const Matrix3f R = Matrix3f(1,  0,  0,
                             0, -1,  0,
                             0,  0, -1);
@@ -49,9 +54,13 @@ int main(int argc, char* argv[]) {
 
 #ifdef VERBOSE
   std::cout << "| Out file: " << raw_name << "_{";
+  std::cout << std::setfill('0');
   for (int i = 3; i < argc - 1; ++i)
-    std::cout << argv[i] << ",";
-  std::cout << argv[argc - 1] << "}.ppm\n";
+    std::cout << std::setw(std::strlen(argv[argc - 1]))
+              << argv[i] << ",";
+  std::cout << std::setw(std::strlen(argv[argc - 1]))
+            << argv[argc - 1] << "}.ppm\n";
+  std::cout << std::setfill(' ');
 #endif
 
 #ifdef VERBOSE
@@ -79,16 +88,25 @@ int main(int argc, char* argv[]) {
             << "+                                                 |\n";
 #endif
 
+  Vector3f t;
+  if (raw_name.back() == '1')
+    t = Vector3f(0, 5, 16);
+  else if (raw_name.back() == '2')
+    t = Vector3f(2, 3, 20);
+
   int k_max = stoi(argv[2]);
   int n_max = 0, last_n_max = 0;
   MonteCarlo monte_carlo(&scene);
   monte_carlo.SetParameters(w, h, fx, fy, cx, cy, t, R, k_max);
+  int setwidth = std::strlen(argv[argc - 1]);
   for (int i = 3; i < argc; last_n_max = n_max, ++i) {
     n_max = stoi(argv[i]);
     monte_carlo(n_max - last_n_max);
-    const float* image = monte_carlo.result();
+    const double* image = monte_carlo.result();
 
-    string out_name = raw_name + "_" + string(argv[i]) + ".ppm";
+    stringstream ss;
+    ss << raw_name << "_" << setfill('0') << setw(setwidth) << n_max << ".ppm";
+    string out_name = ss.str();
     Utils::SaveRGBToPPM(image, n_max, w, h, out_name);
 
 #ifdef VERBOSE

@@ -12,11 +12,11 @@
 
 class Utils {
  public:
-  static bool Equal(float a, float b) {
+  static bool Equal(double a, double b) {
     return std::fabs(a - b) < kEpsilon;
   }
 
-  static bool IsZero(float a) {
+  static bool IsZero(double a) {
     return std::fabs(a) < kEpsilon;
   }
 
@@ -52,22 +52,22 @@ class Utils {
     }
   }
 
-  static void SaveRGBToPPM(const float* image, float n, int w, int h, const std::string& str) {
-    static constexpr float kKernal[9] = {0.0625, 0.125, 0.0625,
+  static void SaveRGBToPPM(const double* image, double n, int w, int h, const std::string& str) {
+    static constexpr double kKernal[9] = {0.0625, 0.125, 0.0625,
                                           0.125,  0.25,  0.125,
                                          0.0625, 0.125, 0.0625};
 
     std::ofstream ofs(str);
     ofs << "P3\n" << w << " " << h << " 255\n";
 
-    float* before_image = new float[w * h * 3]{0};
-    float* after_image = new float[w * h * 3]{0};
+    double* before_image = new double[w * h * 3]{0};
+    double* after_image = new double[w * h * 3]{0};
 
 #pragma omp parallel for
     for (int i = 0; i < w * h; ++i) {
-      float& r = before_image[i * 3 + 0] = image[i * 3 + 0] / n;
-      float& g = before_image[i * 3 + 1] = image[i * 3 + 1] / n;
-      float& b = before_image[i * 3 + 2] = image[i * 3 + 2] / n;
+      double& r = before_image[i * 3 + 0] = image[i * 3 + 0] / n;
+      double& g = before_image[i * 3 + 1] = image[i * 3 + 1] / n;
+      double& b = before_image[i * 3 + 2] = image[i * 3 + 2] / n;
 
       r = r > 1 ? 255 : r * 255;
       g = g > 1 ? 255 : g * 255;
@@ -92,9 +92,9 @@ class Utils {
     }
 
     for (int i = 0; i < w * h; ++i) {
-      ofs << std::setw(8) << (int)before_image[i * 3 + 0] << " "
-          << std::setw(8) << (int)before_image[i * 3 + 1] << " "
-          << std::setw(8) << (int)before_image[i * 3 + 2];
+      ofs << std::setw(8) << (int)after_image[i * 3 + 0] << " "
+          << std::setw(8) << (int)after_image[i * 3 + 1] << " "
+          << std::setw(8) << (int)after_image[i * 3 + 2];
       if ((i + 1) % w == 0)
         ofs << "\n";
       else
@@ -106,10 +106,10 @@ class Utils {
     ofs.close();
   }
 
-  static constexpr float Epsilon() { return kEpsilon; }
+  static constexpr double Epsilon() { return kEpsilon; }
 
  private:
-  static constexpr float kEpsilon = std::numeric_limits<float>::epsilon();
+  static constexpr double kEpsilon = std::numeric_limits<double>::epsilon();
 
   Utils() = delete;
   ~Utils() = delete;

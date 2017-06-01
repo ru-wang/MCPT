@@ -17,7 +17,7 @@ RayCaster::operator()(const Ray& r) const {
   Intersection intersectant;
 
   Point intersection = Point::Zero();
-  float min_t = -1;
+  double min_t = -1;
 
   const Mesh* mesh = nullptr;
   string mtl_name;
@@ -25,9 +25,9 @@ RayCaster::operator()(const Ray& r) const {
   /* computes intersections with all the objects, selects the closest one */
   for (const auto& entry : scene_->objects()) {
     const Object& obj = entry.second;
-    tuple<Point, float, size_t> tp = cast(r, obj, intersectant);
+    tuple<Point, double, size_t> tp = cast(r, obj, intersectant);
     if (not Utils::IsZero(get<0>(tp).w())) {
-      float t = get<1>(tp);
+      double t = get<1>(tp);
       if (t < min_t || min_t < 0) {
         intersection = get<0>(tp);
         min_t = t;
@@ -42,16 +42,16 @@ RayCaster::operator()(const Ray& r) const {
     /* computes the normal vector */
     return make_tuple(intersection, mesh->n, mtl_name);
   } else {
-    Vector3f nan = Vector3f::All(numeric_limits<float>::quiet_NaN());
+    Vector3f nan = Vector3f::All(numeric_limits<double>::quiet_NaN());
     return make_tuple(intersection, nan, mtl_name);
   }
 }
 
-tuple<Point, float, size_t>
+tuple<Point, double, size_t>
 RayCaster::cast(const Ray& r, const Object& obj, const Intersection& intersectant) const {
   Point intersection = Point::Zero();
   size_t mesh_id = 0;
-  float min_t = -1;
+  double min_t = -1;
 
   /* traverses the BVH tree using BFS */
   queue<const Object::BVH*> queue;
@@ -72,7 +72,7 @@ RayCaster::cast(const Ray& r, const Object& obj, const Intersection& intersectan
       const Polygon& f = obj.GetPolygonByMeshID(current_bvh->mesh_id);
       Point x = intersectant(r, f);
       if (not Utils::IsZero(x.w())) {
-        float t = Vector3f(x - r.A) * r.dir;
+        double t = Vector3f(x - r.A) * r.dir;
         if (t < min_t || min_t < 0) {
           intersection = x;
           mesh_id = current_bvh->mesh_id;

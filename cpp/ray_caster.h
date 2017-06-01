@@ -26,7 +26,7 @@ class RayCaster {
    * Returns the intersection of the ray and an object, and its projection length
    * on the ray, as well as the material name of the mesh.
    */
-  std::tuple<Point, float, size_t>
+  std::tuple<Point, double, size_t>
   cast(const Ray& r, const Object& obj, const Intersection& intersectant) const;
 
   const Scene* const scene_;

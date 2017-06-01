@@ -7,7 +7,7 @@
 #include <tuple>
 
 /*
- * Generic random distribution class for float.
+ * Generic random distribution class for double.
  *
  * Generates a random variable subjected to a specific distribution.
  * Also provides a function to compute the PDF for a given value.
@@ -23,7 +23,7 @@ class Distribution {
    *
    * All derived classes should override this function.
    */
-  virtual float operator()() = 0;
+  virtual double operator()() = 0;
 
 
   /*
@@ -31,38 +31,38 @@ class Distribution {
    *
    * All derived classes should override this function.
    */
-  virtual float operator()(float y) const = 0;
+  virtual double operator()(double y) const = 0;
 
  protected:
   std::mt19937 generator_;
-  std::uniform_real_distribution<float> uniform_;
+  std::uniform_real_distribution<double> uniform_;
 };
 
 /*
- * Uniform distribution for float.
+ * Uniform distribution for double.
  */
 class Uniform : public Distribution {
  public:
-   Uniform(float range = 1, int seed = 0) : Distribution(seed), range_(range) {}
+   Uniform(double range = 1, int seed = 0) : Distribution(seed), range_(range) {}
 
    virtual ~Uniform() override {}
 
   /*
    * When no parameter is given, generates the next random value.
    */
-  virtual float operator()() override { return uniform_(generator_) * range_; }
+  virtual double operator()() override { return uniform_(generator_) * range_; }
 
   /*
    * Computes the PDF for a given value.
    */
-  virtual float operator()(float /* y */) const override { return 1 / range_; }
+  virtual double operator()(double /* y */) const override { return 1 / range_; }
 
  private:
-  const float range_;
+  const double range_;
 };
 
 /*
- * The uniform weigted distribution for float.
+ * The uniform weigted distribution for double.
  *
  * Generates a (φ,θ) in a hemisphere surface region.
  * p(φ,θ)=p(φ)p(θ) where
@@ -75,28 +75,28 @@ class UniformWeightedHemisphere {
   /*
    * Returns a (φ,θ,p) tuple where p=p(φ,θ)=p(φ)p(θ).
    */
-  std::tuple<float, float, float> operator()() {
-    float u1 = u_();
-    float u2 = u_();
-    float phi = kDoublePi * u1;
-    float theta = kHalfPi * u2;
-    float p1 = kDoublePiInv;
-    float p2 = kHalfPiInv;
-    float p = p1 * p2;
+  std::tuple<double, double, double> operator()() {
+    double u1 = u_();
+    double u2 = u_();
+    double phi = kDoublePi * u1;
+    double theta = kHalfPi * u2;
+    double p1 = kDoublePiInv;
+    double p2 = kHalfPiInv;
+    double p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }
 
  private:
   Uniform u_;  /* uniform generator for φ and θ */
 
-  static constexpr float kDoublePi = 2 * M_PI;
-  static constexpr float kDoublePiInv = 1 / kDoublePi;
-  static constexpr float kHalfPi = M_PI / 2;
-  static constexpr float kHalfPiInv = 1 / kHalfPi;
+  static constexpr double kDoublePi = 2 * M_PI;
+  static constexpr double kDoublePiInv = 1 / kDoublePi;
+  static constexpr double kHalfPi = M_PI / 2;
+  static constexpr double kHalfPiInv = 1 / kHalfPi;
 };
 
 /*
- * The consine weigted distribution for float.
+ * The consine weigted distribution for double.
  *
  * Generates a (φ,θ) in a hemisphere surface region.
  * p(φ,θ)=p(φ)p(θ) where
@@ -109,26 +109,26 @@ class CosineWeightedHemisphere {
   /*
    * Returns a (φ,θ,p) tuple where p=p(φ,θ)=p(φ)p(θ).
    */
-  std::tuple<float, float, float> operator()() {
-    float u1 = u_();
-    float u2 = u_();
-    float phi = kDoublePi * u1;
-    float theta = std::asin(std::sqrt(u2));
-    float p1 = kDoublePiInv;
-    float p2 = 2 * std::sin(theta) * std::cos(theta);
-    float p = p1 * p2;
+  std::tuple<double, double, double> operator()() {
+    double u1 = u_();
+    double u2 = u_();
+    double phi = kDoublePi * u1;
+    double theta = std::asin(std::sqrt(u2));
+    double p1 = kDoublePiInv;
+    double p2 = 2 * std::sin(theta) * std::cos(theta);
+    double p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }
 
  private:
   Uniform u_;  /* uniform generator for φ and θ */
 
-  static constexpr float kDoublePi = 2 * M_PI;
-  static constexpr float kDoublePiInv = 1 / kDoublePi;
+  static constexpr double kDoublePi = 2 * M_PI;
+  static constexpr double kDoublePiInv = 1 / kDoublePi;
 };
 
 /*
- * The cosᵃ weigted distribution for float.
+ * The cosᵃ weigted distribution for double.
  *
  * Generates a (φ,θ) in a hemisphere surface region.
  * p(φ,θ)=p(φ)p(θ) where
@@ -142,23 +142,23 @@ class CosinePowerWeightedHemisphere {
   /*
    * Returns a (φ,θ,p) tuple where p=p(φ,θ)=p(φ)p(θ).
    */
-  std::tuple<float, float, float> operator()(float a) {
-    float u1 = u_();
-    float u2 = u_();
-    float phi = kDoublePi * u1;
-    float cos_theta = pow(u2, 1 / (a + 1));
-    float theta = acos(cos_theta);
-    float p1 = kDoublePiInv;
-    float p2 = (a + 1) * sin(theta) * pow(cos_theta, a);
-    float p = p1 * p2;
+  std::tuple<double, double, double> operator()(double a) {
+    double u1 = u_();
+    double u2 = u_();
+    double phi = kDoublePi * u1;
+    double cos_theta = pow(u2, 1 / (a + 1));
+    double theta = acos(cos_theta);
+    double p1 = kDoublePiInv;
+    double p2 = (a + 1) * sin(theta) * pow(cos_theta, a);
+    double p = p1 * p2;
     return std::make_tuple(phi, theta, p);
   }
 
  private:
   Uniform u_;  /* uniform generator for φ and θ */
 
-  static constexpr float kDoublePi = 2 * M_PI;
-  static constexpr float kDoublePiInv = 1 / kDoublePi;
+  static constexpr double kDoublePi = 2 * M_PI;
+  static constexpr double kDoublePiInv = 1 / kDoublePi;
 };
 
 #endif  /* MCPT_RANDOM_H_ */

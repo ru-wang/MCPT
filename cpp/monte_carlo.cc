@@ -26,14 +26,14 @@ void MonteCarlo::operator()(int n_max) {
   auto start = std::chrono::system_clock::now();
 #endif
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) num_threads(16)
-#endif
   for (int n = 0; n < n_max; ++n) {
 #ifdef VERBOSE
     auto start = std::chrono::system_clock::now();
 #endif
 
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, cam_.w * cam_.h / 16) num_threads(16)
+#endif
     for (int p = 0; p < cam_.w * cam_.h; ++p) {
       int u = p % cam_.w;
       int v = p / cam_.w;
@@ -46,9 +46,10 @@ void MonteCarlo::operator()(int n_max) {
 #ifdef VERBOSE
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double, std::ratio<1, 1000>> milliseconds = end - start;
-  std::cout << '\n'
+  std::cout << '\r'
             << "| <Iteration " << std::setw(setw) << n + 1 << "/" << n_max << ">"
-            << " [==============] " << milliseconds.count() << "ms";
+            << " [======" << std::setw(3) << (n + 1) * 100 / n_max << "%"
+            << "======] " << milliseconds.count() << "ms" << std::flush;
 #endif
   }
 
@@ -61,7 +62,7 @@ void MonteCarlo::operator()(int n_max) {
 #endif
 }
 
-Vector3f MonteCarlo::sample(float u, float v) {
+Vector3f MonteCarlo::sample(double u, double v) {
   std::vector<PathTracer::Path> paths;
   Vector3f estimator;
 
@@ -71,7 +72,7 @@ Vector3f MonteCarlo::sample(float u, float v) {
   return estimator;
 }
 
-void MonteCarlo::backtrace(float u, float v, std::vector<PathTracer::Path>* paths) {
+void MonteCarlo::backtrace(double u, double v, std::vector<PathTracer::Path>* paths) {
   Vector3f view_dir = cam_.R * Vector3f((u - cam_.cx) / cam_.fx,
                                         (v - cam_.cy) / cam_.fy, 1);
   Vector4f view_point = Vector4f(cam_.t);
@@ -79,27 +80,27 @@ void MonteCarlo::backtrace(float u, float v, std::vector<PathTracer::Path>* path
 
   PathTracer::Path path(Ray(view_point, view_dir), view_dir.Normalize(), 1, nullptr);
 
-  float path_pdf = path.p;
+  double path_pdf = path.p;
   paths->push_back(path);
   for (int i = 0; i < k_max_; ++i) {
     PathTracer::Path next_path = tracer_(path.r);
     path = next_path;
 
     path_pdf *= next_path.p;
-    if (path_pdf <= Utils::Epsilon())
+    if (path_pdf <= 1e-5)           /* too litte path PDF, stops to avoid divided by 0 */
       break;
 
     paths->push_back(next_path);
     if (next_path.mtl->Ka.r() > 0 ||
         next_path.mtl->Ka.g() > 0 ||
-        next_path.mtl->Ka.b() > 0)
+        next_path.mtl->Ka.b() > 0)  /* on reaching the light source, stops */
       break;
   }
 }
 
 void MonteCarlo::propagate(const std::vector<PathTracer::Path>& paths, Vector3f* estimator) {
   /* Prepares for the first light transport. */
-  float pdf = 1;
+  double pdf = 1;
   Vector3f Ii;
   Vector3f V, L, N, H;
   Vector3f Ia, Id, Is;
@@ -118,13 +119,13 @@ void MonteCarlo::propagate(const std::vector<PathTracer::Path>& paths, Vector3f*
       Is.SetZero();
 
       /* diffusion */
-      float cos_phi = N * (-L);
+      double cos_phi = N * (-L);
       Id = Vector3f(Ii.r() * mtl->Kd.r(),
                     Ii.g() * mtl->Kd.g(),
                     Ii.b() * mtl->Kd.b()) * cos_phi;
       if (mtl->Ks.r() > 0 || mtl->Ks.g() > 0 || mtl->Ks.b() > 0) {
         /* specular */
-        float cos_theta = H * N;
+        double cos_theta = H * N;
         Is = Vector3f(Ii.r() * mtl->Ks.r(),
                       Ii.g() * mtl->Ks.g(),
                       Ii.b() * mtl->Ks.b()) * pow(cos_theta, mtl->Ns);
@@ -144,7 +145,7 @@ void MonteCarlo::propagate(const std::vector<PathTracer::Path>& paths, Vector3f*
       Id.SetZero();
 
       /* lambert */
-      float cos_phi = N * (-L);
+      double cos_phi = N * (-L);
       if (cos_phi > 0) {  /* on entering a transparent object */
         Id = Vector3f(Ii.r() * mtl->Kd.r(),
                       Ii.g() * mtl->Kd.g(),

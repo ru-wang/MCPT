@@ -19,17 +19,17 @@ class MonteCarlo {
 
   ~MonteCarlo() { if (result_) delete [] result_, result_ = nullptr; }
 
-  const float* result() const { return result_; }
+  const double* result() const { return result_; }
 
   void SetParameters(int w, int h,
-                     float fx, float fy, float cx, float cy,
+                     double fx, double fy, double cx, double cy,
                      const Vector3f& t, const Matrix3f& R,
                      int k_max) {
     cam_.w = w; cam_.h = h;
     cam_.fx = fx; cam_.fy = fy; cam_.cx = cx; cam_.cy = cy;
     cam_.t = t; cam_.R = R;
     k_max_ = k_max;
-    result_ = new float[cam_.w * cam_.h * 3]{0};
+    result_ = new double[cam_.w * cam_.h * 3]{0};
     are_params_set_ = true;
   }
 
@@ -39,9 +39,9 @@ class MonteCarlo {
   /*
    * Samples a path with k points and returns the color at the pixel (u, v).
    */
-  Vector3f sample(float u, float v);
+  Vector3f sample(double u, double v);
 
-  void backtrace(float u, float v, std::vector<PathTracer::Path>* paths);
+  void backtrace(double u, double v, std::vector<PathTracer::Path>* paths);
   void propagate(const std::vector<PathTracer::Path>& paths, Vector3f* estimator);
 
   /*
@@ -49,14 +49,14 @@ class MonteCarlo {
    */
   struct {
     int w, h;
-    float fx, fy, cx, cy;
+    double fx, fy, cx, cy;
     Vector3f t;
     Matrix3f R;
   } cam_;
 
   int k_max_;
   bool are_params_set_;
-  float* result_;
+  double* result_;
 
   PathTracer tracer_;
   const Scene* const scene_;

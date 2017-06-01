@@ -38,38 +38,38 @@ string ToString(const Matrix<T, D>& mat) {
 }
 
 int main() {
-  cerr << ToString(Vector<float, 4>(1, 2))       << "\n"
-       << ToString(Vector<float, 4>(1, 2, 3))    << "\n"
-       << ToString(Vector<float, 4>(1, 2, 3, 4)) << "\n"
-       << ToString(Vector<float, 4>{1, 2})       << "\n"
-       << ToString(Vector<float, 4>{1, 2, 3})    << "\n"
-       << ToString(Vector<float, 4>{1, 2, 3, 4}) << "\n"
+  cerr << ToString(Vector<double, 4>(1, 2))       << "\n"
+       << ToString(Vector<double, 4>(1, 2, 3))    << "\n"
+       << ToString(Vector<double, 4>(1, 2, 3, 4)) << "\n"
+       << ToString(Vector<double, 4>{1, 2})       << "\n"
+       << ToString(Vector<double, 4>{1, 2, 3})    << "\n"
+       << ToString(Vector<double, 4>{1, 2, 3, 4}) << "\n"
        << "\n"
-       << ToString(Vector<float, 4>::Zero())     << "\n"
-       << ToString(Vector<float, 4>::Zero() + Vector<float, 4>::All(8)) << "\n"
-       << ToString(Vector<float, 4>::Ones())     << "\n"
+       << ToString(Vector<double, 4>::Zero())     << "\n"
+       << ToString(Vector<double, 4>::Zero() + Vector<double, 4>::All(8)) << "\n"
+       << ToString(Vector<double, 4>::Ones())     << "\n"
        << "\n"
-       << ToString(Vector<float, 4>(1, 2, 3, 4) * 10) << "\n"
-       << ToString(Vector<float, 4>(1, 2, 3, 4) / 10) << "\n"
-       << Vector<float, 4>::Ones() * Vector<float, 4>(1, 2, 3, 4) << "\n"
-       << ToString(Cross(Vector<float, 3>(0, 1, 0),
-                         Vector<float, 3>(1, 0, 0))) << "\n"
-       << ToString(Vector<float, 3>(1, 0, 0).Cross(
-                   Vector<float, 3>(0, 1, 0))) << "\n"
+       << ToString(Vector<double, 4>(1, 2, 3, 4) * 10) << "\n"
+       << ToString(Vector<double, 4>(1, 2, 3, 4) / 10) << "\n"
+       << Vector<double, 4>::Ones() * Vector<double, 4>(1, 2, 3, 4) << "\n"
+       << ToString(Cross(Vector<double, 3>(0, 1, 0),
+                         Vector<double, 3>(1, 0, 0))) << "\n"
+       << ToString(Vector<double, 3>(1, 0, 0).Cross(
+                   Vector<double, 3>(0, 1, 0))) << "\n"
        << "\n"
-       << Vector<float, 3>(1, 0, 1).L0() << "\n"
-       << Vector<float, 3>(1, -1, 1).L1() << "\n"
-       << Vector<float, 3>(1, 1, 1).L2() << "\n"
-       << ToString(Vector<float, 3>(1, 2, 2).Normalize()) << "\n"
-       << ToString(Vector<float, 4>(1, 2, 3, 4).Normalize()) << "\n"
+       << Vector<double, 3>(1, 0, 1).L0() << "\n"
+       << Vector<double, 3>(1, -1, 1).L1() << "\n"
+       << Vector<double, 3>(1, 1, 1).L2() << "\n"
+       << ToString(Vector<double, 3>(1, 2, 2).Normalize()) << "\n"
+       << ToString(Vector<double, 4>(1, 2, 3, 4).Normalize()) << "\n"
        << "\n"
-       << Vector<float, 3>(1, 0, 0).Cos(Vector<float, 3>(1, 1, 0)) << "\n"
-       << Cos(Vector<float, 3>(1, 0, 0), Vector<float, 3>(0, 1, 0)) << "\n"
+       << Vector<double, 3>(1, 0, 0).Cos(Vector<double, 3>(1, 1, 0)) << "\n"
+       << Cos(Vector<double, 3>(1, 0, 0), Vector<double, 3>(0, 1, 0)) << "\n"
        << "\n"
-       << ToString(Matrix<float, 4>::Identity()) << "\n"
-       << ToString(Matrix<float, 4>::Diagonal(Vector<float, 4>(1, 2, 3, 4))) << "\n"
-       << ToString(Matrix<float, 4>::Diagonal(Vector<float, 4>(1, 2, 3, 4)) *
-                   Vector<float, 4>(1, 2, 3, -4)) << "\n"
+       << ToString(Matrix<double, 4>::Identity()) << "\n"
+       << ToString(Matrix<double, 4>::Diagonal(Vector<double, 4>(1, 2, 3, 4))) << "\n"
+       << ToString(Matrix<double, 4>::Diagonal(Vector<double, 4>(1, 2, 3, 4)) *
+                   Vector<double, 4>(1, 2, 3, -4)) << "\n"
        ;
   return 0;
 }
