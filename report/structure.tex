@@ -1,0 +1,53 @@
+%----------------------------------------------------------------------------------------
+%	REQUIRED PACKAGES
+%----------------------------------------------------------------------------------------
+
+\usepackage{xeCJK}
+\usepackage[includeheadfoot,left=1in,right=1in,top=.5in,bottom=.5in]{geometry}
+\usepackage{amsmath, amssymb, bm}
+\usepackage{XCharter}
+\usepackage[euler-digits]{eulervm}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{caption,listings,xcolor}
+\usepackage[hidelinks]{hyperref}
+
+%----------------------------------------------------------------------------------------
+%	CUSTOM COMMANDS
+%----------------------------------------------------------------------------------------
+
+\renewcommand{\today}{\number\year 年 \number\month 月 \number\day 日}
+\newcommand{\articletitle}[1]{\renewcommand{\articletitle}{#1}}
+\newcommand{\docdate}[1]{\renewcommand{\docdate}{#1}}
+\newcommand{\docauthor}[1]{\renewcommand{\docauthor}{#1}}
+
+\newcommand{\printtitle}{
+  \begin{center}
+    \textbf{\LARGE{\articletitle}}
+
+    \docauthor
+  \end{center}
+}
+
+\renewcommand\contentsname{目录}
+\renewcommand\figurename{图}
+
+%----------------------------------------------------------------------------------------
+%	STRUCTURE MODIFICATIONS
+%----------------------------------------------------------------------------------------
+
+\captionsetup{font={scriptsize}}
+\setlength{\parskip}{10pt}
+\setlength{\parindent}{0em}
+\setCJKmainfont{FZNewShuSong-Z10}
+\lstset{
+  frame=none,
+  language=sh,
+  backgroundcolor=\color[RGB]{245,245,244},
+  keywordstyle=\color[RGB]{40,40,255},
+  numberstyle=\footnotesize\color{darkgray},
+  commentstyle=\it\color[RGB]{0,96,96},
+  stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},
+  showstringspaces=false
+}
