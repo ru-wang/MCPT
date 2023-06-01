@@ -1,0 +1,32 @@
+﻿---
+BasedOnStyle: Google
+
+AccessModifierOffset: -2
+AllowAllArgumentsOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: false
+BinPackParameters: false
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 100
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+DerivePointerAlignment: false
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex:           '^<c[[:alpha:]_]+>'
+    Priority:        1
+    CaseSensitive:   true
+  - Regex:           '^<[[:alpha:]_]+>'
+    Priority:        2
+    CaseSensitive:   true
+  - Regex:           '^<.*>'
+    Priority:        3
+    CaseSensitive:   true
+  - Regex:           '^".*"'
+    Priority:        4
+    CaseSensitive:   true
+
+...
