@@ -13,7 +13,7 @@
 namespace mcpt::obj_parser {
 
 struct Context {
-  using GroupBinding = MeshIndexGroup*;
+  using AssociatedGroup = MeshIndexGroup*;
 
   std::filesystem::path filepath;
   size_t linenum = 0;
@@ -25,9 +25,9 @@ struct Context {
   std::vector<Eigen::Vector3f> default_normals;
 
   std::unordered_map<std::string, MeshIndexGroup> mesh_groups;
-  int smooth_switch = 0;
+  std::string smooth_group;
 
-  GroupBinding bound_group = nullptr;
+  AssociatedGroup associated_group = nullptr;
 };
 
 }  // namespace mcpt::obj_parser

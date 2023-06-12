@@ -11,12 +11,10 @@ bottle_library(
   NAME line_parser
   SRCS line_parser.cpp
   HDRS line_parser.hpp
-  DEPS @eigen
-       @spdlog
-       //mcpt/common:assert
+  DEPS @spdlog
        //mcpt/parser:misc
-       //mcpt/parser:mtl_parser
        :context
+       :tokenizer
 )
 
 bottle_library(
@@ -29,19 +27,28 @@ bottle_library(
 )
 
 bottle_library(
-  NAME line_parser_test
-  SRCS line_parser_test.cpp
+  NAME tokenizer
+  SRCS tokenizer.cpp
+  HDRS tokenizer.hpp
+  DEPS //mcpt/common:assert
+       //mcpt/parser:mtl_parser
+       :context
+)
+
+bottle_library(
+  NAME tokenizer_test
+  SRCS tokenizer_test.cpp
   DEPS @catch2
        @eigen
        @spdlog
        //mcpt/common/object
        :context
-       :line_parser
+       :tokenizer
   XCLD
 )
 
 bottle_library(
   NAME test
-  DEPS :line_parser_test
+  DEPS :tokenizer_test
   XCLD
 )
