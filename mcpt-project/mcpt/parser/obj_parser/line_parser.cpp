@@ -1,14 +1,13 @@
-#include "mcpt/parser/obj_line_parser.hpp"
+#include "mcpt/parser/obj_parser/line_parser.hpp"
 
 #include <cctype>
 #include <algorithm>
-#include <iterator>
 #include <regex>
-#include <sstream>
 #include <utility>
 
-#include "mcpt/common/assert.hpp"
+#include <spdlog/spdlog.h>
 
+#include "mcpt/common/assert.hpp"
 #include "mcpt/parser/misc.hpp"
 #include "mcpt/parser/mtl_parser.hpp"
 
@@ -17,7 +16,7 @@
 #define ASSERT_PARSE_FAIL(msg_tpl, ...) \
   ASSERT_FAIL("fail to parse {} ({}): " msg_tpl, m_ctx.filepath, m_ctx.linenum, ##__VA_ARGS__)
 
-namespace mcpt {
+namespace mcpt::obj_parser {
 
 namespace {
 
@@ -27,13 +26,13 @@ const std::regex RE_SPLIT{R"((\d+)/(\d+)/(\d+))"};
 
 }  // namespace
 
-ObjParser::LineParser::LineParser(Context init_ctx) : m_ctx(std::move(init_ctx)) {}
+LineParser::LineParser(Context init_ctx) : m_ctx(std::move(init_ctx)) {}
 
-void ObjParser::LineParser::Advance(std::istream& is) {
+void LineParser::Advance(std::istream& is) {
   Advance(SafelyGetLineString(is));
 }
 
-void ObjParser::LineParser::Advance(const std::string& statement) {
+void LineParser::Advance(const std::string& statement) {
   spdlog::debug("parsing {}: `{}'", m_ctx.filepath, statement);
 
   std::string trimed;
@@ -51,7 +50,7 @@ void ObjParser::LineParser::Advance(const std::string& statement) {
   ++m_ctx.linenum;
 }
 
-void ObjParser::LineParser::Advance(const std::string& identifier, const std::string& declaration) {
+void LineParser::Advance(const std::string& identifier, const std::string& declaration) {
   if (identifier == "mtllib") {
     // declaration: material file relative path
     ParseMTLFilename(declaration);
@@ -84,7 +83,7 @@ void ObjParser::LineParser::Advance(const std::string& identifier, const std::st
   }
 }
 
-void ObjParser::LineParser::ParseMTLFilename(const std::filesystem::path& mtl_filename) {
+void LineParser::ParseMTLFilename(const std::filesystem::path& mtl_filename) {
   auto mtl_filepath = std::filesystem::absolute(m_ctx.filepath).parent_path() / mtl_filename;
   MtlParser mtl_parser(mtl_filepath);
   for (auto&& [mtl_name, mtl] : mtl_parser.materials()) {
@@ -93,7 +92,7 @@ void ObjParser::LineParser::ParseMTLFilename(const std::filesystem::path& mtl_fi
   }
 }
 
-void ObjParser::LineParser::ParseGroupName(const std::string& group_name) {
+void LineParser::ParseGroupName(const std::string& group_name) {
   if (group_name == "default") {
     // following attributes (v/vt/vn) will added to default groups
     m_ctx.bound_group = nullptr;
@@ -105,8 +104,7 @@ void ObjParser::LineParser::ParseGroupName(const std::string& group_name) {
 }
 
 template <Eigen::Index Size, typename Derived>
-void ObjParser::LineParser::ParseNumericVector(const std::string& tokens,
-                                               Eigen::MatrixBase<Derived>& vector) {
+void LineParser::ParseNumericVector(const std::string& tokens, Eigen::MatrixBase<Derived>& vector) {
   std::sregex_token_iterator token_first(tokens.cbegin(), tokens.cend(), RE_TOKEN, -1);
   std::sregex_token_iterator token_last;
   ASSERT_PARSE(std::distance(token_first, token_last) == Size, "must provide {} tokens", Size);
@@ -115,7 +113,7 @@ void ObjParser::LineParser::ParseNumericVector(const std::string& tokens,
     vector[i] = std::stof(token_first->str());
 }
 
-void ObjParser::LineParser::ParseMeshIndex(const std::string& tokens) {
+void LineParser::ParseMeshIndex(const std::string& tokens) {
   ASSERT_PARSE(m_ctx.bound_group, "must be bound to group other than `default'");
   auto& mesh_index = m_ctx.bound_group->mesh_index.emplace_back();
 
@@ -141,16 +139,16 @@ void ObjParser::LineParser::ParseMeshIndex(const std::string& tokens) {
   }
 }
 
-void ObjParser::LineParser::ParseSmoothSwitch(const std::string& smooth_decl) {
+void LineParser::ParseSmoothSwitch(const std::string& smooth_decl) {
   m_ctx.smooth_switch = (smooth_decl == "off") ? 0 : std::stoi(smooth_decl);
 }
 
-void ObjParser::LineParser::ParseMaterialDecl(const std::string& material_name) {
+void LineParser::ParseMaterialDecl(const std::string& material_name) {
   ASSERT_PARSE(m_ctx.bound_group, "must be bound to group other than `default'");
   m_ctx.bound_group->material = material_name;
 }
 
-}  // namespace mcpt
+}  // namespace mcpt::obj_parser
 
 #undef ASSERT_PARSE
 #undef ASSERT_PARSE_FAIL

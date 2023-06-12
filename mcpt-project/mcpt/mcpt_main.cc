@@ -13,14 +13,14 @@
 #include "mcpt/common/assert.hpp"
 #include "mcpt/common/fileserver/fileserver.hpp"
 #include "mcpt/parser/misc.hpp"
-#include "mcpt/parser/obj_parser.hpp"
+#include "mcpt/parser/obj_parser/parser.hpp"
 #include "mcpt/renderer/monte_carlo.hpp"
 
 using namespace mcpt;
 
 Object LoadObject(std::filesystem::path obj_path) {
   ASSERT(!obj_path.empty());
-  auto object = ObjParser(obj_path).object();
+  auto object = obj_parser::Parser(obj_path).object();
   object.ConstructBVH();
   return object;
 }

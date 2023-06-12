@@ -9,8 +9,8 @@ bottle_binary(
   SRCS mcpt_main.cc
   DEPS /common/fileserver
        /common:assert
+       /parser/obj_parser
        /parser:misc
-       /parser:obj_parser
        /renderer:monte_carlo
 )
 
@@ -18,7 +18,7 @@ bottle_binary(
   NAME catch2_main
   SRCS catch2_main.cc
   DEPS @catch2
-       /parser:test
+       /parser/obj_parser:test
 )
 
 include(CTest)

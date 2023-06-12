@@ -1,4 +1,4 @@
-#include "mcpt/parser/obj_line_parser.hpp"
+#include "mcpt/parser/obj_parser/line_parser.hpp"
 
 #include <filesystem>
 #include <functional>
@@ -13,6 +13,8 @@
 #include "mcpt/common/object/material.hpp"
 #include "mcpt/common/object/mesh.hpp"
 #include "mcpt/common/object/object.hpp"
+
+#include "mcpt/parser/obj_parser/context.hpp"
 
 template <int Rows>
 struct fmt::formatter<std::vector<Eigen::Matrix<float, Rows, 1>>> {
@@ -122,7 +124,7 @@ struct fmt::formatter<mcpt::MeshIndexGroup> {
   }
 };
 
-using Context = mcpt::ObjParser::LineParser::Context;
+using Context = mcpt::obj_parser::Context;
 
 template <>
 struct Catch::StringMaker<Context> {
@@ -175,10 +177,10 @@ struct Equals : public Catch::MatcherBase<Context> {
   }
 };
 
-CATCH_TEST_CASE("`.obj' line parser parse one line correctly", "[utility][obj_line_parser]") {
+CATCH_TEST_CASE("`.obj' line parser parse one line correctly", "[parser][obj_line_parser]") {
 
 std::filesystem::path mock_filepath = "/foo/bar.obj";
-mcpt::ObjParser::LineParser parser{{mock_filepath}};
+mcpt::obj_parser::LineParser parser{{mock_filepath}};
 
 CATCH_SECTION("default parser context") {
   CATCH_CHECK(parser.ctx().filepath == mock_filepath);

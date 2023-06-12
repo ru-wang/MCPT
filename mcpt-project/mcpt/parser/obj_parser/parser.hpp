@@ -4,13 +4,11 @@
 
 #include "mcpt/common/object/object.hpp"
 
-namespace mcpt {
+namespace mcpt::obj_parser {
 
-class ObjParser {
+class Parser {
 public:
-  class LineParser;
-
-  explicit ObjParser(const std::filesystem::path& filepath);
+  explicit Parser(const std::filesystem::path& filepath);
 
   auto& object() const noexcept { return m_object; }
   auto& object() noexcept { return m_object; }
@@ -19,4 +17,4 @@ private:
   Object m_object;
 };
 
-}  // namespace mcpt
+}  // namespace mcpt::obj_parser
