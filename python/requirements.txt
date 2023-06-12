@@ -1,0 +1,7 @@
+pynvim
+black
+docformatter
+isort
+pyqt5
+numpy
+matplotlib
