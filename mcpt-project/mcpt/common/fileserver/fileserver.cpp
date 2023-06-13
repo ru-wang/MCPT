@@ -9,63 +9,56 @@ namespace mcpt {
 namespace fs = std::filesystem;
 
 SandboxFileserver::SandboxFileserver(const fs::path& root_path) {
-  // compose absolute path lexically
-  m_root_path = fs::current_path() / root_path;
   // assert exists and is a directory
-  ASSERT(fs::is_directory(m_root_path), "not a valid directory: {}", root_path);
-  // remove dots and symlinks
-  m_root_path = fs::canonical(m_root_path);
+  ASSERT(fs::is_directory(root_path), "not a valid directory: {}", root_path);
+  // convert to aboslute and remove dots and symlinks
+  m_root_path = fs::canonical(root_path);
 }
 
 std::filesystem::path SandboxFileserver::GetAbsolutePath(const std::filesystem::path& relpath) {
+  auto abspath = fs::weakly_canonical(m_root_path / relpath);
   if (!relpath.has_filename()) {
-    spdlog::error("failed to get absolute path {}: not a valid file path", relpath);
-    return {};
-  }
-
-  // compose canonical path lexically
-  fs::path canonical_relpath = relpath.lexically_normal();
-
-  // allow symlinks to out the sandbox
-  fs::path abspath = fs::canonical(m_root_path / canonical_relpath);
-  if (fs::exists(abspath) && !fs::is_regular_file(abspath)) {
-    spdlog::error("failed to get absolute path {}: not a regular file", relpath);
+    spdlog::error("failed to get absolute path {} ({}): not a valid file path", relpath, abspath);
     return {};
   }
   return abspath;
 }
 
 bool SandboxFileserver::OpenTextForRead(const std::filesystem::path& relpath, std::ifstream& ifs) {
-  if (ifs.is_open()) {
-    spdlog::error("failed to open {}: file stream aleady occupied", relpath);
+  auto abspath = GetAbsolutePath(relpath);
+  if (!fs::is_regular_file(abspath)) {
+    spdlog::error("failed to open {} ({}): not a regular file", relpath, abspath);
     return false;
   }
 
-  auto abspath = GetAbsolutePath(relpath);
-  if (abspath.empty())
+  if (ifs.is_open()) {
+    spdlog::error("failed to open {} ({}): file stream aleady occupied", relpath, abspath);
     return false;
+  }
 
   ifs.open(abspath);
-  if (ifs.is_open()) {
-    spdlog::error("failed to open {}", relpath);
+  if (!ifs.is_open()) {
+    spdlog::error("failed to open {} ({})", relpath, abspath);
     return false;
   }
   return true;
 }
 
 bool SandboxFileserver::OpenTextWrite(const std::filesystem::path& relpath, std::ofstream& ofs) {
-  if (ofs.is_open()) {
-    spdlog::error("failed to open {}: file stream aleady occupied", relpath);
+  auto abspath = GetAbsolutePath(relpath);
+  if (fs::exists(abspath) && !fs::is_regular_file(abspath)) {
+    spdlog::error("failed to open {} ({}): not a regular file", relpath, abspath);
     return false;
   }
 
-  auto abspath = GetAbsolutePath(relpath);
-  if (abspath.empty())
+  if (ofs.is_open()) {
+    spdlog::error("failed to open {} ({}): file stream aleady occupied", relpath, abspath);
     return false;
+  }
 
   ofs.open(abspath);
-  if (ofs.is_open()) {
-    spdlog::error("failed to open {}", relpath);
+  if (!ofs.is_open()) {
+    spdlog::error("failed to open {} ({})", relpath, abspath);
     return false;
   }
   return true;

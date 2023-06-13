@@ -94,10 +94,11 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  auto result_filename = obj_filename.replace_extension(".ppm");
-  spdlog::info("saving to PPM image {}", result_filename);
+  auto ppm_filepath = obj_filename.replace_extension(".ppm");
+  spdlog::info("saving to PPM image {}", ppm_filepath);
+
   std::ofstream ofs;
-  fsserver.OpenTextWrite(result_filename, ofs);
+  ASSERT(fsserver.OpenTextWrite(ppm_filepath, ofs));
   SaveRawToPPM(w, h, im.data(), ofs);
   return 0;
 }
