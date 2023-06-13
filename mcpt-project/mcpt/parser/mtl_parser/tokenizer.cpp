@@ -53,15 +53,15 @@ void Tokenizer::Proc(std::string_view identifier, std::string_view declaration) 
   } else if (identifier == "Kd") {
     auto& Kd = ctx().associated_material->Kd;
     ProcNumericVector<3>(declaration, Kd.data());
-    ASSERT_PARSE((Kd.array() >= 0.0F).all(), "`Kd' must be non-negative");
+    ASSERT_PARSE((Kd.array() >= 0.0F).all() && (Kd.array() <= 1.0F).all(), "`Kd' out of range");
   } else if (identifier == "Ka") {
     auto& Ka = ctx().associated_material->Ka;
     ProcNumericVector<3>(declaration, Ka.data());
-    ASSERT_PARSE((Ka.array() >= 0.0F).all(), "`Ka' must be non-negative");
+    ASSERT_PARSE((Ka.array() >= 0.0F).all() && (Ka.array() <= 1.0F).all(), "`Ka' out of range");
   } else if (identifier == "Ks") {
     auto& Ks = ctx().associated_material->Ks;
     ProcNumericVector<3>(declaration, Ks.data());
-    ASSERT_PARSE((Ks.array() >= 0.0F).all(), "`Ks' must be non-negative");
+    ASSERT_PARSE((Ks.array() >= 0.0F).all() && (Ks.array() <= 1.0F).all(), "`Ks' out of range");
   } else if (identifier == "Ns") {
     auto& Ns = ctx().associated_material->Ns;
     ProcNumber(declaration, Ns);
@@ -69,7 +69,7 @@ void Tokenizer::Proc(std::string_view identifier, std::string_view declaration) 
   } else if (identifier == "Ni") {
     auto& Ni = ctx().associated_material->Ni;
     ProcNumber(declaration, Ni);
-    ASSERT_PARSE(Ni >= 0.0F && Ni <= 1.0F, "`Ni' out of range");
+    ASSERT_PARSE(Ni >= 0.001F && Ni <= 10.0F, "`Ni' out of range");
   } else if (identifier == "Tr") {
     auto& Tr = ctx().associated_material->Tr;
     ProcNumber(declaration, Tr);
