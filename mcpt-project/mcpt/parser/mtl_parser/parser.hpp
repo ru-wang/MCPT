@@ -6,17 +6,21 @@
 
 #include "mcpt/common/object/material.hpp"
 
-namespace mcpt {
+#include "mcpt/parser/mtl_parser/context.hpp"
 
-class MtlParser {
+namespace mcpt::mtl_parser {
+
+class Parser {
 public:
-  explicit MtlParser(const std::filesystem::path& filepath);
+  explicit Parser(const std::filesystem::path& filepath);
 
   auto& materials() const noexcept { return m_materials; }
   auto& materials() noexcept { return m_materials; }
 
 private:
+  void Advance(const std::string& statement, Context& ctx);
+
   std::unordered_map<std::string, Material> m_materials;
 };
 
-}  // namespace mcpt
+}  // namespace mcpt::mtl_parser
