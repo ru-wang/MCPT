@@ -31,7 +31,7 @@ bottle_library(
   SRCS tokenizer.cpp
   HDRS tokenizer.hpp
   DEPS //mcpt/common:assert
-       //mcpt/parser:mtl_parser
+       //mcpt/parser/mtl_parser:parser
        :context
 )
 
@@ -40,10 +40,21 @@ bottle_library(
   SRCS tokenizer_test.cpp
   DEPS @catch2
        @eigen
+       :context
+       :test_helper
+       :tokenizer
+  XCLD
+)
+
+bottle_library(
+  NAME test_helper
+  SRCS test_helper.cpp
+  HDRS test_helper.hpp
+  DEPS @catch2
+       @eigen
        @spdlog
        //mcpt/common/object
        :context
-       :tokenizer
   XCLD
 )
 

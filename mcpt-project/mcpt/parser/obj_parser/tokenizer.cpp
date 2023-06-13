@@ -5,7 +5,7 @@
 #include <string>
 
 #include "mcpt/common/assert.hpp"
-#include "mcpt/parser/mtl_parser.hpp"
+#include "mcpt/parser/mtl_parser/parser.hpp"
 
 #define ASSERT_PARSE(assertion, msg_tpl, ...) \
   ASSERT(assertion, "fail to parse {} ({}): " msg_tpl, ctx().filepath, ctx().linenum, ##__VA_ARGS__)
@@ -71,7 +71,7 @@ void Tokenizer::Proc(std::string_view identifier, std::string_view declaration) 
 
 void Tokenizer::ProcMTLFilename(std::string_view mtl_filename) {
   auto mtl_filepath = std::filesystem::absolute(ctx().filepath).parent_path() / mtl_filename;
-  MtlParser mtl_parser(mtl_filepath);
+  mtl_parser::Parser mtl_parser(mtl_filepath);
   for (auto&& [mtl_name, mtl] : mtl_parser.materials()) {
     bool inserted = ctx().materials.emplace(mtl_name, std::move(mtl)).second;
     ASSERT(inserted, "material `{}' in `{}' already exists", mtl_name, mtl_filepath);
