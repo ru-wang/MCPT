@@ -50,6 +50,7 @@ bottle_library(
   NAME test_helper
   SRCS test_helper.cpp
   HDRS test_helper.hpp
+       test_mock.hpp
   DEPS @catch2
        @eigen
        @spdlog
