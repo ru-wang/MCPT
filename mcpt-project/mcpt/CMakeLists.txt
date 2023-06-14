@@ -18,6 +18,7 @@ bottle_binary(
   NAME catch2_main
   SRCS catch2_main.cc
   DEPS @catch2
+       @spdlog
        /parser/obj_parser:test
 )
 
