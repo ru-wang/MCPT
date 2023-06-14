@@ -28,3 +28,18 @@ bottle_library(
   DEPS @eigen
        //mcpt/common:assert
 )
+
+bottle_library(
+  NAME intersect_test
+  SRCS intersect_test.cpp
+  DEPS @catch2
+       @eigen
+       :intersect
+  XCLD
+)
+
+bottle_library(
+  NAME test
+  DEPS :intersect_test
+  XCLD
+)

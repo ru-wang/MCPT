@@ -19,6 +19,7 @@ bottle_binary(
   SRCS catch2_main.cc
   DEPS @catch2
        @spdlog
+       /common/geometry:test
        /parser/obj_parser:test
 )
 

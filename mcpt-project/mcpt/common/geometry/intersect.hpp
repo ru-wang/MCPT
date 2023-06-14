@@ -44,6 +44,35 @@ public:
 
   // return the homogeneous intersection of a ray and a convex polygon
   // return point at infinity if not intersectant
+  Vector4 Get(const Line<T>& l, const ConvexPolygon<T>& ply) const {
+    Vector4 x = Get(l, static_cast<const Plane<T>&>(ply));
+    if (x.w() == 0)
+      return Vector4::Zero();
+
+    std::vector<Vector3> cross;
+    for (size_t a = 0; a < ply.vertices.size(); ++a) {
+      size_t b = a + 1 < ply.vertices.size() ? a + 1 : 0;
+      Vector3 ab(ply.vertices.at(b) - ply.vertices.at(a));
+      Vector3 ax(x.template head<3>() - ply.vertices.at(a));
+      cross.push_back(ab.cross(ax));
+    }
+
+    for (size_t i = 0; i < ply.vertices.size(); ++i) {
+      // on the edge
+      if (approx(cross.at(i).norm(), 0))
+        return Vector4::Zero();
+      // at different sides
+      if (i + 1 < ply.vertices.size()) {
+        if (cross.at(i).dot(cross.at(i + 1)) <= 0)
+          return Vector4::Zero();
+      }
+    }
+
+    return x;
+  }
+
+  // return the homogeneous intersection of a ray and a convex polygon
+  // return point at infinity if not intersectant
   Vector4 Get(const Ray<T>& r, const ConvexPolygon<T>& ply) const {
     Vector4 x = Get(r, static_cast<const Plane<T>&>(ply));
     if (x.w() == 0)
