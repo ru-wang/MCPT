@@ -20,6 +20,8 @@ Parser::Parser(const std::filesystem::path& filepath) {
   Context ctx{filepath};
 
   std::ifstream ifs(filepath);
+  ASSERT(ifs.is_open(), "failed to open {}", filepath);
+
   while (ifs && !ifs.eof())
     Advance(SafelyGetLineString(ifs), ctx);
 
@@ -30,7 +32,8 @@ Parser::Parser(const std::filesystem::path& filepath) {
 }
 
 void Parser::Advance(const std::string& statement, Context& ctx) {
-  spdlog::debug("parsing {} ({}): `{}'", ctx.filepath, ctx.linenum, statement);
+  // advance one line anyway
+  spdlog::debug("parsing {} ({}): `{}'", ctx.filepath, ++ctx.linenum, statement);
 
   auto trim_start =
       std::find_if(statement.cbegin(), statement.cend(), [](char ch) { return !std::isspace(ch); });
@@ -39,8 +42,6 @@ void Parser::Advance(const std::string& statement, Context& ctx) {
   // do nothing if it is an empty line or comment
   if (!trimed.empty() && trimed.front() != '#')
     Tokenizer(ctx).Process(trimed);
-  // advance one line after tokenization
-  ++ctx.linenum;
 }
 
 }  // namespace mcpt::mtl_parser
