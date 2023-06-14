@@ -104,9 +104,7 @@ struct fmt::formatter<mcpt::MeshIndexGroup> {
   template <typename FormatContext>
   auto format(const Type& v, FormatContext& ctx) const -> decltype(ctx.out()) {
     return fmt::format_to(
-        ctx.out(),
-        "{{smooth='{}', material='{}', mesh_index=[{}]}}",
-        v.smooth_group, v.material, fmt::join(v.mesh_index, ", "));
+        ctx.out(), "{{material='{}', mesh_index=[{}]}}", v.material, fmt::join(v.mesh_index, ", "));
   }
 };
 

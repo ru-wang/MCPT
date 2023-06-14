@@ -25,7 +25,6 @@ struct Context {
   std::vector<Eigen::Vector3f> default_normals;
 
   std::unordered_map<std::string, MeshIndexGroup> mesh_groups;
-  std::string smooth_group;
 
   AssociatedGroup associated_group = nullptr;
 };

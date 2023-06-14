@@ -60,7 +60,7 @@ void Tokenizer::Proc(std::string_view identifier, std::string_view declaration) 
     ProcMeshIndex(declaration);
   } else if (identifier == "s") {
     // declaration: off or smooth value
-    ProcSmoothGroup(declaration);
+    // ignore
   } else if (identifier == "usemtl") {
     // declaration: material name
     ProcMaterialDecl(declaration);
@@ -74,19 +74,12 @@ void Tokenizer::ProcMTLFilename(std::string_view mtl_filename) {
   mtl_parser::Parser mtl_parser(mtl_filepath);
   for (auto&& [mtl_name, mtl] : mtl_parser.materials()) {
     bool inserted = ctx().materials.emplace(mtl_name, std::move(mtl)).second;
-    ASSERT(inserted, "material `{}' in `{}' already exists", mtl_name, mtl_filepath);
+    ASSERT_PARSE(inserted, "material `{}' in `{}' already exists", mtl_name, mtl_filepath);
   }
 }
 
 void Tokenizer::ProcGroupName(std::string_view group_name) {
-  if (group_name == "default") {
-    // following attributes (v/vt/vn) will be added to default group
-    ctx().associated_group = nullptr;
-  } else {
-    // following attributes (s/f) will be added to named group
-    ctx().associated_group = &ctx().mesh_groups[std::string(group_name)];
-    ctx().associated_group->smooth_group = ctx().smooth_group;
-  }
+  ctx().associated_group = nullptr;
 }
 
 template <size_t Size, typename T>
@@ -128,12 +121,8 @@ void Tokenizer::ProcMeshIndex(std::string_view tokens) {
   }
 }
 
-void Tokenizer::ProcSmoothGroup(std::string_view smooth_group) {
-  ctx().smooth_group = smooth_group;
-}
-
 void Tokenizer::ProcMaterialDecl(std::string_view material_name) {
-  ASSERT_PARSE(ctx().associated_group, "must be associated to group other than `default'");
+  ctx().associated_group = &ctx().mesh_groups[std::string(material_name)];
   ctx().associated_group->material = material_name;
 }
 

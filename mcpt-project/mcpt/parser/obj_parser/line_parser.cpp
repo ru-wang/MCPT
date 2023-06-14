@@ -17,7 +17,8 @@ void LineParser::Advance(std::istream& is) {
 }
 
 void LineParser::Advance(const std::string& statement) {
-  spdlog::debug("parsing {} ({}): `{}'", ctx().filepath, ctx().linenum, statement);
+  // advance one line anyway
+  spdlog::debug("parsing {} ({}): `{}'", ctx().filepath, ++ctx().linenum, statement);
 
   auto trim_start =
       std::find_if(statement.cbegin(), statement.cend(), [](char ch) { return !std::isspace(ch); });
@@ -26,8 +27,6 @@ void LineParser::Advance(const std::string& statement) {
   // do nothing if it is an empty line or comment
   if (!trimed.empty() && trimed.front() != '#')
     Tokenizer(m_ctx).Process(trimed);
-  // advance one line after tokenization
-  ++ctx().linenum;
 }
 
 }  // namespace mcpt::obj_parser

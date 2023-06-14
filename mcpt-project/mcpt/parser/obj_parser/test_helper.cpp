@@ -46,8 +46,7 @@ std::string Catch::StringMaker<Context>::convert(const Context& ctx) {
       "  default_text_coords: [{}]\n"
       "  default_normals: [{}]\n"
       "  mesh_groups: {{{}}}\n"
-      "  smooth_group: '{}'\n"
-      "  bound_group: {}\n"
+      "  associated_group: {}\n"
       "}}\n",
       ctx.filepath,
       ctx.linenum,
@@ -56,7 +55,6 @@ std::string Catch::StringMaker<Context>::convert(const Context& ctx) {
       ctx.default_text_coords,
       ctx.default_normals,
       fmt::join(ctx.mesh_groups, ", "),
-      ctx.smooth_group,
       fmt::ptr(ctx.associated_group));
 }
 
@@ -68,7 +66,6 @@ bool Equals::match(const Context& lhs) const {
          lhs.default_text_coords == rhs.get().default_text_coords &&
          lhs.default_normals == rhs.get().default_normals &&
          lhs.mesh_groups == rhs.get().mesh_groups &&
-         lhs.smooth_group == rhs.get().smooth_group &&
          ( (lhs.associated_group == nullptr && rhs.get().associated_group == nullptr) ||
            *lhs.associated_group == *rhs.get().associated_group );
 }

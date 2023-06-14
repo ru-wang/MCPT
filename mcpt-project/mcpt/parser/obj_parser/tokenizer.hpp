@@ -23,7 +23,6 @@ private:
   void ProcNumericVector(std::string_view tokens, T* vector);
 
   void ProcMeshIndex(std::string_view tokens);
-  void ProcSmoothGroup(std::string_view smooth_group);
   void ProcMaterialDecl(std::string_view material_name);
 
 private:

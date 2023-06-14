@@ -22,14 +22,11 @@ struct MeshIndex {
 };
 
 struct MeshIndexGroup {
-  std::string smooth_group;
   std::string material;
   std::vector<MeshIndex> mesh_index;
 
   friend bool operator==(const MeshIndexGroup& lhs, const MeshIndexGroup& rhs) {
-    return lhs.smooth_group == rhs.smooth_group &&
-           lhs.material     == rhs.material &&
-           lhs.mesh_index   == rhs.mesh_index;
+    return lhs.material == rhs.material && lhs.mesh_index == rhs.mesh_index;
   }
 };
 

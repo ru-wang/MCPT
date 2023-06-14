@@ -22,7 +22,6 @@ CATCH_SECTION("default context") {
   CATCH_CHECK(ctx.default_text_coords.empty());
   CATCH_CHECK(ctx.default_normals.empty());
   CATCH_CHECK(ctx.mesh_groups.empty());
-  CATCH_CHECK(ctx.smooth_group.empty());
   CATCH_CHECK(ctx.associated_group == nullptr);
 }
 
@@ -57,7 +56,7 @@ CATCH_SECTION("parse `g default'") {
           CATCH_INFO("parse `f 1/1/1 2/1/1 2/1/1'");
           tokenizer.Process("f 1/1/1 2/1/1 2/1/1");
 
-          mock_ctx.associated_group = &mock_ctx.mesh_groups["group"];
+          mock_ctx.associated_group = &mock_ctx.mesh_groups["material"];
           mock_ctx.associated_group->material = "material";
           mock_ctx.associated_group->mesh_index.push_back({{0, 1, 1}, {0, 0, 0}, {0, 0, 0}});
 
@@ -70,18 +69,14 @@ CATCH_SECTION("parse `g default'") {
 
 CATCH_SECTION("parse `s 1'") {
   tokenizer.Process("s 1");
-  mock_ctx.smooth_group = "1";
   CATCH_REQUIRE_THAT(ctx, Equals(mock_ctx));
 
   CATCH_SECTION("parse `g group'") {
     tokenizer.Process("g group");
-    mock_ctx.associated_group = &mock_ctx.mesh_groups["group"];
-    mock_ctx.associated_group->smooth_group = mock_ctx.smooth_group;
     CATCH_REQUIRE_THAT(ctx, Equals(mock_ctx));
 
     CATCH_SECTION("parse `s off'") {
       tokenizer.Process("s off");
-      mock_ctx.smooth_group = "off";
       CATCH_REQUIRE_THAT(ctx, Equals(mock_ctx));
     }
   }
