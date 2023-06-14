@@ -22,6 +22,7 @@ bottle_library(
   SRCS parser.cpp
   HDRS parser.hpp
   DEPS //mcpt/common/object
+       //mcpt/common:assert
        :context
        :line_parser
 )
@@ -60,7 +61,17 @@ bottle_library(
 )
 
 bottle_library(
+  NAME parser_test
+  SRCS parser_test.cpp
+  DEPS @catch2
+       //mcpt/common/object
+       :parser
+  XCLD
+)
+
+bottle_library(
   NAME test
-  DEPS :tokenizer_test
+  DEPS :parser_test
+       :tokenizer_test
   XCLD
 )

@@ -3,6 +3,8 @@
 #include <fstream>
 #include <utility>
 
+#include "mcpt/common/assert.hpp"
+
 #include "mcpt/parser/obj_parser/context.hpp"
 #include "mcpt/parser/obj_parser/line_parser.hpp"
 
@@ -13,6 +15,8 @@ Parser::Parser(const std::filesystem::path& filepath) {
   LineParser parser(ctx);
 
   std::ifstream ifs(filepath);
+  ASSERT(ifs.is_open(), "failed to open {}", filepath);
+
   while (ifs && !ifs.eof())
     parser.Advance(ifs);
 
