@@ -18,6 +18,7 @@ bottle_library(
   NAME intersect
   HDRS intersect.hpp
   DEPS @eigen
+       @spdlog
        :aabb
        :types
 )
@@ -34,7 +35,9 @@ bottle_library(
   SRCS intersect_test.cpp
   DEPS @catch2
        @eigen
+       :aabb
        :intersect
+       :types
   XCLD
 )
 

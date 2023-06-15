@@ -45,8 +45,7 @@ public:
 
   template <typename U>
   bool Envelop(const Eigen::MatrixBase<U>& v) const {
-    return (v.template head<3>().array() >= m_min_vertex.template head<3>().array()).all() &&
-           (v.template head<3>().array() <= m_max_vertex.template head<3>().array()).all();
+    return (v.array() >= m_min_vertex.array()).all() && (v.array() <= m_max_vertex.array()).all();
   }
 
 private:

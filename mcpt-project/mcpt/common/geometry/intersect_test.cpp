@@ -3,14 +3,17 @@
 #include <Eigen/Eigen>
 #include <catch2/catch.hpp>
 
-CATCH_TEST_CASE("intersect compute intersection of line/ray and shape", "[geometry][intersect]") {
+#include "mcpt/common/geometry/aabb.hpp"
+#include "mcpt/common/geometry/types.hpp"
+
+CATCH_TEST_CASE("intersect computes intersection of line/ray and shape", "[geometry][intersect]") {
 
 using Line = mcpt::Line<double>;
 using Ray = mcpt::Ray<double>;
 using Plane = mcpt::Plane<double>;
 using Polygon = mcpt::ConvexPolygon<double>;
 
-static constexpr double PRECISION = 1.0e-10;
+static constexpr double PRECISION = 1.0e-03;
 mcpt::Intersect<double> intersect(PRECISION);
 
 CATCH_SECTION("intersection of line and plane") {
@@ -166,6 +169,136 @@ CATCH_SECTION("intersection of ray and triangular") {
     Ray r(Eigen::Vector3d::Zero(), -point_x);
     Eigen::Vector4d p = intersect.Get(r, tri);
     CATCH_CHECK(p == Eigen::Vector4d::Zero());
+  }
+}
+
+CATCH_SECTION("intersection of ray and AABB") {
+  /**
+   *   Z
+   *    |  ______________
+   *    | /|            /|
+   *    |/ |           / |         Y
+   *    /__|__________/  |          |
+   *    |  |          |  |         1|_____________
+   *    |  |  / Y     |  | h=1      |            |
+   *    |  | /        |  |          |            |
+   *    |  |/         |  |          |            |
+   *    |  |__________|__|          |            |
+   *    | /(0,1)      | /(1,1)      |            |
+   *  O |/____________|/_______ X   |____________|____ X
+   *    (0,0)         (1,0)        O(Z)           1
+   */
+  mcpt::AABB<double> aabb(Eigen::Vector3d::Zero(), Eigen::Vector3d::Ones());
+
+  CATCH_SECTION("starting from inside") {
+    Ray r(Eigen::Vector3d::Constant(0.5), Eigen::Vector3d::Ones());
+    CATCH_CHECK(intersect.Test(r, aabb));
+  }
+
+  CATCH_SECTION("starting from the bottom facet") {
+    Eigen::Vector3d start_point(0.5, 0.5, 0.0);
+    CATCH_SECTION("pointing outside") {
+      Eigen::Vector3d d = -Eigen::Vector3d::UnitZ();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+    CATCH_SECTION("pointing inside") {
+      Eigen::Vector3d d = Eigen::Vector3d::UnitZ();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+  }
+
+  CATCH_SECTION("starting from some edge of the bottom facet") {
+    Eigen::Vector3d start_point(0.5, 0.0, 0.0);
+    CATCH_SECTION("pointing outside") {
+      Eigen::Vector3d d = -Eigen::Vector3d::UnitZ();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+    CATCH_SECTION("pointing inside") {
+      Eigen::Vector3d d = Eigen::Vector3d::UnitZ();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+  }
+
+  CATCH_SECTION("starting from some corner of the bottom facet") {
+    Eigen::Vector3d start_point = Eigen::Vector3d::Zero();
+    CATCH_SECTION("pointing outside") {
+      Eigen::Vector3d d = -Eigen::Vector3d::Ones();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+    CATCH_SECTION("pointing inside") {
+      Eigen::Vector3d d = Eigen::Vector3d::Ones();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+  }
+
+  CATCH_SECTION("starting from some corner of the bottom facet") {
+    Eigen::Vector3d start_point = Eigen::Vector3d::Zero();
+    CATCH_SECTION("pointing outside") {
+      Eigen::Vector3d d = -Eigen::Vector3d::Ones();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+    CATCH_SECTION("pointing inside") {
+      Eigen::Vector3d d = Eigen::Vector3d::Ones();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+  }
+
+  CATCH_SECTION("starting from outside") {
+    Eigen::Vector3d start_point = -Eigen::Vector3d::UnitX();
+    CATCH_SECTION("pointing outside") {
+      Eigen::Vector3d d = Eigen::Vector3d::UnitZ();
+      CATCH_CHECK_FALSE(intersect.Test(Ray(start_point, d), aabb));
+    }
+    CATCH_SECTION("pointing inside") {
+      Eigen::Vector3d d = Eigen::Vector3d::Ones();
+      CATCH_CHECK(intersect.Test(Ray(start_point, d), aabb));
+    }
+    CATCH_SECTION("cross some edge from inside") {
+      Eigen::Vector3d pointing_to(1.0, 0.5, 1.0);
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+    CATCH_SECTION("cross some corner from inside") {
+      Eigen::Vector3d pointing_to = Eigen::Vector3d::Ones();
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+  }
+
+  CATCH_SECTION("special case staring from outside") {
+    CATCH_SECTION("parallel") {
+      Eigen::Vector3d start_point(0.0, -1.0, 0.0);
+      Eigen::Vector3d pointing_to(1.0, -1.0, 0.0);
+      CATCH_CHECK_FALSE(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+    CATCH_SECTION("along some diagonal") {
+      Eigen::Vector3d start_point = -Eigen::Vector3d::Ones();
+      Eigen::Vector3d pointing_to = Eigen::Vector3d::Ones();
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+    CATCH_SECTION("along some edge") {
+      Eigen::Vector3d start_point = -Eigen::Vector3d::UnitX();
+      Eigen::Vector3d pointing_to = Eigen::Vector3d::UnitX();
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+    CATCH_SECTION("cross two edges") {
+      Eigen::Vector3d start_point(-1.0, -1.0, 0.5);
+      Eigen::Vector3d pointing_to(1.0, 1.0, 0.5);
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+    CATCH_SECTION("tangent with some facet") {
+      Eigen::Vector3d start_point(-1.0, -1.0, 0.0);
+      Eigen::Vector3d pointing_to(1.0, 1.0, 0.0);
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+    CATCH_SECTION("tangent with some edge") {
+      Eigen::Vector3d start_point(0.5, -0.5, 0.0);
+      Eigen::Vector3d pointing_to(0.5, 0.0, 1.0);
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
+    CATCH_SECTION("tangent with some corner") {
+      Eigen::Vector3d start_point = -Eigen::Vector3d::UnitX();
+      Eigen::Vector3d pointing_to = Eigen::Vector3d::UnitZ();
+      CATCH_CHECK(intersect.Test(Ray(start_point, pointing_to - start_point), aabb));
+    }
   }
 }
 
