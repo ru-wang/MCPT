@@ -31,6 +31,15 @@ bottle_library(
 )
 
 bottle_library(
+  NAME aabb_test
+  SRCS aabb_test.cpp
+  DEPS @catch2
+       @eigen
+       :aabb
+  XCLD
+)
+
+bottle_library(
   NAME intersect_test
   SRCS intersect_test.cpp
   DEPS @catch2
@@ -43,6 +52,7 @@ bottle_library(
 
 bottle_library(
   NAME test
-  DEPS :intersect_test
+  DEPS :aabb_test
+       :intersect_test
   XCLD
 )
