@@ -1,16 +1,15 @@
 #pragma once
 
-#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <Eigen/Eigen>
 
-#include "mcpt/common/geometry/bvh_tree.hpp"
-
 #include "mcpt/common/object/material.hpp"
 #include "mcpt/common/object/mesh.hpp"
+
+#include "mcpt/common/geometry/bvh_tree.hpp"
 
 namespace mcpt {
 
@@ -32,9 +31,9 @@ public:
   auto& normals() noexcept { return m_normals; }
 
   const Material& GetMaterialByName(const std::string& name) const;
-  const BVHNode& GetBVHTree() const;
 
-  void ConstructBVH();
+  // create a BVH tree and bind the current object to it
+  BVHTree<float> CreateBVHTree() const;
 
 private:
   std::unordered_map<std::string, Material> m_materials;
@@ -43,8 +42,6 @@ private:
   std::vector<Eigen::Vector3f> m_vertices;
   std::vector<Eigen::Vector2f> m_text_coords;
   std::vector<Eigen::Vector3f> m_normals;
-
-  std::shared_ptr<BVHNode> m_bvh_root;
 };
 
 }  // namespace mcpt

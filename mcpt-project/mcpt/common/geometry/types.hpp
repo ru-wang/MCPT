@@ -55,6 +55,9 @@ struct ConvexPolygon : Plane<T> {
   using Scalar = T;
   std::vector<Eigen::Matrix<T, 3, 1>> vertices;
 
+  explicit ConvexPolygon(const std::vector<Eigen::Matrix<T, 3, 1>>& vertices)
+      : ConvexPolygon(vertices.cbegin(), vertices.cend()) {}
+
   template <typename T0, typename T1, typename T2, typename... Ts>
   ConvexPolygon(const Eigen::MatrixBase<T0>& a,
                 const Eigen::MatrixBase<T1>& b,
@@ -65,6 +68,27 @@ struct ConvexPolygon : Plane<T> {
   template <typename InputIt>
   ConvexPolygon(InputIt first, InputIt last)
       : Plane<T>(*first, *(first + 1), *(first + 2)), vertices(first, last) {
+    ASSERT(std::distance(first, last) >= 3);
+  }
+};
+
+template <typename T>
+struct Polygon2D {
+  using Scalar = T;
+  std::vector<Eigen::Matrix<T, 2, 1>> vertices;
+
+  explicit Polygon2D(const std::vector<Eigen::Matrix<T, 2, 1>>& vertices)
+      : Polygon2D(vertices.cbegin(), vertices.cend()) {}
+
+  template <typename T0, typename T1, typename T2, typename... Ts>
+  Polygon2D(const Eigen::MatrixBase<T0>& a,
+            const Eigen::MatrixBase<T1>& b,
+            const Eigen::MatrixBase<T2>& c,
+            const Eigen::MatrixBase<Ts>&... vs)
+      : vertices{a, b, c, vs...} {}
+
+  template <typename InputIt>
+  Polygon2D(InputIt first, InputIt last) : vertices(first, last) {
     ASSERT(std::distance(first, last) >= 3);
   }
 };

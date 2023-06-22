@@ -8,7 +8,8 @@ bottle_library(
 
 bottle_library(
   NAME bvh_tree
-  HDRS bvh_tree.hpp
+  HDRS bvh_node.hpp
+       bvh_tree.hpp
   DEPS @eigen
        //mcpt/common:assert
        :aabb

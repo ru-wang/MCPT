@@ -17,7 +17,6 @@ bottle_library(
   HDRS object.hpp
   DEPS @eigen
        //mcpt/common/geometry:bvh_tree
-       //mcpt/common:assert
        :material
        :mesh
 )

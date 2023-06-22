@@ -33,6 +33,7 @@ struct MeshIndexGroup {
 struct Mesh {
   std::string material;
   ConvexPolygon<float> polygon;
+  Polygon2D<float> text_coords;
   Eigen::Vector3f normal;
 };
 
