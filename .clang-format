@@ -5,6 +5,7 @@ AccessModifierOffset: -2
 AllowAllArgumentsOnNextLine: true
 AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
@@ -15,6 +16,7 @@ ColumnLimit: 100
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 DerivePointerAlignment: false
 IncludeBlocks: Preserve
+
 IncludeCategories:
   - Regex:           '^<c[[:alpha:]_]+>'
     Priority:        1

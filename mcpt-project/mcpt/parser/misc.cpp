@@ -13,8 +13,7 @@ std::string SafelyGetLineString(std::istream& is) {
   for (std::string str;;) {
     char ch = is.rdbuf()->sbumpc();
     switch (ch) {
-      case '\n':
-        return str;
+      case '\n': return str;
       case '\r':
         if (is.rdbuf()->sgetc() == '\n')
           is.rdbuf()->sbumpc();
@@ -23,8 +22,7 @@ std::string SafelyGetLineString(std::istream& is) {
         if (is.rdbuf()->in_avail() == 0)
           is.setstate(std::istream::eofbit);
         return str;
-      default:
-        str.push_back(ch);
+      default: str.push_back(ch);
     }
   }
 }
