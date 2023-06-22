@@ -20,9 +20,7 @@ using namespace mcpt;
 
 Object LoadObject(std::filesystem::path obj_path) {
   ASSERT(!obj_path.empty());
-  auto object = obj_parser::Parser(obj_path).object();
-  object.ConstructBVH();
-  return object;
+  return obj_parser::Parser(obj_path).object();
 }
 
 /**

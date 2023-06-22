@@ -12,8 +12,7 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
   Intersection ret;
 
   // compute intersection with all the meshes and select the closest one
-  const BVHNode* found = nullptr;
-  std::deque<const BVHNode*> bfs_queue{&m_object.get().GetBVHTree()};
+  std::deque<const BVHNode<float>*> bfs_queue{m_bvh_tree.root.get()};
 
   while (!bfs_queue.empty()) {
     auto node = bfs_queue.front();
@@ -50,13 +49,11 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
         ret.abs_cos_incident = abs_cos_incident;
         ret.traveling_length = traveling_len;
         ret.point = point_h.head<3>();
-        found = node;
+        ret.node = node;
       }
     }
   }
 
-  if (found)
-    ret.node = found->shared_from_this();
   return ret;
 }
 

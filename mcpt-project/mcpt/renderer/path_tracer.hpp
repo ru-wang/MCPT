@@ -25,7 +25,7 @@ public:
     double exit_pdf;
   };
 
-  explicit PathTracer(const Object& object) : m_ray_caster(object) {}
+  explicit PathTracer(const Object& object) : m_associated_object(object), m_ray_caster(object) {}
 
   // return the exit path at the intersection of the incident ray and the surface
   std::optional<ReversePath> Run(const Ray<float>& incident_ray);
@@ -42,6 +42,9 @@ private:
                        const Material& material);
 
   sample SampleDirection(const Eigen::Vector3f& normal, float alpha);
+
+private:
+  std::reference_wrapper<const Object> m_associated_object;
 
   RayCaster m_ray_caster;
   UniformHemisphere<float> m_cos_hemi;
