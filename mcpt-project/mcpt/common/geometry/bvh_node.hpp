@@ -46,8 +46,10 @@ void BVHNode<T>::Split(InputIt first, InputIt last) {
   // split the space into two partitions
   Eigen::Index sort_axis;
   aabb.diagonal().maxCoeff(&sort_axis);
-  std::nth_element(first, first + l, last, [sort_axis](auto& lhs, auto& rhs) {
-    return lhs->aabb.min_vertex().coeff(sort_axis) < rhs->aabb.min_vertex().coeff(sort_axis) &&
+  std::nth_element(first, first + l, last, [sort_axis](const auto& lhs, const auto& rhs) {
+    if (lhs->aabb.min_vertex().coeff(sort_axis) > rhs->aabb.min_vertex().coeff(sort_axis))
+      return false;
+    return lhs->aabb.min_vertex().coeff(sort_axis) < rhs->aabb.min_vertex().coeff(sort_axis) ||
            lhs->aabb.max_vertex().coeff(sort_axis) < rhs->aabb.max_vertex().coeff(sort_axis);
   });
 

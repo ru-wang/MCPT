@@ -12,27 +12,18 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
   Intersection ret;
 
   // compute intersection with all the meshes and select the closest one
-  std::deque<const BVHNode<float>*> bfs_queue{m_bvh_tree.root.get()};
-
-  while (!bfs_queue.empty()) {
-    auto node = bfs_queue.front();
-    bfs_queue.pop_front();
-
+  for (std::deque queue{m_bvh_tree.root.get()}; !queue.empty(); queue.pop_front()) {
+    auto node = queue.front();
     if (!m_intersect.Test(ray, node->aabb))
       continue;
     if (node->l_child)
-      bfs_queue.push_back(node->l_child.get());
+      queue.push_back(node->l_child.get());
     if (node->r_child)
-      bfs_queue.push_back(node->r_child.get());
+      queue.push_back(node->r_child.get());
 
     // is leaf node
     if (node->mesh.has_value()) {
       auto& mesh = std::any_cast<const Mesh&>(node->mesh);
-
-      float abs_cos_incident = std::abs(ray.direction.dot(mesh.normal));
-      // reject parallel
-      if (abs_cos_incident == 0.0F)
-        continue;
 
       // no intersection
       Eigen::Vector4f point_h = m_intersect.Get(ray, mesh.polygon);
@@ -40,14 +31,15 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
         continue;
 
       // reject farther mesh
-      float traveling_len = (point_h.head<3>() - ray.point_a).norm();
-      if (traveling_len > ret.traveling_length)
+      float traveling_length = (point_h.head<3>() - ray.point_a).norm();
+      if (traveling_length > ret.traveling_length)
         continue;
 
       // take closer mesh
-      if (traveling_len < ret.traveling_length || abs_cos_incident > ret.abs_cos_incident) {
+      float abs_cos_incident = std::abs(ray.direction.dot(mesh.normal));
+      if (traveling_length < ret.traveling_length || abs_cos_incident > ret.abs_cos_incident) {
         ret.abs_cos_incident = abs_cos_incident;
-        ret.traveling_length = traveling_len;
+        ret.traveling_length = traveling_length;
         ret.point = point_h.head<3>();
         ret.node = node;
       }
