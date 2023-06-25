@@ -4,6 +4,8 @@
 
 #include <Eigen/Eigen>
 
+#include "mcpt/common/assert.hpp"
+
 namespace mcpt {
 
 template <typename T>
@@ -16,6 +18,7 @@ public:
   template <typename T0, typename T1>
   AABB(const Eigen::MatrixBase<T0>& min_v, const Eigen::MatrixBase<T1>& max_v)
       : m_min_vertex(min_v), m_max_vertex(max_v) {
+    ASSERT((m_max_vertex.array() > m_min_vertex.array()).all());
     Finish();
   }
 

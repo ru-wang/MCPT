@@ -1,9 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <any>
+#include <iterator>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include <Eigen/Eigen>
 
@@ -28,6 +29,7 @@ struct BVHNode {
   std::unique_ptr<BVHNode> l_child;
   std::unique_ptr<BVHNode> r_child;
 
+  BVHNode() = default;
   explicit BVHNode(const AABB<T>& aabb) : aabb(aabb) {}
 
   template <typename InputIt>
@@ -37,44 +39,40 @@ struct BVHNode {
 template <typename T>
 template <typename InputIt>
 void BVHNode<T>::Split(InputIt first, InputIt last) {
-  ASSERT(first != last);
+  size_t n = std::distance(first, last);
+  size_t l = n / 2;
+  ASSERT(n > 1);
 
-  l_child = std::make_unique<BVHNode>(aabb);
-  r_child = std::make_unique<BVHNode>(aabb);
+  // split the space into two partitions
+  Eigen::Index sort_axis;
+  aabb.diagonal().maxCoeff(&sort_axis);
+  std::nth_element(first, first + l, last, [sort_axis](auto& lhs, auto& rhs) {
+    return lhs->aabb.min_vertex().coeff(sort_axis) < rhs->aabb.min_vertex().coeff(sort_axis) &&
+           lhs->aabb.max_vertex().coeff(sort_axis) < rhs->aabb.max_vertex().coeff(sort_axis);
+  });
 
-  // find a hyperplane in P3 space splitting the space into two partitions
-  Eigen::Index max_coeff;
-  aabb.diagonal().maxCoeff(&max_coeff);
-  Eigen::Vector4f hyperplane = Eigen::Vector4f::Unit(max_coeff);
-  hyperplane.w() = -aabb.center().coeff(max_coeff);
+  if (l == 1) {
+    l_child = std::move(*first);
+  } else {
+    AABB<T> parent_aabb;
+    for (auto it = first; it != first + l; ++it)
+      parent_aabb.Update((*it)->aabb);
+    parent_aabb.Finish();
 
-  // split the leaves by the hyperplane
-  std::vector<std::unique_ptr<BVHNode>> l_leaves;
-  std::vector<std::unique_ptr<BVHNode>> r_leaves;
-  for (; first != last; ++first) {
-    auto& leaf = *first;
-    T dist = leaf->aabb.center().homogeneous().dot(hyperplane);
-    if (dist < 0.0 || (dist == 0.0 && l_leaves.size() <= r_leaves.size())) {
-      l_child->aabb.Update(leaf->aabb);
-      l_leaves.push_back(std::move(leaf));
-    } else {
-      r_child->aabb.Update(leaf->aabb);
-      r_leaves.push_back(std::move(leaf));
-    }
+    l_child = std::make_unique<BVHNode>(parent_aabb);
+    l_child->Split(first, first + l);
   }
 
-  l_child->aabb.Finish();
-  r_child->aabb.Finish();
+  if (n - l == 1) {
+    r_child = std::move(*(first + l));
+  } else {
+    AABB<T> parent_aabb;
+    parent_aabb.Finish();
+    for (auto it = first + l; it != last; ++it)
+      parent_aabb.Update((*it)->aabb);
 
-  switch (l_leaves.size()) {
-    case 0: l_child = nullptr; break;
-    case 1: l_child = std::move(l_leaves.front()); break;
-    default: l_child->Split(l_leaves.begin(), l_leaves.end());
-  }
-  switch (r_leaves.size()) {
-    case 0: r_child = nullptr; break;
-    case 1: r_child = std::move(r_leaves.front()); break;
-    default: r_child->Split(r_leaves.begin(), r_leaves.end());
+    r_child = std::make_unique<BVHNode>(parent_aabb);
+    r_child->Split(first + l, last);
   }
 }
 

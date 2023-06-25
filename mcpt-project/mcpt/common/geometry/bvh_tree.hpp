@@ -29,14 +29,19 @@ void BVHTree<T>::Construct(InputIt first, InputIt last) {
 
   std::vector<std::unique_ptr<BVHNode<T>>> leaves;
   for (; first != last; ++first) {
-    AABB<T> polygon_aabb;
+    AABB<T> leaf_aabb;
     for (const auto& v : first->polygon.vertices)
-      polygon_aabb.Update(v);
-    polygon_aabb.Finish();
+      leaf_aabb.Update(v);
+    leaf_aabb.Finish();
 
-    auto node = std::make_unique<BVHNode<T>>(polygon_aabb);
+    auto node = std::make_unique<BVHNode<T>>(leaf_aabb);
     node->mesh = *first;
     leaves.push_back(std::move(node));
+  }
+
+  if (leaves.size() == 1) {
+    root = std::move(leaves.front());
+    return;
   }
 
   AABB<T> root_aabb;
