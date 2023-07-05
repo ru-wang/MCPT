@@ -18,7 +18,7 @@ struct BVHTree {
   using Scalar = T;
 
   size_t num_leaves = 0;
-  std::unique_ptr<BVHNode<T>> root;
+  std::unique_ptr<const BVHNode<T>> root;
 
   template <typename InputIt>
   void Construct(InputIt first, InputIt last);
@@ -38,7 +38,7 @@ void BVHTree<T>::Construct(InputIt first, InputIt last) {
     leaf_aabb.Finish();
 
     auto node = std::make_unique<BVHNode<T>>(leaf_aabb);
-    node->mesh = *first;
+    node->mesh = std::as_const(*first);
     leaves.push_back(std::move(node));
   }
 
@@ -52,8 +52,9 @@ void BVHTree<T>::Construct(InputIt first, InputIt last) {
     root_aabb.Update(leaf->aabb);
   root_aabb.Finish();
 
-  root = std::make_unique<BVHNode<T>>(root_aabb);
-  root->Split(leaves.begin(), leaves.end());
+  auto node = std::make_unique<BVHNode<T>>(root_aabb);
+  node->Split(leaves.begin(), leaves.end());
+  root = std::move(node);
   ASSERT(root, "invalid object");
 }
 

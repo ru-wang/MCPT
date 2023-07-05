@@ -26,8 +26,8 @@ struct BVHNode {
   // only leaf nodes have corresponding mesh (cref)
   std::any mesh;
 
-  std::unique_ptr<BVHNode> l_child;
-  std::unique_ptr<BVHNode> r_child;
+  std::unique_ptr<const BVHNode> l_child;
+  std::unique_ptr<const BVHNode> r_child;
 
   BVHNode() = default;
   explicit BVHNode(const AABB<T>& aabb) : aabb(aabb) {}
@@ -61,8 +61,9 @@ void BVHNode<T>::Split(InputIt first, InputIt last) {
       parent_aabb.Update((*it)->aabb);
     parent_aabb.Finish();
 
-    l_child = std::make_unique<BVHNode>(parent_aabb);
-    l_child->Split(first, first + l);
+    auto node = std::make_unique<BVHNode>(parent_aabb);
+    node->Split(first, first + l);
+    l_child = std::move(node);
   }
 
   if (n - l == 1) {
@@ -73,8 +74,9 @@ void BVHNode<T>::Split(InputIt first, InputIt last) {
       parent_aabb.Update((*it)->aabb);
     parent_aabb.Finish();
 
-    r_child = std::make_unique<BVHNode>(parent_aabb);
-    r_child->Split(first + l, last);
+    auto node = std::make_unique<BVHNode>(parent_aabb);
+    node->Split(first + l, last);
+    r_child = std::move(node);
   }
 }
 
