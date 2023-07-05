@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <utility>
@@ -16,6 +17,7 @@ template <typename T>
 struct BVHTree {
   using Scalar = T;
 
+  size_t num_leaves = 0;
   std::unique_ptr<BVHNode<T>> root;
 
   template <typename InputIt>
@@ -26,6 +28,7 @@ template <typename T>
 template <typename InputIt>
 void BVHTree<T>::Construct(InputIt first, InputIt last) {
   ASSERT(first != last);
+  num_leaves = std::distance(first, last);
 
   std::vector<std::unique_ptr<BVHNode<T>>> leaves;
   for (; first != last; ++first) {

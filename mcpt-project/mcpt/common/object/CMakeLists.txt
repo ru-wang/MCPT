@@ -16,6 +16,7 @@ bottle_library(
   SRCS object.cpp
   HDRS object.hpp
   DEPS @eigen
+       @spdlog
        //mcpt/common/geometry:bvh_tree
        :material
        :mesh
