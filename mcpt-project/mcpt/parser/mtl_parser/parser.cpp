@@ -10,7 +10,7 @@
 #include <spdlog/spdlog.h>
 
 #include "mcpt/common/assert.hpp"
-#include "mcpt/parser/misc.hpp"
+#include "mcpt/common/misc.hpp"
 
 #include "mcpt/parser/mtl_parser/tokenizer.hpp"
 

@@ -6,7 +6,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "mcpt/parser/misc.hpp"
+#include "mcpt/common/misc.hpp"
 
 #include "mcpt/parser/obj_parser/tokenizer.hpp"
 

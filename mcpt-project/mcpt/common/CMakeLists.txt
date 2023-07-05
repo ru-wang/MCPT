@@ -11,6 +11,14 @@ bottle_library(
 )
 
 bottle_library(
+  NAME misc
+  SRCS misc.cpp
+  HDRS misc.hpp
+  DEPS @spdlog
+       :assert
+)
+
+bottle_library(
   NAME random
   HDRS random.hpp
 )

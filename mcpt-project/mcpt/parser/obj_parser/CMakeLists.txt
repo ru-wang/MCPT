@@ -12,7 +12,7 @@ bottle_library(
   SRCS line_parser.cpp
   HDRS line_parser.hpp
   DEPS @spdlog
-       //mcpt/parser:misc
+       //mcpt/common:misc
        :context
        :tokenizer
 )

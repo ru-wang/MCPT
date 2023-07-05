@@ -1,4 +1,4 @@
-#include "mcpt/parser/misc.hpp"
+#include "mcpt/common/misc.hpp"
 
 #include <algorithm>
 

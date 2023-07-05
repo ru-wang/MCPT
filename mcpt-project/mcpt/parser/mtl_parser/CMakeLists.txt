@@ -13,7 +13,7 @@ bottle_library(
   DEPS @spdlog
        //mcpt/common/object
        //mcpt/common:assert
-       //mcpt/parser:misc
+       //mcpt/common:misc
        :context
        :tokenizer
 )
