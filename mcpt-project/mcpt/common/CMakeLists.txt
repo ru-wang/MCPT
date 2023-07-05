@@ -3,6 +3,7 @@ bottle_package()
 bottle_subdir(NAME fileserver)
 bottle_subdir(NAME geometry)
 bottle_subdir(NAME object)
+bottle_subdir(NAME viz)
 
 bottle_library(
   NAME assert
