@@ -48,6 +48,9 @@ SECTION("traverse the BVH tree") {
       queue.push_back(node->r_child.get());
     num_bvh_leaves += node->mesh.has_value();
 
+    CHECK((node->aabb.min_vertex().array() <= node->aabb.max_vertex().array()).all());
+    CHECK((node->aabb.min_vertex().array() < node->aabb.max_vertex().array()).count() > 1);
+
     // no orphan child
     CHECK(node->mesh.has_value() == (!node->l_child && !node->r_child));
 

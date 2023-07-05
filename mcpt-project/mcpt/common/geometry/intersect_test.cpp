@@ -302,4 +302,42 @@ SECTION("intersection of ray and AABB") {
   }
 }
 
+SECTION("intersection of ray and AABB degenerated cases") {
+  SECTION("ray is invalid") {
+    Ray r(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    mcpt::AABB<double> aabb(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    CHECK_FALSE(intersect.Test(r, aabb));
+  }
+
+  SECTION("AABB is a single point") {
+    Ray r(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    mcpt::AABB<double> aabb(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    CHECK_FALSE(intersect.Test(r, aabb));
+  }
+
+  SECTION("AABB is a line") {
+    Ray r(Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    mcpt::AABB<double> aabb(Eigen::Vector3d::Zero(), Eigen::Vector3d::UnitX());
+    CHECK_FALSE(intersect.Test(r, aabb));
+  }
+
+  SECTION("AABB is on XY plane") {
+    mcpt::AABB<double> aabb(Eigen::Vector3d::UnitZ(), Eigen::Vector3d::Ones());
+    CHECK(intersect.Test(Ray(Eigen::Vector3d::Zero(), Eigen::Vector3d::UnitZ()), aabb));
+    CHECK_FALSE(intersect.Test(Ray(Eigen::Vector3d::Zero(), -Eigen::Vector3d::UnitZ()), aabb));
+  }
+
+  SECTION("AABB is on YZ plane") {
+    mcpt::AABB<double> aabb(Eigen::Vector3d::UnitX(), Eigen::Vector3d::Ones());
+    CHECK(intersect.Test(Ray(Eigen::Vector3d::Zero(), Eigen::Vector3d::UnitX()), aabb));
+    CHECK_FALSE(intersect.Test(Ray(Eigen::Vector3d::Zero(), -Eigen::Vector3d::UnitX()), aabb));
+  }
+
+  SECTION("AABB is on XZ plane") {
+    mcpt::AABB<double> aabb(Eigen::Vector3d::UnitY(), Eigen::Vector3d::Ones());
+    CHECK(intersect.Test(Ray(Eigen::Vector3d::Zero(), Eigen::Vector3d::UnitY()), aabb));
+    CHECK_FALSE(intersect.Test(Ray(Eigen::Vector3d::Zero(), -Eigen::Vector3d::UnitY()), aabb));
+  }
+}
+
 }

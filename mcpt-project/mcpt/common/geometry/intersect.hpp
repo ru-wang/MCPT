@@ -72,6 +72,8 @@ private:
       return std::make_tuple(false, d_a, d_b);
   }
 
+  bool TestDegenerated(const Ray<T>& r, const AABB<T>& aabb) const;
+
   template <typename U>
   bool Inside(const Eigen::MatrixBase<U>& p, const ConvexPolygon<T>& ply) const;
 
@@ -102,41 +104,76 @@ bool Intersect<T>::Test(const Ray<T>& r, const AABB<T>& aabb) const {
     spdlog::error("invalid ray: direction = {}", r.direction.format(FMT));
     return false;
   }
-  if ((aabb.max_vertex().array() <= aabb.min_vertex().array()).any()) {
-    spdlog::error("invalid ray: min = {}, max = {}",
-                  aabb.min_vertex().format(FMT),
-                  aabb.max_vertex().format(FMT));
+
+  const auto& v_min = aabb.min_vertex();
+  const auto& v_max = aabb.max_vertex();
+  size_t dim = (v_min.array() < v_max.array()).count();
+
+  if (dim <= 1) {
+    spdlog::error("invalid AABB: min = {}, max = {}", v_min.format(FMT), v_max.format(FMT));
     return false;
+  } else if (dim == 2) {
+    return TestDegenerated(r, aabb);
   }
 
   // start point inside AABB
   if (aabb.Envelop(r.point_a))
     return true;
 
-  const auto& v_min = aabb.min_vertex();
-  const auto& v_max = aabb.max_vertex();
-
-  Vector3 a1 = v_min;
+  const auto& a1 = v_min;
   Vector3 a2(v_max.x(), v_min.y(), v_min.z());
   Vector3 a3(v_max.x(), v_max.y(), v_min.z());
   Vector3 a4(v_min.x(), v_max.y(), v_min.z());
 
   Vector3 b1(v_min.x(), v_min.y(), v_max.z());
   Vector3 b2(v_max.x(), v_min.y(), v_max.z());
-  Vector3 b3 = v_max;
+  const auto& b3 = v_max;
   Vector3 b4(v_min.x(), v_max.y(), v_max.z());
 
-  ConvexPolygon<T> ply_u(b1, b2, b3, b4);
   ConvexPolygon<T> ply_d(a1, a2, a3, a4);
+  ConvexPolygon<T> ply_u(b1, b2, b3, b4);
 
   ConvexPolygon<T> ply_l(a1, b1, b4, a4);
   ConvexPolygon<T> ply_r(a2, b2, b3, a3);
 
-  ConvexPolygon<T> ply_f(a4, b3, b3, b4);
   ConvexPolygon<T> ply_b(a1, a2, b2, b1);
+  ConvexPolygon<T> ply_f(a4, b3, b3, b4);
 
   return Get(r, ply_u).w() != 0.0 || Get(r, ply_l).w() != 0.0 || Get(r, ply_f).w() != 0.0 ||
          Get(r, ply_d).w() != 0.0 || Get(r, ply_r).w() != 0.0 || Get(r, ply_b).w() != 0.0;
+}
+
+template <typename T>
+bool Intersect<T>::TestDegenerated(const Ray<T>& r, const AABB<T>& aabb) const {
+  const auto& v_min = aabb.min_vertex();
+  const auto& v_max = aabb.max_vertex();
+
+  Eigen::Index null_dim = 0;
+  for (;; ++null_dim) {
+    if (v_min[null_dim] == v_max[null_dim])
+      break;
+  }
+  switch (null_dim) {
+    case 0: {
+      Vector3 a4(v_min.x(), v_max.y(), v_min.z());
+      Vector3 b1(v_min.x(), v_min.y(), v_max.z());
+      Vector3 b4(v_min.x(), v_max.y(), v_max.z());
+      return Get(r, ConvexPolygon<T>(v_min, b1, b4, a4)).w() != 0.0;
+    }
+    case 1: {
+      Vector3 a2(v_max.x(), v_min.y(), v_min.z());
+      Vector3 b1(v_min.x(), v_min.y(), v_max.z());
+      Vector3 b2(v_max.x(), v_min.y(), v_max.z());
+      return Get(r, ConvexPolygon<T>(v_min, a2, b2, b1)).w() != 0.0;
+    }
+    case 2: {
+      Vector3 a2(v_max.x(), v_min.y(), v_min.z());
+      Vector3 a3(v_max.x(), v_max.y(), v_min.z());
+      Vector3 a4(v_min.x(), v_max.y(), v_min.z());
+      return Get(r, ConvexPolygon<T>(v_min, a2, a3, a4)).w() != 0.0;
+    }
+    default: ASSERT_FAIL(); return false;
+  }
 }
 
 /**
