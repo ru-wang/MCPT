@@ -69,9 +69,9 @@ void BVHNode<T>::Split(InputIt first, InputIt last) {
     r_child = std::move(*(first + l));
   } else {
     AABB<T> parent_aabb;
-    parent_aabb.Finish();
     for (auto it = first + l; it != last; ++it)
       parent_aabb.Update((*it)->aabb);
+    parent_aabb.Finish();
 
     r_child = std::make_unique<BVHNode>(parent_aabb);
     r_child->Split(first + l, last);
