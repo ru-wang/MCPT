@@ -18,7 +18,6 @@ public:
   template <typename T0, typename T1>
   AABB(const Eigen::MatrixBase<T0>& min_v, const Eigen::MatrixBase<T1>& max_v)
       : m_min_vertex(min_v), m_max_vertex(max_v) {
-    ASSERT((m_max_vertex.array() > m_min_vertex.array()).all());
     Finish();
   }
 
@@ -29,16 +28,17 @@ public:
 
   template <typename U>
   void Update(const Eigen::MatrixBase<U>& v) {
-    m_max_vertex = m_max_vertex.cwiseMax(v);
     m_min_vertex = m_min_vertex.cwiseMin(v);
+    m_max_vertex = m_max_vertex.cwiseMax(v);
   }
 
   void Update(const AABB& aabb) {
-    m_max_vertex = m_max_vertex.cwiseMax(aabb.max_vertex());
     m_min_vertex = m_min_vertex.cwiseMin(aabb.min_vertex());
+    m_max_vertex = m_max_vertex.cwiseMax(aabb.max_vertex());
   }
 
   void Finish() {
+    ASSERT((m_min_vertex.array() <= m_max_vertex.array()).all());
     m_center = (m_min_vertex + m_max_vertex) / 2;
     m_diagonal = m_max_vertex - m_min_vertex;
   }
