@@ -11,7 +11,8 @@ public:
   using Scalar = T;
 
   Uniform() = default;
-  Uniform(int seed) { m_gen.seed(seed); }
+  Uniform(int seed) : m_gen(seed) {}
+
   T Random() { return m_uniform(m_gen); }
 
 private:
@@ -38,6 +39,7 @@ public:
 
   UniformHemisphere() = default;
   UniformHemisphere(int seed) : m_u1(seed), m_u2(seed) {}
+  UniformHemisphere(int seed_u1, int seed_u2) : m_u1(seed_u1), m_u2(seed_u2) {}
 
   SolidAngle<T> Random() {
     // sample uniformly [0, 2pi), PDF = 1/(2pi)
@@ -60,6 +62,10 @@ public:
   using Scalar = T;
 
   static constexpr double TWO_PI = 2.0 * M_PI;
+
+  CosHemisphere() = default;
+  CosHemisphere(int seed) : m_u1(seed), m_u2(seed) {}
+  CosHemisphere(int seed_u1, int seed_u2) : m_u1(seed_u1), m_u2(seed_u2) {}
 
   SolidAngle<T> Random() {
     // sample uniformly [0, 2pi), PDF=1/(2pi)
@@ -86,6 +92,10 @@ public:
   using Scalar = T;
 
   static constexpr double TWO_PI = 2.0 * M_PI;
+
+  CosPowHemisphere() = default;
+  CosPowHemisphere(int seed) : m_u1(seed), m_u2(seed) {}
+  CosPowHemisphere(int seed_u1, int seed_u2) : m_u1(seed_u1), m_u2(seed_u2) {}
 
   SolidAngle<T> Random(float alpha) {
     float alpha_1 = alpha + 1.0F;
