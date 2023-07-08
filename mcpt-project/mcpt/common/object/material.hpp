@@ -63,7 +63,6 @@ struct Material {
   float Ni = 1.0F;
 
   // d factor
-  // Tr alpha
   //
   // Specifies the dissolve for the current material.
   //
@@ -73,6 +72,8 @@ struct Material {
   //
   // Unlike a real transparent material, the dissolve does not depend upon material thickness nor
   // does it have any spectral character. Dissolve works on all illumination models.
+  //
+  // Tr alpha
   //
   // The quantities d and Tr are the opposites of each other, and specifying transparency or
   // nontransparency is simply a matter of user convenience.
