@@ -43,7 +43,7 @@ BVHTree<float> Object::CreateBVHTree() const {
       Eigen::Vector3f avg_normal = Eigen::Vector3f::Zero();
       for (size_t index : nindex)
         avg_normal += m_normals.at(index);
-      avg_normal /= nindex.size();
+      avg_normal.normalize();
 
       meshes.push_back({material, ConvexPolygon{vertices}, Polygon2D{text_coords}, avg_normal});
     }
