@@ -7,8 +7,6 @@
 #include <string_view>
 #include <utility>
 
-#include <spdlog/spdlog.h>
-
 #include "mcpt/common/assert.hpp"
 #include "mcpt/common/misc.hpp"
 
@@ -33,8 +31,6 @@ Parser::Parser(const std::filesystem::path& filepath) {
 
 void Parser::Advance(const std::string& statement, Context& ctx) {
   // advance one line anyway
-  spdlog::debug("parsing {} ({}): `{}'", ctx.filepath, ++ctx.linenum, statement);
-
   auto trim_start =
       std::find_if(statement.cbegin(), statement.cend(), [](char ch) { return !std::isspace(ch); });
   auto trimed = std::string_view(statement).substr(std::distance(statement.cbegin(), trim_start));

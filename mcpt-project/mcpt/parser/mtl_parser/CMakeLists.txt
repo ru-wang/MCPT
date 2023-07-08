@@ -10,8 +10,7 @@ bottle_library(
   NAME parser
   SRCS parser.cpp
   HDRS parser.hpp
-  DEPS @spdlog
-       //mcpt/common/object
+  DEPS //mcpt/common/object
        //mcpt/common:assert
        //mcpt/common:misc
        :context

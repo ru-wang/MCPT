@@ -11,8 +11,7 @@ bottle_library(
   NAME line_parser
   SRCS line_parser.cpp
   HDRS line_parser.hpp
-  DEPS @spdlog
-       //mcpt/common:misc
+  DEPS //mcpt/common:misc
        :context
        :tokenizer
 )
