@@ -9,6 +9,9 @@
 namespace mcpt {
 
 RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
+  // threshold for rejecting the same mesh when doing test intersection
+  static constexpr float MIN_PROJECTION_LENGTH = 0.001F;
+
   Intersection ret;
 
   // compute intersection with all the meshes and select the closest one
@@ -30,8 +33,14 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
       if (point_h.w() == 0.0F)
         continue;
 
+      // reject the same mesh
+      Eigen::Vector3f segment = point_h.head<3>() - ray.point_a;
+      float project_length = std::abs(segment.dot(mesh.normal));
+      if (project_length < MIN_PROJECTION_LENGTH)
+        continue;
+
       // reject farther mesh
-      float traveling_length = (point_h.head<3>() - ray.point_a).norm();
+      float traveling_length = segment.norm();
       if (traveling_length > ret.traveling_length)
         continue;
 
