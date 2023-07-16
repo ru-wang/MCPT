@@ -75,16 +75,15 @@ PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
 }
 
 PathTracer::sample PathTracer::SampleDirection(const Eigen::Vector3f& normal, float alpha) {
-  auto [azimuth, depression, pdf] = alpha ? m_cos_pow_hemi.Random(alpha) : m_cos_hemi.Random();
+  auto [azimuth, depression, pdf] = m_cos_pow_hemi.Random(alpha);
   DASSERT(depression < M_PI_2, "depression can not reach pi/2");
 
   Eigen::Vector3f dir(std::sin(depression) * std::cos(azimuth),
                       std::sin(depression) * std::sin(azimuth),
                       std::cos(depression));
 
-  Eigen::Index z;
-  normal.maxCoeff(&z);
-  Eigen::Index x = (z == 2) ? 0 : z + 1;
+  Eigen::Index x;
+  normal.cwiseAbs().minCoeff(&x);
 
   // find the plane coordinate system
   Eigen::Matrix3f axes;

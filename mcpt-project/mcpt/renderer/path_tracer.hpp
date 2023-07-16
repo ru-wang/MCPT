@@ -51,7 +51,6 @@ private:
   std::reference_wrapper<const Object> m_associated_object;
 
   RayCaster m_ray_caster;
-  UniformHemisphere<float> m_cos_hemi;
   CosPowHemisphere<float> m_cos_pow_hemi;
 };
 
