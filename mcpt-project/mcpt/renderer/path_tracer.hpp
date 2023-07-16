@@ -19,8 +19,10 @@ class PathTracer {
 public:
   struct ReversePath {
     std::reference_wrapper<const Material> target_material;  // surface material at the intersection
-    Eigen::Vector3f point;                                   // intersection point
-    Eigen::Vector3f normal;                                  // surface normal at the intersection
+
+    float distance;          // intersection distance
+    Eigen::Vector3f point;   // intersection point
+    Eigen::Vector3f normal;  // surface normal at the intersection
 
     Eigen::Vector3f exit_dir;
     double exit_pdf;

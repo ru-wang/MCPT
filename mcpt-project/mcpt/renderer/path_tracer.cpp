@@ -21,9 +21,9 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
 
   // sample a new direction
   auto [exit_dir, exit_normal, exit_pdf] = NextDirection(incident_ray.direction, mesh.normal, mtl);
-  if (exit_pdf == 0.0)
-    return std::nullopt;
-  return ReversePath{mtl, intersection.point, exit_normal, exit_dir, exit_pdf};
+  DASSERT(exit_pdf > 0.0);
+  return ReversePath{
+      mtl, intersection.traveling_length, intersection.point, exit_normal, exit_dir, exit_pdf};
 }
 
 /**
