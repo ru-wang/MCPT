@@ -49,28 +49,23 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
 PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
                                              const Eigen::Vector3f& normal,
                                              const Material& material) {
-  float cos_incident = std::clamp(-incident.dot(normal), -1.0F, 1.0F);
+  float cos_incident = incident.dot(normal);
   DASSERT(cos_incident != 0.0F, "incident parallel to the mesh should have been rejected");
 
-  if (material.Tr == 0) {
-    // fully opaque
-    return SampleDirection(cos_incident > 0.0F ? normal : -normal, material.Ns);
+  if (material.Tr != 0.0) {
+    // refraction
+    // cos < 0: entering a transparent object
+    // cos > 0: leaving a transparent object
+    float k = cos_incident < 0.0F ? 1.0F / material.Ni : material.Ni;
+    Eigen::Vector3f refract = k * incident + (1.0F - k) * cos_incident * normal;
+    return {refract.normalized(), cos_incident < 0.0F ? -normal : normal, 1.0};
+  } else if (material.Kd == Eigen::Vector3f::Zero() && material.Ks != Eigen::Vector3f::Zero()) {
+    // ideal reflection
+    Eigen::Vector3f reflect = incident - 2.0F * cos_incident * normal;
+    return {reflect.normalized(), cos_incident < 0.0F ? normal : -normal, 1.0};
   } else {
-    // transparent
-    if (cos_incident > 0.0F) {
-      // entering a transparent object
-      if (cos_incident == 1.0F) {
-        return {-normal, normal, 1.0};
-      } else {
-        Eigen::Vector3f perpend_n = (incident + cos_incident * normal).normalized();
-        float sin_refract = std::sqrt(1.0F - cos_incident * cos_incident) / material.Ni;
-        float tan_refract = sin_refract / std::sqrt(1.0F - sin_refract * sin_refract);
-        return {(tan_refract * perpend_n - normal).normalized(), normal, 1.0};
-      }
-    } else {
-      // leaving a transparent object
-      return SampleDirection(normal, material.Ns);
-    }
+    // fully opaque
+    return SampleDirection(cos_incident < 0.0F ? normal : -normal, material.Ns + 1.0F);
   }
 }
 
