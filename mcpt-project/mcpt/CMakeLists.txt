@@ -26,6 +26,15 @@ bottle_binary(
 )
 
 bottle_binary(
+  NAME random_main
+  SRCS random_main.cc
+  DEPS @cheers
+       @eigen
+       /common
+       :misc
+)
+
+bottle_binary(
   NAME catch2_main
   SRCS catch2_main.cc
   DEPS @catch2
