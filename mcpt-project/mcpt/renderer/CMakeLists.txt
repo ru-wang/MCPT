@@ -1,6 +1,14 @@
 bottle_package()
 
 bottle_library(
+  NAME brdf
+  SRCS brdf.cpp
+  HDRS brdf.hpp
+  DEPS @eigen
+       //mcpt/common/object
+)
+
+bottle_library(
   NAME monte_carlo
   SRCS monte_carlo.cpp
   HDRS monte_carlo.hpp
