@@ -68,7 +68,7 @@ struct ConvexPolygon : Plane<T> {
   template <typename InputIt>
   ConvexPolygon(InputIt first, InputIt last)
       : Plane<T>(*first, *(first + 1), *(first + 2)), vertices(first, last) {
-    ASSERT(std::distance(first, last) >= 3);
+    DASSERT(std::distance(first, last) >= 3);
   }
 };
 
@@ -89,7 +89,7 @@ struct Polygon2D {
 
   template <typename InputIt>
   Polygon2D(InputIt first, InputIt last) : vertices(first, last) {
-    ASSERT(std::distance(first, last) >= 3);
+    DASSERT(std::distance(first, last) >= 3);
   }
 };
 

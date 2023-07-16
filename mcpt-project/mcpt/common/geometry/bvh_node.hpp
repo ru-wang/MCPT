@@ -41,7 +41,7 @@ template <typename InputIt>
 void BVHNode<T>::Split(InputIt first, InputIt last) {
   size_t n = std::distance(first, last);
   size_t l = n / 2;
-  ASSERT(n > 1);
+  DASSERT(n > 1);
 
   // split the space into two partitions
   Eigen::Index sort_axis;

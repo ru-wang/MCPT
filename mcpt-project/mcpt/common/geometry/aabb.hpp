@@ -38,7 +38,7 @@ public:
   }
 
   void Finish() {
-    ASSERT((m_min_vertex.array() <= m_max_vertex.array()).all());
+    DASSERT((m_min_vertex.array() <= m_max_vertex.array()).all());
     m_center = (m_min_vertex + m_max_vertex) / 2;
     m_diagonal = m_max_vertex - m_min_vertex;
   }

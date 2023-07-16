@@ -27,7 +27,7 @@ struct BVHTree {
 template <typename T>
 template <typename InputIt>
 void BVHTree<T>::Construct(InputIt first, InputIt last) {
-  ASSERT(first != last);
+  DASSERT(first != last);
   num_leaves = std::distance(first, last);
 
   std::vector<std::unique_ptr<BVHNode<T>>> leaves;
@@ -55,7 +55,7 @@ void BVHTree<T>::Construct(InputIt first, InputIt last) {
   auto node = std::make_unique<BVHNode<T>>(root_aabb);
   node->Split(leaves.begin(), leaves.end());
   root = std::move(node);
-  ASSERT(root, "invalid object");
+  DASSERT(root, "invalid object");
 }
 
 }  // namespace mcpt

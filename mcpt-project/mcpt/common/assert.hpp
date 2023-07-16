@@ -16,6 +16,14 @@
 #define ASSERT_FAIL(...) \
   mcpt::AssertFail("this should not happen", __FILE__, __LINE__, __PRETTY_FUNCTION__, ##__VA_ARGS__)
 
+#ifndef NDASSERT
+#define DASSERT(expr, ...) ASSERT(expr, ##__VA_ARGS__)
+#define DASSERT_FAIL(...) ASSERT_FAIL(__VA_ARGS__)
+#else
+#define DASSERT(expr, ...) ((void)0)
+#define DASSERT_FAIL(...) ((void)0)
+#endif
+
 namespace mcpt {
 
 template <typename... Args>

@@ -50,7 +50,7 @@ PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
                                              const Eigen::Vector3f& normal,
                                              const Material& material) {
   float cos_incident = std::clamp(-incident.dot(normal), -1.0F, 1.0F);
-  ASSERT(cos_incident != 0.0F, "incident parallel to the mesh should have been rejected");
+  DASSERT(cos_incident != 0.0F, "incident parallel to the mesh should have been rejected");
 
   if (material.Tr == 0) {
     // fully opaque
@@ -76,7 +76,7 @@ PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
 
 PathTracer::sample PathTracer::SampleDirection(const Eigen::Vector3f& normal, float alpha) {
   auto [azimuth, depression, pdf] = alpha ? m_cos_pow_hemi.Random(alpha) : m_cos_hemi.Random();
-  ASSERT(depression < M_PI_2, "depression can not reach pi/2");
+  DASSERT(depression < M_PI_2, "depression can not reach pi/2");
 
   Eigen::Vector3f dir(std::sin(depression) * std::cos(azimuth),
                       std::sin(depression) * std::sin(azimuth),

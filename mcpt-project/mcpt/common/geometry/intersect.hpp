@@ -172,7 +172,7 @@ bool Intersect<T>::TestDegenerated(const Ray<T>& r, const AABB<T>& aabb) const {
       Vector3 a4(v_min.x(), v_max.y(), v_min.z());
       return Get(r, ConvexPolygon<T>(v_min, a2, a3, a4)).w() != 0.0;
     }
-    default: ASSERT_FAIL(); return false;
+    default: DASSERT_FAIL(); return false;
   }
 }
 
