@@ -23,7 +23,7 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
   auto [exit_dir, exit_normal, exit_pdf] = NextDirection(incident_ray.direction, mesh.normal, mtl);
   DASSERT(exit_pdf > 0.0);
   return ReversePath{
-      mtl, intersection.traveling_length, intersection.point, exit_normal, exit_dir, exit_pdf};
+      mtl, intersection.distance, intersection.point, exit_normal, exit_dir, exit_pdf};
 }
 
 /**

@@ -13,8 +13,7 @@ namespace mcpt {
 class RayCaster {
 public:
   struct Intersection {
-    float traveling_length = std::numeric_limits<float>::max();
-    float abs_cos_incident = 0.0F;
+    float distance = std::numeric_limits<float>::max();
     Eigen::Vector3f point{Eigen::Vector3f::Zero()};
     const BVHNode<float>* node = nullptr;
   };

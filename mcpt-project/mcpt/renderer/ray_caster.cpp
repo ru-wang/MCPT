@@ -13,6 +13,7 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
   static constexpr float MIN_PROJECTION_LENGTH = 0.001F;
 
   Intersection ret;
+  float max_abs_cos_incident = 0.0F;
 
   // compute intersection with all the meshes and select the closest one
   for (std::deque queue{m_bvh_tree.get().root.get()}; !queue.empty(); queue.pop_front()) {
@@ -40,15 +41,15 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
         continue;
 
       // reject farther mesh
-      float traveling_length = segment.norm();
-      if (traveling_length > ret.traveling_length)
+      float distance = segment.norm();
+      if (distance > ret.distance)
         continue;
 
       // take closer mesh
       float abs_cos_incident = std::abs(ray.direction.dot(mesh.normal));
-      if (traveling_length < ret.traveling_length || abs_cos_incident > ret.abs_cos_incident) {
-        ret.abs_cos_incident = abs_cos_incident;
-        ret.traveling_length = traveling_length;
+      if (distance < ret.distance || abs_cos_incident > max_abs_cos_incident) {
+        max_abs_cos_incident = abs_cos_incident;
+        ret.distance = distance;
         ret.point = point_h.head<3>();
         ret.node = node;
       }
