@@ -1,102 +1,133 @@
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <Eigen/Eigen>
-#include <spdlog/cfg/env.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/stdout_sinks.h>
+#include <cheers/window/window.hpp>
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
+#include <spdlog/stopwatch.h>
 
 #include "mcpt/common/assert.hpp"
 #include "mcpt/common/fileserver/fileserver.hpp"
-#include "mcpt/parser/misc.hpp"
+#include "mcpt/common/misc.hpp"
+#include "mcpt/common/viz/object_layer.hpp"
+#include "mcpt/common/viz/path_layer.hpp"
 #include "mcpt/parser/obj_parser/parser.hpp"
+#include "mcpt/renderer/brdf.hpp"
 #include "mcpt/renderer/monte_carlo.hpp"
 
+#include "mcpt/misc.hpp"
+
 using namespace mcpt;
+
+static const Eigen::IOFormat FMT{
+    Eigen::StreamPrecision, Eigen::DontAlignCols, " ", " ", "", "", "[", "]"};
 
 Object LoadObject(std::filesystem::path obj_path) {
   ASSERT(!obj_path.empty());
   return obj_parser::Parser(obj_path).object();
 }
 
-/**
- * Y(m) |\
- *      | \
- *      |  \
- *      |   \
- *      |    \       /| y(mm): vertical CMOS half size
- *      |     \     / |
- *      |      \   /  |
- *      |       \ /   |
- *    --+--------X----+--
- *         d(m)    f(mm)
- *
- * Y/d = y/f = fy
- *
- * h/2 = fy * Y/d
- *  fy = h/2 * d/Y
- *     = h/2 * f/y
- */
-Eigen::Vector4f MakeCamera(unsigned int w, unsigned int h, float focal_length, float cmos_horizon) {
-  float cmos_vertical = cmos_horizon * h / w;
-  float fx = w * focal_length / cmos_horizon;
-  float fy = h * focal_length / cmos_vertical;
-  return Eigen::Vector4f(fx, fy, w / 2.0F, h / 2.0F);
-}
-
-void MakeLogger() {
-  auto console_sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
-  auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", true);
-  auto logger = std::make_shared<spdlog::logger>(
-      "default", spdlog::sinks_init_list({console_sink, file_sink}));
-  spdlog::set_default_logger(logger);
-
-  spdlog::set_pattern(R"([%H:%M:%S.%e %L%t] %^%v%$)");
-  spdlog::cfg::load_env_levels();
-}
-
 int main(int argc, char* argv[]) {
-  MakeLogger();
+  MakeLogger("default");
 
   ASSERT(argc == 5);
-  std::filesystem::path asset_root = argv[1];
-  std::filesystem::path obj_filename = argv[2];
-  unsigned int w = std::stoul(argv[3]);
-  unsigned int h = std::stoul(argv[4]);
+  std::filesystem::path arg_obj_fname = argv[1];
+  ASSERT(arg_obj_fname.has_parent_path());
+  ASSERT(arg_obj_fname.has_filename());
 
-  spdlog::info("loading object from {}", obj_filename);
-  SandboxFileserver fsserver(asset_root);
-  auto obj = LoadObject(fsserver.GetAbsolutePath(obj_filename));
+  unsigned int arg_w = std::stoul(argv[2]);
+  unsigned int arg_h = std::stoul(argv[3]);
+  ASSERT(arg_w > 0 && arg_h > 0);
+
+  size_t arg_samples = std::stoul(argv[4]);
+  ASSERT(arg_samples > 0);
+
+  spdlog::info("loading object from {}", arg_obj_fname);
+  SandboxFileserver fserver(arg_obj_fname.parent_path());
+  auto obj = LoadObject(fserver.GetAbsolutePath(arg_obj_fname));
+  auto bvh = obj.CreateBVHTree();
+
+  spdlog::info("making MCPT options");
+  MonteCarlo::Options mc_opts;
+  mc_opts.intrin = MakeCamera(arg_w, arg_h, 28.0F, 36.0F);
+  mc_opts.R.col(0) = Eigen::Vector3f::UnitX();
+  mc_opts.R.col(1) = -Eigen::Vector3f::UnitY();
+  mc_opts.R.col(2) = -Eigen::Vector3f::UnitZ();
+  mc_opts.t << 8.0F, 8.0F, 18.0F;
+  mc_opts.R = Eigen::AngleAxisf(20.0F / 180.0F * M_PI, Eigen::Vector3f::UnitY()) *
+              Eigen::AngleAxisf(-10.0F / 180.0F * M_PI, Eigen::Vector3f::UnitX()) * mc_opts.R;
+  spdlog::info("camera intrinsics: {}", mc_opts.intrin.format(FMT));
 
   spdlog::info("making MCPT renderer");
-  MonteCarlo::options options;
-  options.intrin = MakeCamera(w, h, 28.0F, 36.0F);
-  options.R.col(0) = Eigen::Vector3f::UnitX();
-  options.R.col(1) = -Eigen::Vector3f::UnitZ();
-  options.R.col(2) = Eigen::Vector3f::UnitY();
-  options.t << 0.0F, -200.0F, 50.0F;
-  MonteCarlo mcpt(options, obj);
+  MonteCarlo mcpt(mc_opts, obj, bvh);
+  mcpt.InstallBRDF(std::make_unique<BlinnPhongBRDF>());
 
-  spdlog::info("running MCPT configs");
-  std::vector<float> im(w * h * 3);
-  for (unsigned int v = 0, px = 0; v < h; ++v) {
-    for (unsigned int u = 0; u < w; ++u, ++px) {
-      auto color = mcpt.Run(u, v);
-      im.at(px * 3 + 0) = color.x();
-      im.at(px * 3 + 1) = color.y();
-      im.at(px * 3 + 2) = color.z();
+  auto object_layer = cheers::Window::Instance().InstallSharedLayer<ObjectLayer>();
+  auto path_layer = cheers::Window::Instance().InstallSharedLayer<PathLayer>();
+  auto viz_thread = std::thread{VizThread{mc_opts.t * 2.0}};
+  object_layer->UpdateObject(obj, mc_opts.R, mc_opts.t);
+
+  size_t samples = 0;
+  std::vector integral(arg_w * arg_h * 3, 0.0F);
+  SandboxFileserver fs_out(fmt::format("{}_{}x{}", arg_obj_fname.stem().string(), arg_w, arg_h));
+
+  spdlog::info("running MCPT for {} samples", arg_samples);
+  spdlog::stopwatch sw;
+
+#ifdef NDEBUG
+#pragma omp parallel for
+#endif
+  for (size_t k = 0; k < arg_samples; ++k) {
+    spdlog::stopwatch sw_k;
+
+    std::vector<Eigen::Vector3f> radiance(arg_w * arg_h);
+    for (size_t i = 0; i < arg_w * arg_h; ++i) {
+      unsigned int x = i % arg_w;
+      unsigned int y = i / arg_w;
+
+      auto result = mcpt.Run(x, y);
+      radiance[i] = result.radiance;
+
+      if (k == 0 && !result.rpaths.empty()) {
+        spdlog::debug("[{:03}] computing for uv({},{}), #paths: {}", i, x, y, result.rpaths.size());
+        path_layer->AddPaths(mc_opts.t, result.rpaths);
+      }
+    }
+
+    double elapsed = sw_k.elapsed().count();
+
+#ifdef NDEBUG
+#pragma omp critical
+#endif
+    {
+      for (size_t i = 0; i < radiance.size(); ++i) {
+        integral[i * 3 + 0] += radiance[i].x();
+        integral[i * 3 + 1] += radiance[i].y();
+        integral[i * 3 + 2] += radiance[i].z();
+      }
+
+      spdlog::info("sample: {}/{}, elapsed(s): {:.1f}/{:.1f}", ++samples, arg_samples, elapsed, sw);
+      if (samples == arg_samples || samples % 50 == 0) {
+        spdlog::info("saving to PPM image sample_{}.ppm", samples);
+
+        std::vector<float> im(integral.size());
+        for (size_t i = 0; i < integral.size(); ++i)
+          im[i] = integral[i] / samples;
+
+        std::ofstream ofs;
+        ASSERT(fs_out.OpenTextWrite(fmt::format("sample_{}.ppm", samples), ofs));
+        RawToPPM(arg_w, arg_h, 2.2F, im.data(), ofs);
+      }
     }
   }
 
-  auto ppm_filepath = obj_filename.replace_extension(".ppm");
-  spdlog::info("saving to PPM image {}", ppm_filepath);
-
-  std::ofstream ofs;
-  ASSERT(fsserver.OpenTextWrite(ppm_filepath, ofs));
-  SaveRawToPPM(w, h, im.data(), ofs);
+  spdlog::info("saved results in {}", fs_out.GetAbsolutePath());
+  viz_thread.join();
   return 0;
 }
