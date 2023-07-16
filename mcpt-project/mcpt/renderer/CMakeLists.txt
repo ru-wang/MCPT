@@ -13,9 +13,11 @@ bottle_library(
   SRCS monte_carlo.cpp
   HDRS monte_carlo.hpp
   DEPS @eigen
-       @spdlog
        //mcpt/common/geometry
        //mcpt/common/object
+       //mcpt/common:assert
+       //mcpt/common:random
+       :brdf
        :path_tracer
 )
 

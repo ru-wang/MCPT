@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+#include <utility>
 #include <vector>
 
 #include <Eigen/Eigen>
@@ -7,7 +9,9 @@
 #include "mcpt/common/geometry/bvh_tree.hpp"
 #include "mcpt/common/geometry/types.hpp"
 #include "mcpt/common/object/object.hpp"
+#include "mcpt/common/random.hpp"
 
+#include "mcpt/renderer/brdf.hpp"
 #include "mcpt/renderer/path_tracer.hpp"
 
 namespace mcpt {
@@ -17,41 +21,49 @@ namespace mcpt {
 // - and BTDF(Bidirectional transmittance distribution function) of Lambert model
 class MonteCarlo {
 public:
-  struct options {
-    double trunc_pdf = 1.0e-10;
+  struct Result {
+    std::vector<PathTracer::ReversePath> rpaths;
+    Eigen::Vector3f radiance;
+  };
+
+  struct Options {
+    size_t min_num_paths = 3;
+    double rr_continue_prob = 0.5;
     // camera options
     Eigen::Vector4f intrin{Eigen::Vector4f::Zero()};
     Eigen::Matrix3f R{Eigen::Matrix3f::Zero()};
     Eigen::Vector3f t{Eigen::Vector3f::Zero()};
   };
 
-  MonteCarlo(options options, const Object& object, const BVHTree<float>& bvh_tree)
+  MonteCarlo(const Options& options, const Object& object, const BVHTree<float>& bvh_tree)
       : m_options(options), m_path_tracer(object, bvh_tree) {
     float fx = m_options.intrin.x();
     float fy = m_options.intrin.y();
     float cx = m_options.intrin.z();
     float cy = m_options.intrin.w();
-    m_cam_K_inv << 1.0F / fx, 0.0F, -cx / fx, 0.0F, 1.0F / fy, -cy / fy, 0.0F, 0.0F, 1.0F;
+    m_intrin_inv << 1.0F / fx, 0.0F, -cx / fx, 0.0F, 1.0F / fy, -cy / fy, 0.0F, 0.0F, 1.0F;
   }
 
-  Eigen::Vector3f Run(unsigned int u, unsigned int v);
+  void InstallBRDF(std::unique_ptr<BRDF> brdf) { m_brdf = std::move(brdf); }
+
+  Result Run(unsigned int u, unsigned int v);
 
 private:
-  struct Paths {
-    double rpath_pdf;
-    std::vector<PathTracer::ReversePath> rpaths;
-  };
+  using RPaths = std::vector<PathTracer::ReversePath>;
 
   // backtrace from the eye until:
   // - escaping from the scene (no more intersection)
-  // - falling-off (the PDF is too small)
-  Paths Backtrace(const Eigen::Vector3f& xy1);
+  // - failing in Russian roulette
+  RPaths Backtrace(const Eigen::Vector3f& xy1);
   // propagate the light from the light source
-  Eigen::Vector3f Propagate(const Eigen::Vector3f& eye, const Paths& paths) const;
+  Eigen::Vector3f Propagate(const Eigen::Vector3f& eye, const RPaths& rpaths) const;
 
-  options m_options;
-  Eigen::Matrix3f m_cam_K_inv;
+  Options m_options;
+  std::unique_ptr<BRDF> m_brdf;
+
+  Eigen::Matrix3f m_intrin_inv;
   PathTracer m_path_tracer;
+  Uniform<double> m_russian_roulette;
 };
 
 }  // namespace mcpt
