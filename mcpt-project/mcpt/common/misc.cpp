@@ -1,9 +1,11 @@
 #include "mcpt/common/misc.hpp"
 
+#include <cmath>
 #include <algorithm>
 
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/ostr.h>
+#include <spdlog/spdlog.h>
 
 #include "mcpt/common/assert.hpp"
 
@@ -31,18 +33,41 @@ std::stringstream SafelyGetLineStream(std::istream& is) {
   return std::stringstream(SafelyGetLineString(is));
 }
 
-void SaveRawToPPM(unsigned int w, unsigned int h, const float im[], std::ofstream& ofs) {
+void DepthToPPM(unsigned int w, unsigned int h, const float im[], std::ofstream& ofs) {
   ASSERT(ofs.is_open(), "not a invalid file");
-
-  unsigned int num_ch = w * h * 3;
-  float c_max = *std::max_element(im, im + num_ch);
+  auto [d_min, d_max] = std::minmax_element(im, im + w * h);
+  spdlog::info("min depth: {}, max depth {}", *d_min, *d_max);
 
   // remap to [0, 255]
-  std::vector<unsigned char> remap(num_ch);
-  for (unsigned int i = 0; i < num_ch; ++i) {
-    ASSERT(im[i] >= 0.0F);
-    int ch = std::lround(im[i] / c_max * 255.0);
-    remap.at(i) = std::max(ch, 255);
+  std::vector<unsigned char> remap(w * h);
+  for (size_t i = 0; i < remap.size(); ++i) {
+    float val = (im[i] - *d_min) / (*d_max);
+    ASSERT(val >= 0.0F && val <= 1.0F, "wrong depth value: ({},{}) {}", i % w, i / w, im[i]);
+    remap.at(i) = std::clamp<unsigned int>(val * 255.0F, 0, 255);
+  }
+
+  // header
+  fmt::print(ofs, "P3\n{} {}\n255\n", w, h);
+  // each line for one pixel
+  for (size_t i = 0; i < remap.size(); ++i)
+    fmt::print(ofs, "{:>3} {:>3} {:>3}\n", remap[i], remap[i], remap[i]);
+}
+
+void RawToPPM(unsigned int w, unsigned int h, float gamma, const float im[], std::ofstream& ofs) {
+  ASSERT(ofs.is_open(), "not a invalid file");
+  float c_max = *std::max_element(im, im + w * h * 3);
+  spdlog::info("max color: {}", c_max);
+
+  // remap to [0, 255]
+  std::vector<unsigned char> remap(w * h * 3);
+  for (size_t i = 0; i < remap.size(); ++i) {
+    size_t u = i / 3 % w;
+    size_t v = i / 3 / w;
+    size_t ch = i % 3;
+
+    float val = std::pow(std::clamp(im[i], 0.0F, 1.0F), 1.0F / gamma);
+    ASSERT(val >= 0.0F && val <= 1.0F, "wrong channel value: ({},{},{}) {}", u, v, ch, im[i]);
+    remap.at(i) = std::clamp<unsigned int>(std::round(val * 255.0F), 0, 255);
   }
 
   // header
