@@ -10,9 +10,16 @@ namespace fs = std::filesystem;
 
 SandboxFileserver::SandboxFileserver(const fs::path& root_path) {
   // assert exists and is a directory
-  ASSERT(fs::is_directory(root_path), "not a valid directory: {}", root_path);
+  if (fs::exists(root_path))
+    ASSERT(fs::is_directory(root_path), "not a valid directory: {}", root_path);
+  else
+    ASSERT(fs::create_directories(root_path), "failed to create directories for: {}", root_path);
   // convert to aboslute and remove dots and symlinks
   m_root_path = fs::canonical(root_path);
+}
+
+std::filesystem::path SandboxFileserver::GetAbsolutePath() {
+  return m_root_path;
 }
 
 std::filesystem::path SandboxFileserver::GetAbsolutePath(const std::filesystem::path& relpath) {
@@ -48,6 +55,12 @@ bool SandboxFileserver::OpenTextWrite(const std::filesystem::path& relpath, std:
   auto abspath = GetAbsolutePath(relpath);
   if (fs::exists(abspath) && !fs::is_regular_file(abspath)) {
     spdlog::error("failed to open {} ({}): not a regular file", relpath, abspath);
+    return false;
+  }
+
+  fs::create_directories(abspath.parent_path());
+  if (!fs::is_directory(abspath.parent_path())) {
+    spdlog::error("failed to open {} ({}): invalid parent directory", relpath, abspath);
     return false;
   }
 
