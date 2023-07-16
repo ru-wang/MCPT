@@ -12,7 +12,7 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
   Intersection ret;
 
   // compute intersection with all the meshes and select the closest one
-  for (std::deque queue{m_bvh_tree.root.get()}; !queue.empty(); queue.pop_front()) {
+  for (std::deque queue{m_bvh_tree.get().root.get()}; !queue.empty(); queue.pop_front()) {
     auto node = queue.front();
     if (!m_intersect.Test(ray, node->aabb))
       continue;

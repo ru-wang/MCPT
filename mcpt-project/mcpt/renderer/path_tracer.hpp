@@ -5,6 +5,7 @@
 
 #include <Eigen/Eigen>
 
+#include "mcpt/common/geometry/bvh_tree.hpp"
 #include "mcpt/common/geometry/types.hpp"
 #include "mcpt/common/object/material.hpp"
 #include "mcpt/common/object/object.hpp"
@@ -25,7 +26,8 @@ public:
     double exit_pdf;
   };
 
-  explicit PathTracer(const Object& object) : m_associated_object(object), m_ray_caster(object) {}
+  PathTracer(const Object& object, const BVHTree<float>& bvh_tree)
+      : m_associated_object(object), m_ray_caster(bvh_tree) {}
 
   // return the exit path at the intersection of the incident ray and the surface
   std::optional<ReversePath> Run(const Ray<float>& incident_ray);

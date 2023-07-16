@@ -1,12 +1,12 @@
 #pragma once
 
+#include <functional>
 #include <limits>
 
 #include <Eigen/Eigen>
 
 #include "mcpt/common/geometry/bvh_tree.hpp"
 #include "mcpt/common/geometry/intersect.hpp"
-#include "mcpt/common/object/object.hpp"
 
 namespace mcpt {
 
@@ -19,16 +19,15 @@ public:
     const BVHNode<float>* node = nullptr;
   };
 
-  explicit RayCaster(const Object& object)
-      : RayCaster(object, Eigen::NumTraits<float>::dummy_precision()) {}
+  explicit RayCaster(const BVHTree<float>& bvh_tree)
+      : RayCaster(bvh_tree, Eigen::NumTraits<float>::dummy_precision()) {}
 
-  RayCaster(const Object& object, float prec)
-      : m_bvh_tree(object.CreateBVHTree()), m_intersect(prec) {}
+  RayCaster(const BVHTree<float>& bvh_tree, float prec) : m_bvh_tree(bvh_tree), m_intersect(prec) {}
 
   Intersection Run(const Ray<float>& ray) const;
 
 private:
-  BVHTree<float> m_bvh_tree;
+  std::reference_wrapper<const BVHTree<float>> m_bvh_tree;
   Intersect<float> m_intersect;
 };
 

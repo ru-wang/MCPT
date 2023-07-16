@@ -4,6 +4,7 @@
 
 #include <Eigen/Eigen>
 
+#include "mcpt/common/geometry/bvh_tree.hpp"
 #include "mcpt/common/geometry/types.hpp"
 #include "mcpt/common/object/object.hpp"
 
@@ -24,7 +25,8 @@ public:
     Eigen::Vector3f t{Eigen::Vector3f::Zero()};
   };
 
-  MonteCarlo(options options, const Object& object) : m_options(options), m_path_tracer(object) {
+  MonteCarlo(options options, const Object& object, const BVHTree<float>& bvh_tree)
+      : m_options(options), m_path_tracer(object, bvh_tree) {
     float fx = m_options.intrin.x();
     float fy = m_options.intrin.y();
     float cx = m_options.intrin.z();
