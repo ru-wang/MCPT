@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <mutex>
 
 #include <Eigen/Eigen>
@@ -16,6 +17,7 @@ public:
   void OnCreateRenderer() override;
   void OnDestroyRenderer() override;
 
+  void OnUpdateImFrame() override;
   void OnUpdateRenderData() override;
   void OnRenderLayer(const float* matrix_vp) override;
 
@@ -35,8 +37,11 @@ private:
     Object object;
     Eigen::Matrix4f camera_pose;
 
-    // generated
-    size_t num_indices = 0;
+    // ImGui data
+    bool draw_wire = true;
+    float line_width = 2.0F;
+    std::array<float, 4> facet_color{0.22F, 0.22F, 0.22F, 0.78F};
+    std::array<float, 4> wire_color{0.1F, 0.1F, 0.1F, 1.0F};
   };
 
   RenderData m_render_data;

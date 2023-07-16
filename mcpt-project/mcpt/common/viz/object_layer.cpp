@@ -1,11 +1,12 @@
 #include "mcpt/common/viz/object_layer.hpp"
 
-#include <array>
 #include <vector>
 
 #include <GL/glew.h>
 
 #include <cheers/resource/shader_absolute_path.hpp>
+#include <cheers/utils/gl_object.hpp>
+#include <cheers/utils/im_export.hpp>
 
 namespace mcpt {
 
@@ -26,8 +27,6 @@ constexpr std::array CAMERA_UP_SHAPE = {
     -1.0F, -0.6F, 2.0F,  // left-bottom
 };
 
-constexpr std::array FACET_COLOR{0.22F, 0.22F, 0.22F, 0.78F};
-constexpr std::array WIRE_COLOR{0.1F, 0.1F, 0.1F, 1.0F};
 constexpr std::array CAMERA_COLOR{0.1F, 0.1F, 0.1F, 1.0F};
 constexpr std::array CAMERA_UP_COLOR{0.9F, 0.1F, 0.1F, 1.0F};
 
@@ -71,6 +70,18 @@ void ObjectLayer::OnDestroyRenderer() {
   clear_render_program();
 }
 
+void ObjectLayer::OnUpdateImFrame() {
+  if (ImGui::Begin("Object Properties")) {
+    ImGui::Checkbox("Draw Wire", &m_render_data.draw_wire);
+    ImGui::DragFloat("Line Width", &m_render_data.line_width, 0.5f, 0.5f, 5.0f, "%.1f");
+    ImGui::ColorEdit4("Facet", m_render_data.facet_color.data());
+    ImGui::BeginDisabled(!m_render_data.draw_wire);
+    ImGui::ColorEdit4("Wire", m_render_data.wire_color.data());
+    ImGui::EndDisabled();
+  }
+  ImGui::End();
+}
+
 void ObjectLayer::OnUpdateRenderData() {
   std::unique_lock try_lock(render_data_mutex(), std::try_to_lock);
   if (!try_lock.owns_lock())
@@ -110,8 +121,6 @@ void ObjectLayer::OnUpdateRenderData() {
     GLsizeiptr data_size = sizeof(unsigned short) * index_data.size();
     const void* data_ptr = index_data.data();
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, data_size, data_ptr, GL_STATIC_DRAW);
-
-    m_render_data.num_indices = index_data.size();
   }
 
   m_render_data.dirty = false;
@@ -124,25 +133,36 @@ void ObjectLayer::OnRenderLayer(const float* matrix_vp) {
   program.Vao(0).Bind();
   program.EnableAttrib("pos");
 
-  glLineWidth(2.0F);
-
   {
+    glLineWidth(m_render_data.line_width);
     glUniformMatrix4fv(program.Uniform("mvp"), 1, GL_FALSE, matrix_vp);
 
     program.Vao(0).Vbo(0).Bind();
     program.Vao(0).Ebo(0).Bind();
+
+    GLint64 num_buffer_bytes;
+    glGetBufferParameteri64v(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &num_buffer_bytes);
     glVertexAttribPointer(program.Attrib("pos"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    glUniform4fv(program.Uniform("clr"), 1, FACET_COLOR.data());
+    glUniform4fv(program.Uniform("clr"), 1, m_render_data.facet_color.data());
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDrawElements(GL_TRIANGLES, m_render_data.num_indices, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, num_buffer_bytes / sizeof(unsigned short), GL_UNSIGNED_SHORT, 0);
 
-    glUniform4fv(program.Uniform("clr"), 1, WIRE_COLOR.data());
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawElements(GL_TRIANGLES, m_render_data.num_indices, GL_UNSIGNED_SHORT, 0);
+    if (m_render_data.draw_wire) {
+      bool depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+      glDisable(GL_DEPTH_TEST);
+
+      glUniform4fv(program.Uniform("clr"), 1, m_render_data.wire_color.data());
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      glDrawElements(GL_TRIANGLES, num_buffer_bytes / sizeof(unsigned short), GL_UNSIGNED_SHORT, 0);
+
+      if (depth_test_enabled)
+        glEnable(GL_DEPTH_TEST);
+    }
   }
 
   {
+    glLineWidth(1.0F);
     Eigen::Map<const Eigen::Matrix4f> vp_matrix(matrix_vp);
     Eigen::Matrix4f mvp_matrix = vp_matrix * m_render_data.camera_pose;
     glUniformMatrix4fv(program.Uniform("mvp"), 1, GL_FALSE, mvp_matrix.data());

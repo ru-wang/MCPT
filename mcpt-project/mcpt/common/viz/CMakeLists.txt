@@ -8,3 +8,21 @@ bottle_library(
        @eigen
        //mcpt/common/object:object
 )
+
+bottle_library(
+  NAME path_layer
+  SRCS path_layer.cpp
+  HDRS path_layer.hpp
+  DEPS @cheers
+       @eigen
+       //mcpt/common:assert
+)
+
+bottle_library(
+  NAME shape_layer
+  SRCS shape_layer.cpp
+  HDRS shape_layer.hpp
+  DEPS @cheers
+       @eigen
+       //mcpt/common/geometry:types
+)
