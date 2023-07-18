@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -30,10 +31,13 @@ public:
   auto& normals() const noexcept { return m_normals; }
   auto& normals() noexcept { return m_normals; }
 
+  auto& meshes() const noexcept { return m_meshes; }
+  auto& light_sources() const noexcept { return m_light_sources; }
+
   const Material& GetMaterialByName(const std::string& name) const;
 
   // create a BVH tree and bind the current object to it
-  BVHTree<float> CreateBVHTree() const;
+  BVHTree<float> CreateBVHTree();
 
 private:
   std::unordered_map<std::string, Material> m_materials;
@@ -42,6 +46,9 @@ private:
   std::vector<Eigen::Vector3f> m_vertices;
   std::vector<Eigen::Vector2f> m_text_coords;
   std::vector<Eigen::Vector3f> m_normals;
+
+  std::vector<Mesh> m_meshes;
+  std::vector<std::reference_wrapper<const Mesh>> m_light_sources;
 };
 
 }  // namespace mcpt

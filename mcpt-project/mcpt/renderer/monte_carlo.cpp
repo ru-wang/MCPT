@@ -3,16 +3,9 @@
 #include <cmath>
 
 #include "mcpt/common/assert.hpp"
+#include "mcpt/common/object/material.hpp"
 
 namespace mcpt {
-
-namespace {
-
-Eigen::Vector3f emission(const Eigen::Vector3f& Ka) {
-  return Ka * 10.0F;
-}
-
-}  // namespace
 
 MonteCarlo::Result MonteCarlo::Run(unsigned int u, unsigned int v) {
   Eigen::Vector2f uv(u, v);
@@ -80,7 +73,7 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
 
   if (rpaths.empty())
     return Eigen::Vector3f::Zero();
-  Eigen::Vector3f radiance = emission(rpaths.back().target_material.get().Ka);
+  Eigen::Vector3f radiance = Material::AsEmission(rpaths.back().target_material);
 
   // back propagate from the light source
   for (auto rit = rpaths.crbegin() + 1; rit != rpaths.crend(); ++rit) {
@@ -100,9 +93,9 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
 
     float pdf_wi = rpath.exit_pdf;
     float cos_wi = std::abs(n.dot(wi));
-    Eigen::Vector3f f = m_brdf->Shade(p_mtl, n, wi, wi_norm, wo, wo_norm);
+    Eigen::Vector3f fr = m_brdf->Shade(p_mtl, n, wi, wi_norm, wo, wo_norm);
 
-    radiance = emission(p_mtl.Ka) + f.cwiseProduct(radiance) * cos_wi / pdf_wi;
+    radiance = Material::AsEmission(p_mtl) + fr.cwiseProduct(radiance) * cos_wi / pdf_wi;
     DASSERT((radiance.array() >= 0.0F).all(), "wrong path radiance: {}", radiance.format(FMT));
   }
 

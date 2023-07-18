@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -38,7 +39,7 @@ void BVHTree<T>::Construct(InputIt first, InputIt last) {
     leaf_aabb.Finish();
 
     auto node = std::make_unique<BVHNode<T>>(leaf_aabb);
-    node->mesh = std::as_const(*first);
+    node->mesh = std::cref(*first);
     leaves.push_back(std::move(node));
   }
 

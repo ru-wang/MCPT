@@ -27,7 +27,7 @@ INFO("mock `.obj' file generated at " << obj_path);
 INFO("mock `.mtl' file generated at " << mtl_path);
 
 mcpt::obj_parser::Parser parser(obj_path);
-const mcpt::Object& object = parser.object();
+mcpt::Object& object = parser.object();
 
 SECTION("traverse the BVH tree") {
   // count number of meshes

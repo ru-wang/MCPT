@@ -11,7 +11,7 @@ const Material& Object::GetMaterialByName(const std::string& name) const {
   return m_materials.at(name);
 }
 
-BVHTree<float> Object::CreateBVHTree() const {
+BVHTree<float> Object::CreateBVHTree() {
   spdlog::info("construct BVH tree from object:");
   spdlog::info("  #vertex: {}", m_vertices.size());
   spdlog::info("  #texture coordinate: {}", m_text_coords.size());
@@ -24,7 +24,6 @@ BVHTree<float> Object::CreateBVHTree() const {
   Eigen::Vector3f max_mesh_vertex = Eigen::Vector3f::Constant(std::numeric_limits<float>::lowest());
 
   // construct all meshes
-  std::vector<Mesh> meshes;
   for (const auto& [material, mesh_index] : m_mesh_groups) {
     num_meshes += mesh_index.size();
 
@@ -45,8 +44,13 @@ BVHTree<float> Object::CreateBVHTree() const {
         avg_normal += m_normals.at(index);
       avg_normal.normalize();
 
-      meshes.push_back({material, ConvexPolygon{vertices}, Polygon2D{text_coords}, avg_normal});
+      m_meshes.push_back({material, ConvexPolygon{vertices}, Polygon2D{text_coords}, avg_normal});
     }
+  }
+
+  for (const auto& mesh : m_meshes) {
+    if (Material::IsLightSource(GetMaterialByName(mesh.material)))
+      m_light_sources.emplace_back(mesh);
   }
 
   static const Eigen::IOFormat FMT{Eigen::StreamPrecision, Eigen::DontAlignCols, " ", " "};
@@ -56,7 +60,7 @@ BVHTree<float> Object::CreateBVHTree() const {
   spdlog::info("  max: {}", max_mesh_vertex.format(FMT));
 
   BVHTree<float> bvh_tree;
-  bvh_tree.Construct(meshes.cbegin(), meshes.cend());
+  bvh_tree.Construct(m_meshes.cbegin(), m_meshes.cend());
 
   spdlog::info("BVH tree leaves: {}", bvh_tree.num_leaves);
   spdlog::info("  min: {}", bvh_tree.root->aabb.min_vertex().format(FMT));

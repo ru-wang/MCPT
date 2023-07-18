@@ -79,6 +79,9 @@ struct Material {
   // nontransparency is simply a matter of user convenience.
   float Tr = 0.0F;
 
+  static bool IsLightSource(const Material& mtl) { return (mtl.Ka.array() != 0.0F).any(); }
+  static Eigen::Vector3f AsEmission(const Material& mtl) { return mtl.Ka * 10.0F; }
+
   friend bool operator==(const Material& lhs, const Material& rhs) {
     return lhs.illum == rhs.illum &&
            lhs.Kd == rhs.Kd &&

@@ -27,7 +27,7 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
 
     // is leaf node
     if (node->mesh.has_value()) {
-      auto& mesh = std::any_cast<const Mesh&>(node->mesh);
+      const Mesh& mesh = std::any_cast<std::reference_wrapper<const Mesh>>(node->mesh);
 
       // no intersection
       Eigen::Vector4f point_h = m_intersect.Get(ray, mesh.polygon);

@@ -16,8 +16,8 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
   if (intersection.node == nullptr)
     return std::nullopt;
 
-  auto& mesh = std::any_cast<const Mesh&>(intersection.node->mesh);
-  auto& mtl = m_associated_object.get().GetMaterialByName(mesh.material);
+  const Mesh& mesh = std::any_cast<std::reference_wrapper<const Mesh>>(intersection.node->mesh);
+  const Material& mtl = m_associated_object.get().GetMaterialByName(mesh.material);
 
   // sample a new direction
   auto [exit_dir, exit_normal, exit_pdf] = NextDirection(incident_ray.direction, mesh.normal, mtl);
