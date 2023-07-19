@@ -1,12 +1,18 @@
 #pragma once
 
 #include <cmath>
+#include <algorithm>
+#include <array>
 #include <random>
+#include <type_traits>
 
 namespace mcpt {
 
+template <typename T, typename Enabled = void>
+class Uniform;
+
 template <typename T>
-class Uniform {
+class Uniform<T, std::enable_if_t<std::is_floating_point_v<T>>> {
 public:
   using Scalar = T;
 
@@ -22,10 +28,49 @@ public:
 };
 
 template <typename T>
+class Uniform<T, std::enable_if_t<std::is_integral_v<T>>> {
+public:
+  using Scalar = T;
+
+  T Random(T min, T max) {
+#ifndef NDEBUG
+    static thread_local std::mt19937 gen{0};
+#else
+    static thread_local std::mt19937 gen{std::random_device{}()};
+#endif
+    // [min,max]
+    return std::uniform_int_distribution<T>{min, max}(gen);
+  }
+};
+
+template <typename T>
 struct SolidAngle {
   T azimuth;     // [0, 2pi)
   T depression;  // [0, pi/2)
   double pdf;
+};
+
+template <typename T>
+class UniformTriangle {
+public:
+  using Scalar = T;
+
+  template <typename U>
+  std::array<T, 3> Random(const U& a, const U& b, const U& c) {
+    // first sample a point in a unit triangle
+    T sqrt_u1 = std::sqrt(m_u1.Random());
+    T u2 = m_u2.Random();
+    T x = 1.0 - sqrt_u1;
+    T y = sqrt_u1 * (1.0 - u2);
+    T z = sqrt_u1 * u2;
+    return {x * a[0] + y * b[0] + z * c[0],
+            x * a[1] + y * b[1] + z * c[1],
+            x * a[2] + y * b[2] + z * c[2]};
+  }
+
+private:
+  Uniform<T> m_u1;
+  Uniform<T> m_u2;
 };
 
 // uniform weigted distribution on a hemisphere
