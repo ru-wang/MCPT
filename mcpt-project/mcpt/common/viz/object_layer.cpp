@@ -72,6 +72,7 @@ void ObjectLayer::OnDestroyRenderer() {
 
 void ObjectLayer::OnUpdateImFrame() {
   if (ImGui::Begin("Object Properties")) {
+    ImGui::Checkbox("Fluoroscopy", &m_render_data.fluoroscopy);
     ImGui::Checkbox("Draw Wire", &m_render_data.draw_wire);
     ImGui::DragFloat("Line Width", &m_render_data.line_width, 0.5f, 0.5f, 5.0f, "%.1f");
     ImGui::ColorEdit4("Facet", m_render_data.facet_color.data());
@@ -150,13 +151,14 @@ void ObjectLayer::OnRenderLayer(const float* matrix_vp) {
 
     if (m_render_data.draw_wire) {
       bool depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-      glDisable(GL_DEPTH_TEST);
+      if (m_render_data.fluoroscopy)
+        glDisable(GL_DEPTH_TEST);
 
       glUniform4fv(program.Uniform("clr"), 1, m_render_data.wire_color.data());
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
       glDrawElements(GL_TRIANGLES, num_buffer_bytes / sizeof(unsigned short), GL_UNSIGNED_SHORT, 0);
 
-      if (depth_test_enabled)
+      if (m_render_data.fluoroscopy && depth_test_enabled)
         glEnable(GL_DEPTH_TEST);
     }
   }

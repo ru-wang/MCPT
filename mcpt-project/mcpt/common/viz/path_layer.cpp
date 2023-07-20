@@ -28,7 +28,7 @@ void PathLayer::OnDestroyRenderer() {
 
 void PathLayer::OnUpdateImFrame() {
   if (ImGui::Begin("Path Properties")) {
-    ImGui::Checkbox("Draw Normal", &m_render_data.draw_normal);
+    ImGui::Checkbox("Fluoroscopy", &m_render_data.fluoroscopy);
     ImGui::DragFloat("Line Width", &m_render_data.line_width, 0.5f, 0.5f, 5.0f, "%.1f");
     ImGui::ColorEdit4("Path", m_render_data.path_color.data());
     ImGui::BeginDisabled(!m_render_data.draw_normal);
@@ -87,7 +87,8 @@ void PathLayer::OnRenderLayer(const float* matrix_vp) {
   program.Use();
 
   bool depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-  glDisable(GL_DEPTH_TEST);
+  if (m_render_data.fluoroscopy)
+    glDisable(GL_DEPTH_TEST);
 
   glLineWidth(m_render_data.line_width);
   glUniformMatrix4fv(program.Uniform("mvp"), 1, GL_FALSE, matrix_vp);
@@ -118,7 +119,7 @@ void PathLayer::OnRenderLayer(const float* matrix_vp) {
     glDrawArrays(GL_LINES, 0, num_buffer_bytes / sizeof(float) / 3);
   }
 
-  if (depth_test_enabled)
+  if (m_render_data.fluoroscopy && depth_test_enabled)
     glEnable(GL_DEPTH_TEST);
 }
 

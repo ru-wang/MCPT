@@ -38,9 +38,10 @@ private:
     Eigen::Matrix4f camera_pose;
 
     // ImGui data
+    bool fluoroscopy = false;
     bool draw_wire = true;
-    float line_width = 2.0F;
-    std::array<float, 4> facet_color{0.22F, 0.22F, 0.22F, 0.78F};
+    float line_width = 1.0F;
+    std::array<float, 4> facet_color{0.22F, 0.22F, 0.22F, 1.0F};
     std::array<float, 4> wire_color{0.1F, 0.1F, 0.1F, 1.0F};
   };
 

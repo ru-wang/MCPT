@@ -52,6 +52,7 @@ private:
     std::vector<std::vector<float>> path_data;
 
     // ImGui data
+    bool fluoroscopy = false;
     bool draw_normal = true;
     float line_width = 1.0F;
     std::array<float, 4> normal_color{0.22F, 0.78F, 0.78F, 0.22F};
