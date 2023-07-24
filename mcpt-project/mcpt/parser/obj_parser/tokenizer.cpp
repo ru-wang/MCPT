@@ -16,7 +16,7 @@ namespace mcpt::obj_parser {
 
 namespace {
 
-const std::regex SPLIT_STATEMENT{R"((\S+)\s+(\S+.*))"};
+const std::regex SPLIT_STATEMENT{R"(([\S^#]+)\s+([^#]+).*)"};
 const std::regex SPLIT_SPACE{R"(\s+)"};
 const std::regex SPLIT_SLASH{R"((\d+)/(\d+)/(\d+))"};
 

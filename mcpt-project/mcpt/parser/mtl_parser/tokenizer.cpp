@@ -15,7 +15,7 @@ namespace mcpt::mtl_parser {
 
 namespace {
 
-const std::regex SPLIT_STATEMENT{R"((\S+)\s+(\S+.*))"};
+const std::regex SPLIT_STATEMENT{R"(([\S^#]+)\s+([^#]+).*)"};
 const std::regex SPLIT_SPACE{R"(\s+)"};
 
 template <typename T>
