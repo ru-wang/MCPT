@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/ostr.h>
@@ -36,7 +37,8 @@ std::stringstream SafelyGetLineStream(std::istream& is) {
 void DepthToPPM(unsigned int w, unsigned int h, const float im[], std::ofstream& ofs) {
   ASSERT(ofs.is_open(), "not a invalid file");
   auto [d_min, d_max] = std::minmax_element(im, im + w * h);
-  spdlog::info("min depth: {}, max depth {}", *d_min, *d_max);
+  float d_avg = std::accumulate(im, im + w * h, 0.0F) / (w * h);
+  spdlog::info("min depth: {}, max depth: {}, avg depth: {}", *d_min, *d_max, d_avg);
 
   // remap to [0, 255]
   std::vector<unsigned char> remap(w * h);
@@ -56,7 +58,8 @@ void DepthToPPM(unsigned int w, unsigned int h, const float im[], std::ofstream&
 void RawToPPM(unsigned int w, unsigned int h, float gamma, const float im[], std::ofstream& ofs) {
   ASSERT(ofs.is_open(), "not a invalid file");
   float c_max = *std::max_element(im, im + w * h * 3);
-  spdlog::info("max color: {}", c_max);
+  float c_avg = std::accumulate(im, im + w * h * 3, 0.0F) / (w * h * 3);
+  spdlog::info("max channel: {}, avg channel: {}", c_max, c_avg);
 
   // remap to [0, 255]
   std::vector<unsigned char> remap(w * h * 3);
