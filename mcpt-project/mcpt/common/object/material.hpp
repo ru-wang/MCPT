@@ -13,6 +13,15 @@ struct Material {
   // - reflection: ray trace on
   unsigned int illum = 0;
 
+  // Ke r g b
+  //
+  // The Ke statement specifies the emission using RGB values.
+  //
+  // "r g b" are the values for the red, green, and blue components of the color. The g and b
+  // arguments are optional. If only r is specified, then g, and b are assumed to be equal to r. The
+  // r g b values are normally in the range of 0.0 to infinity.
+  Eigen::Vector3f Ke{Eigen::Vector3f::Zero()};
+
   // Kd r g b
   //
   // The Kd statement specifies the diffuse reflectivity using RGB values.
@@ -79,12 +88,13 @@ struct Material {
   // nontransparency is simply a matter of user convenience.
   float Tr = 0.0F;
 
-  static bool IsLightSource(const Material& mtl) { return (mtl.Ka.array() != 0.0F).any(); }
-  static Eigen::Vector3f AsEmission(const Material& mtl) { return mtl.Ka * 10.0F; }
+  static bool IsLightSource(const Material& mtl) { return (mtl.Ke.array() != 0.0F).any(); }
+  static const Eigen::Vector3f& AsEmission(const Material& mtl) { return mtl.Ke; }
 };
 
 inline bool operator==(const Material& lhs, const Material& rhs) {
   return lhs.illum == rhs.illum &&
+         lhs.Ke == rhs.Ke &&
          lhs.Kd == rhs.Kd &&
          lhs.Ka == rhs.Ka &&
          lhs.Ks == rhs.Ks &&

@@ -50,6 +50,10 @@ void Tokenizer::Proc(std::string_view identifier, std::string_view declaration) 
   if (identifier == "illum") {
     ProcNumber(declaration, ctx().associated_material->illum);
     ASSERT_PARSE(ctx().associated_material->illum == 4, "only `4' allowed for illumination type");
+  } else if (identifier == "Ke") {
+    auto& Ke = ctx().associated_material->Ke;
+    ProcNumericVector<3>(declaration, Ke.data());
+    ASSERT_PARSE((Ke.array() >= 0.0F).all(), "`Ke' out of range");
   } else if (identifier == "Kd") {
     auto& Kd = ctx().associated_material->Kd;
     ProcNumericVector<3>(declaration, Kd.data());

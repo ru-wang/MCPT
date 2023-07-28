@@ -74,8 +74,8 @@ struct fmt::formatter<mcpt::Material> {
   auto format(const Type& v, FormatContext& ctx) const -> decltype(ctx.out()) {
     return fmt::format_to(
         ctx.out(),
-        "{{illum={}, Kd={}, Ka={}, Ks={}, Ns={}, Ni={}, Tr={}}}",
-        v.illum, v.Kd, v.Ka, v.Ks, v.Ns, v.Ni, v.Tr);
+        "{{illum={}, Ke={}, Kd={}, Ka={}, Ks={}, Ns={}, Ni={}, Tr={}}}",
+        v.illum, v.Ke, v.Kd, v.Ka, v.Ks, v.Ns, v.Ni, v.Tr);
   }
 };
 
