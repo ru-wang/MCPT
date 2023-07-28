@@ -28,22 +28,18 @@ void ShapeLayer::OnDestroyRenderer() {
 
 void ShapeLayer::OnUpdateImFrame() {
   if (ImGui::Begin("Shape Properties")) {
-    ImGui::Checkbox("Draw Point", &m_render_data.draw_point);
-    ImGui::Checkbox("Draw Line", &m_render_data.draw_line);
-
-    ImGui::BeginDisabled(!m_render_data.draw_point);
     ImGui::DragFloat("Point Size", &m_render_data.point_size, 0.5f, 0.5f, 5.0f, "%.1f");
-    ImGui::EndDisabled();
-
-    ImGui::BeginDisabled(!m_render_data.draw_line);
     ImGui::DragFloat("Line Width", &m_render_data.line_width, 0.5f, 0.5f, 5.0f, "%.1f");
-    ImGui::EndDisabled();
 
+    ImGui::Checkbox("##Point", &m_render_data.draw_point);
     ImGui::BeginDisabled(!m_render_data.draw_point);
+    ImGui::SameLine();
     ImGui::ColorEdit4("Point", m_render_data.point_color.data());
     ImGui::EndDisabled();
 
+    ImGui::Checkbox("##Line", &m_render_data.draw_line);
     ImGui::BeginDisabled(!m_render_data.draw_line);
+    ImGui::SameLine();
     ImGui::ColorEdit4("Line", m_render_data.line_color.data());
     ImGui::EndDisabled();
   }
@@ -98,6 +94,8 @@ void ShapeLayer::OnRenderLayer(const float* matrix_vp) {
   auto& program = render_program(0);
   program.Use();
 
+  glPointSize(m_render_data.point_size);
+  glLineWidth(m_render_data.line_width);
   glUniformMatrix4fv(program.Uniform("mvp"), 1, GL_FALSE, matrix_vp);
 
   for (size_t i = 0; m_render_data.draw_point && i < program.Vao(0).VboSize(); ++i) {
@@ -105,14 +103,11 @@ void ShapeLayer::OnRenderLayer(const float* matrix_vp) {
     program.Vao(0).Vbo(i).Bind();
     program.EnableAttrib("pos");
 
-    glPointSize(m_render_data.point_size);
-
     GLint64 num_buffer_bytes;
     glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &num_buffer_bytes);
-
     glVertexAttribPointer(program.Attrib("pos"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glUniform4fv(program.Uniform("clr"), 1, m_render_data.point_color.data());
-    glDrawArrays(GL_POINT, 0, num_buffer_bytes / sizeof(float) / 3);
+    glDrawArrays(GL_POINTS, 0, num_buffer_bytes / sizeof(float) / 3);
   }
 
   for (size_t i = 0; m_render_data.draw_line && i < program.Vao(1).VboSize(); ++i) {
@@ -120,13 +115,11 @@ void ShapeLayer::OnRenderLayer(const float* matrix_vp) {
     program.Vao(1).Vbo(i).Bind();
     program.EnableAttrib("pos");
 
-    glLineWidth(m_render_data.line_width);
-
     GLint64 num_buffer_bytes;
     glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &num_buffer_bytes);
-
     glVertexAttribPointer(program.Attrib("pos"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glUniform4fv(program.Uniform("clr"), 1, m_render_data.line_color.data());
+    glDrawArrays(GL_POINTS, 0, num_buffer_bytes / sizeof(float) / 3);
     glDrawArrays(GL_LINES, 0, num_buffer_bytes / sizeof(float) / 3);
   }
 }
