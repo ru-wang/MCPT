@@ -37,24 +37,22 @@ MonteCarlo::RPaths MonteCarlo::Backtrace(const Eigen::Vector3f& xy1) {
   RPaths rpaths;
   Ray<float> ray(m_options.t, m_options.R * xy1);
   while (true) {
-    auto path = m_path_tracer.Run(ray);
-    // no intersection
-    if (!path.has_value())
+    auto rpath = m_path_tracer.Run(ray);
+    // stop if no intersection
+    if (!rpath.has_value())
       return rpaths;
-    rpaths.push_back(path.value());
+    auto lpath = m_light_sampler.Run(rpath.value().point, rpath.value().normal);
+    rpaths.push_back({rpath.value(), lpath});
 
-    // test russian roulette and modify the PDF
-    if (rpaths.size() >= m_options.min_num_paths) {
-      bool rr_continue = m_russian_roulette.Random() < m_options.rr_continue_prob;
-      rpaths.back().exit_pdf *=
-          rr_continue ? m_options.rr_continue_prob : 1.0 - m_options.rr_continue_prob;
-      // stop if russian roulette fail
-      if (!rr_continue)
-        return rpaths;
-    }
+    // stop if hit a light source
+    if (Material::IsLightSource(rpath.value().material))
+      return rpaths;
+    // stop if russian roulette fail
+    if (m_russian_roulette.Random() >= m_options.rr_continue_prob)
+      return rpaths;
 
     // generate next ray
-    ray = Ray<float>(path.value().point, path.value().exit_dir);
+    ray = Ray<float>(rpath.value().point, rpath.value().exit_dir);
   }
 }
 
@@ -73,31 +71,65 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
 
   if (rpaths.empty())
     return Eigen::Vector3f::Zero();
-  Eigen::Vector3f radiance = Material::AsEmission(rpaths.back().material);
+  Eigen::Vector3f radiance = Eigen::Vector3f::Zero();
 
   // back propagate from the light source
-  for (auto rit = rpaths.crbegin() + 1; rit != rpaths.crend(); ++rit) {
-    const auto& rpath = *rit;
-    const auto& p_mtl = rpath.material.get();
-
-    const auto& n = rpath.normal;
-    const auto& wi = rpath.exit_dir;
+  for (auto rit = rpaths.crbegin(); rit != rpaths.crend(); ++rit) {
+    const auto& [rpath, lpath] = *rit;
 
     Eigen::Vector3f wo;
     if (rit + 1 == rpaths.crend())
-      wo = (m_options.t - rpath.point).normalized();
+      wo = (eye - rpath.point).normalized();
     else
-      wo = -(rit + 1)->exit_dir;
+      wo = -(rit + 1)->rpath.exit_dir;
 
-    float pdf_wi = rpath.exit_pdf;
-    float cos_wi = std::abs(n.dot(wi));
-    Eigen::Vector3f fr = m_bxdf->Shade(p_mtl, n, wi, wo);
+    // eye ray hit the light source directly
+    if (Material::IsLightSource(rpath.material) && rpaths.size() == 1) {
+      DASSERT(rit == rpaths.crbegin());
+      radiance = shade_light(wo, rpath);
+      break;
+    }
 
-    radiance = Material::AsEmission(p_mtl) + fr.cwiseProduct(radiance) * cos_wi / pdf_wi;
+    // contribution from the light sources
+    Eigen::Vector3f r_direct = Eigen::Vector3f::Zero();
+    if (lpath.has_value())
+      r_direct = shade_direct(wo, rpath, lpath.value());
+
+    // contribution from other reflectors & refractors
+    Eigen::Vector3f r_indirect = Eigen::Vector3f::Zero();
+    if (rit != rpaths.crbegin() && !Material::IsLightSource((rit - 1)->rpath.material))
+      r_indirect = shade_indirect(radiance, wo, rpath);
+
+    radiance = r_direct + r_indirect;
     DASSERT((radiance.array() >= 0.0F).all(), "wrong path radiance: {}", radiance.format(FMT));
   }
 
   return radiance;
+}
+
+Eigen::Vector3f MonteCarlo::shade_light(const Eigen::Vector3f& wo,
+                                        const PathTracer::ReversePath& rpath) const {
+  return std::max(0.0F, rpath.normal.dot(wo)) * Material::AsEmission(rpath.material);
+}
+
+Eigen::Vector3f MonteCarlo::shade_direct(const Eigen::Vector3f& wo,
+                                         const PathTracer::ReversePath& rpath,
+                                         const LightSampler::PathToLight& lpath) const {
+  Eigen::Vector3f fr = m_bxdf->Shade(rpath.material, rpath.normal, lpath.hit_dir, wo);
+  float cos_wi = std::max(0.0F, rpath.normal.dot(lpath.hit_dir));
+  float cos_nl = std::max(0.0F, lpath.normal.dot(-lpath.hit_dir));
+  float attenu = lpath.distance_sq;
+  float pdf = lpath.hit_pdf;
+  return fr.cwiseProduct(Material::AsEmission(lpath.material)) * (cos_wi * cos_nl / attenu / pdf);
+}
+
+Eigen::Vector3f MonteCarlo::shade_indirect(const Eigen::Vector3f& radiance,
+                                           const Eigen::Vector3f& wo,
+                                           const PathTracer::ReversePath& rpath) const {
+  Eigen::Vector3f fr = m_bxdf->Shade(rpath.material, rpath.normal, rpath.exit_dir, wo);
+  float cos_wi = std::max(0.0F, rpath.normal.dot(rpath.exit_dir));
+  float pdf = rpath.exit_pdf * m_options.rr_continue_prob;
+  return fr.cwiseProduct(radiance) * (cos_wi / pdf);
 }
 
 }  // namespace mcpt

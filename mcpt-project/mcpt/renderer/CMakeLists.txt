@@ -30,6 +30,7 @@ bottle_library(
        //mcpt/common:assert
        //mcpt/common:random
        :bxdf
+       :light_sampler
        :path_tracer
 )
 
