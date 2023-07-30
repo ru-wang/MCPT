@@ -11,7 +11,7 @@
 #include "mcpt/common/object/object.hpp"
 #include "mcpt/common/random.hpp"
 
-#include "mcpt/renderer/brdf.hpp"
+#include "mcpt/renderer/bxdf.hpp"
 #include "mcpt/renderer/path_tracer.hpp"
 
 namespace mcpt {
@@ -44,7 +44,7 @@ public:
     m_intrin_inv << 1.0F / fx, 0.0F, -cx / fx, 0.0F, 1.0F / fy, -cy / fy, 0.0F, 0.0F, 1.0F;
   }
 
-  void InstallBRDF(std::unique_ptr<BRDF> brdf) { m_brdf = std::move(brdf); }
+  void SetBxDF(std::unique_ptr<BxDF> bxdf) { m_bxdf = std::move(bxdf); }
 
   Result Run(unsigned int u, unsigned int v);
 
@@ -59,7 +59,7 @@ private:
   Eigen::Vector3f Propagate(const Eigen::Vector3f& eye, const RPaths& rpaths) const;
 
   Options m_options;
-  std::unique_ptr<BRDF> m_brdf;
+  std::unique_ptr<BxDF> m_bxdf;
 
   Eigen::Matrix3f m_intrin_inv;
   PathTracer m_path_tracer;

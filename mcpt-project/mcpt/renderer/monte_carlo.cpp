@@ -82,8 +82,6 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
 
     const auto& n = rpath.normal;
     const auto& wi = rpath.exit_dir;
-    float wi_norm = (rit - 1)->distance;
-    float wo_norm = rpath.distance;
 
     Eigen::Vector3f wo;
     if (rit + 1 == rpaths.crend())
@@ -93,7 +91,7 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
 
     float pdf_wi = rpath.exit_pdf;
     float cos_wi = std::abs(n.dot(wi));
-    Eigen::Vector3f fr = m_brdf->Shade(p_mtl, n, wi, wi_norm, wo, wo_norm);
+    Eigen::Vector3f fr = m_bxdf->Shade(p_mtl, n, wi, wo);
 
     radiance = Material::AsEmission(p_mtl) + fr.cwiseProduct(radiance) * cos_wi / pdf_wi;
     DASSERT((radiance.array() >= 0.0F).all(), "wrong path radiance: {}", radiance.format(FMT));

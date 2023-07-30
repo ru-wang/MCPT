@@ -20,7 +20,7 @@
 #include "mcpt/common/viz/object_layer.hpp"
 #include "mcpt/common/viz/path_layer.hpp"
 #include "mcpt/parser/obj_parser/parser.hpp"
-#include "mcpt/renderer/brdf.hpp"
+#include "mcpt/renderer/bxdf.hpp"
 #include "mcpt/renderer/monte_carlo.hpp"
 
 #include "mcpt/misc.hpp"
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 
   spdlog::info("making MCPT renderer");
   MonteCarlo mcpt(mc_opts, obj, bvh);
-  mcpt.InstallBRDF(std::make_unique<BlinnPhongBRDF>());
+  mcpt.SetBxDF(std::make_unique<BlinnPhongBxDF>());
 
   auto object_layer = cheers::Window::Instance().InstallSharedLayer<ObjectLayer>();
   auto path_layer = cheers::Window::Instance().InstallSharedLayer<PathLayer>();

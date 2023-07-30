@@ -1,9 +1,9 @@
 bottle_package()
 
 bottle_library(
-  NAME brdf
-  SRCS brdf.cpp
-  HDRS brdf.hpp
+  NAME bxdf
+  SRCS bxdf.cpp
+  HDRS bxdf.hpp
   DEPS @eigen
        //mcpt/common/object
 )
@@ -17,7 +17,7 @@ bottle_library(
        //mcpt/common/object
        //mcpt/common:assert
        //mcpt/common:random
-       :brdf
+       :bxdf
        :path_tracer
 )
 
