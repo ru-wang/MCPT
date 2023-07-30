@@ -1,26 +1,29 @@
 newmtl initialShadingGroup
 illum 4
-Ke 10.0 10.0 10.0
 Kd 0.50 0.50 0.50
 Ka 0.00 0.00 0.00
 Ns 1.00
 newmtl lambert2SG
 illum 4
+Ke 10.0 10.0 10.0
 Kd 0.50 0.50 0.50
 Ka 1.00 1.00 1.00
 Ns 1.00
 newmtl lambert3SG
 illum 4
+Ke 10.0 10.0 10.0
 Kd 0.50 0.50 0.50
 Ka 1.00 1.00 1.00
 Ns 1.00
 newmtl lambert4SG
 illum 4
+Ke 10.0 10.0 10.0
 Kd 0.50 0.50 0.50
 Ka 1.00 1.00 1.00
 Ns 1.00
 newmtl lambert5SG
 illum 4
+Ke 10.0 10.0 10.0
 Kd 0.50 0.50 0.50
 Ka 1.00 1.00 1.00
 Ns 1.00
