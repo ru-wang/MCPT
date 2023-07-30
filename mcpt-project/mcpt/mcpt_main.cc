@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
   auto object_layer = cheers::Window::Instance().InstallSharedLayer<ObjectLayer>();
   auto path_layer = cheers::Window::Instance().InstallSharedLayer<PathLayer>(arg_w);
-  auto viz_thread = std::thread{VizThread{mc_opts.t * 2.0}};
+  auto viz_thread = std::thread{VizThread{mc_opts.t * 2.0F}};
   object_layer->UpdateObject(obj, mc_opts.R, mc_opts.t);
 
   size_t spp = 0;
@@ -102,10 +102,8 @@ int main(int argc, char* argv[]) {
       auto result = mcpt.Run(x, y);
       radiance[i] = result.radiance;
 
-      if (k == 0 && !result.rpaths.empty()) {
-        spdlog::debug("[{:03}] computing for uv({},{}), #paths: {}", i, x, y, result.rpaths.size());
+      if (k == 0 && !result.rpaths.empty())
         path_layer->AddPaths(mc_opts.t, result.rpaths);
-      }
     }
 
     double elapsed = sw_k.elapsed().count();
