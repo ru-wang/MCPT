@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
   mcpt.SetBxDF(std::make_unique<BlinnPhongBxDF>());
 
   auto object_layer = cheers::Window::Instance().InstallSharedLayer<ObjectLayer>();
-  auto path_layer = cheers::Window::Instance().InstallSharedLayer<PathLayer>();
+  auto path_layer = cheers::Window::Instance().InstallSharedLayer<PathLayer>(arg_w);
   auto viz_thread = std::thread{VizThread{mc_opts.t * 2.0}};
   object_layer->UpdateObject(obj, mc_opts.R, mc_opts.t);
 

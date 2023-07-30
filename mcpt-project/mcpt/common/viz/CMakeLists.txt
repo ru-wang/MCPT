@@ -1,6 +1,12 @@
 bottle_package()
 
 bottle_library(
+  NAME mask_grids
+  HDRS mask_grids.hpp
+  DEPS @cheers
+)
+
+bottle_library(
   NAME object_layer
   SRCS object_layer.cpp
   HDRS object_layer.hpp
@@ -15,7 +21,8 @@ bottle_library(
   HDRS path_layer.hpp
   DEPS @cheers
        @eigen
-       //mcpt/common:assert
+       //mcpt/renderer:monte_carlo
+       :mask_grids
 )
 
 bottle_library(
