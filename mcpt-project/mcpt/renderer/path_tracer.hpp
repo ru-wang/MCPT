@@ -18,7 +18,7 @@ namespace mcpt {
 class PathTracer {
 public:
   struct ReversePath {
-    std::reference_wrapper<const Material> target_material;  // surface material at the intersection
+    std::reference_wrapper<const Material> material;  // surface material at the intersection
 
     float distance;          // intersection distance
     Eigen::Vector3f point;   // intersection point

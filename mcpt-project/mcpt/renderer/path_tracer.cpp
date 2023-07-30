@@ -1,11 +1,9 @@
 #include "mcpt/renderer/path_tracer.hpp"
 
 #include <cmath>
-#include <algorithm>
 #include <any>
 
 #include "mcpt/common/assert.hpp"
-
 #include "mcpt/common/object/mesh.hpp"
 
 namespace mcpt {
@@ -62,10 +60,10 @@ PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
   } else if (material.Kd == Eigen::Vector3f::Zero() && material.Ks != Eigen::Vector3f::Zero()) {
     // ideal reflection
     Eigen::Vector3f reflect = incident - 2.0F * cos_incident * normal;
-    return {reflect.normalized(), cos_incident < 0.0F ? normal : -normal, 1.0};
+    return {reflect.normalized(), normal, 1.0};
   } else {
-    // fully opaque
-    return SampleDirection(cos_incident < 0.0F ? normal : -normal, material.Ns + 1.0F);
+    // ideal diffusion
+    return SampleDirection(normal, material.Ns + 1.0F);
   }
 }
 
@@ -82,7 +80,7 @@ PathTracer::sample PathTracer::SampleDirection(const Eigen::Vector3f& normal, fl
 
   // find the plane coordinate system
   Eigen::Matrix3f axes;
-  axes.col(2) = normal.normalized();
+  axes.col(2) = normal;
   axes.col(1) = axes.col(2).cross(Eigen::Vector3f::Unit(x)).normalized();
   axes.col(0) = axes.col(1).cross(axes.col(2)).normalized();
 

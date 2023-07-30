@@ -73,12 +73,12 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
 
   if (rpaths.empty())
     return Eigen::Vector3f::Zero();
-  Eigen::Vector3f radiance = Material::AsEmission(rpaths.back().target_material);
+  Eigen::Vector3f radiance = Material::AsEmission(rpaths.back().material);
 
   // back propagate from the light source
   for (auto rit = rpaths.crbegin() + 1; rit != rpaths.crend(); ++rit) {
     const auto& rpath = *rit;
-    const auto& p_mtl = rpath.target_material.get();
+    const auto& p_mtl = rpath.material.get();
 
     const auto& n = rpath.normal;
     const auto& wi = rpath.exit_dir;
