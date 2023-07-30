@@ -7,6 +7,8 @@
 
 #include "mcpt/common/geometry/bvh_tree.hpp"
 #include "mcpt/common/geometry/intersect.hpp"
+#include "mcpt/common/geometry/types.hpp"
+#include "mcpt/common/object/mesh.hpp"
 
 namespace mcpt {
 
@@ -24,6 +26,8 @@ public:
   RayCaster(const BVHTree<float>& bvh_tree, float prec) : m_bvh_tree(bvh_tree), m_intersect(prec) {}
 
   Intersection Run(const Ray<float>& ray) const;
+
+  bool FastCheckOcclusion(const Ray<float>& ray, float length, const Mesh& target) const;
 
 private:
   std::reference_wrapper<const BVHTree<float>> m_bvh_tree;

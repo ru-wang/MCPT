@@ -9,6 +9,18 @@ bottle_library(
 )
 
 bottle_library(
+  NAME light_sampler
+  SRCS light_sampler.cpp
+  HDRS light_sampler.hpp
+  DEPS @eigen
+       @spdlog
+       //mcpt/common/geometry
+       //mcpt/common/object
+       //mcpt/common:assert
+       //mcpt/common:random
+)
+
+bottle_library(
   NAME monte_carlo
   SRCS monte_carlo.cpp
   HDRS monte_carlo.hpp

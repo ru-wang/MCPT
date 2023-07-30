@@ -4,14 +4,16 @@
 #include <any>
 #include <deque>
 
-#include "mcpt/common/object/mesh.hpp"
-
 namespace mcpt {
 
-RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
-  // threshold for rejecting the same mesh when doing test intersection
-  static constexpr float MIN_PROJECTION_LENGTH = 0.001F;
+namespace {
 
+// threshold for rejecting self when doing intersection test
+constexpr float MIN_PROJECTION_LENGTH = 0.001F;
+
+}  // namespace
+
+RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
   Intersection ret;
   float max_abs_cos_incident = 0.0F;
 
@@ -34,10 +36,9 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
       if (point_h.w() == 0.0F)
         continue;
 
-      // reject the same mesh
+      // reject self
       Eigen::Vector3f segment = point_h.head<3>() - ray.point_a;
-      float project_length = std::abs(segment.dot(mesh.normal));
-      if (project_length < MIN_PROJECTION_LENGTH)
+      if (std::abs(segment.dot(mesh.normal)) <= MIN_PROJECTION_LENGTH)
         continue;
 
       // reject farther mesh
@@ -57,6 +58,42 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
   }
 
   return ret;
+}
+
+bool RayCaster::FastCheckOcclusion(const Ray<float>& ray, float length, const Mesh& target) const {
+  // compute intersection with all the meshes and select the closest one
+  for (std::deque queue{m_bvh_tree.get().root.get()}; !queue.empty(); queue.pop_front()) {
+    auto node = queue.front();
+    if (!m_intersect.Test(ray, node->aabb))
+      continue;
+    if (node->l_child)
+      queue.push_back(node->l_child.get());
+    if (node->r_child)
+      queue.push_back(node->r_child.get());
+
+    // is leaf node
+    if (node->mesh.has_value()) {
+      const Mesh& mesh = std::any_cast<std::reference_wrapper<const Mesh>>(node->mesh);
+      // reject target mesh
+      if (&mesh == &target)
+        continue;
+
+      // no intersection
+      Eigen::Vector4f point_h = m_intersect.Get(ray, mesh.polygon);
+      if (point_h.w() == 0.0F)
+        continue;
+
+      // reject self
+      Eigen::Vector3f segment = point_h.head<3>() - ray.point_a;
+      if (std::abs(segment.dot(mesh.normal)) <= MIN_PROJECTION_LENGTH)
+        continue;
+
+      if (segment.norm() <= length - MIN_PROJECTION_LENGTH)
+        return true;
+    }
+  }
+
+  return false;
 }
 
 }  // namespace mcpt
