@@ -41,12 +41,15 @@ MonteCarlo::RPaths MonteCarlo::Backtrace(const Eigen::Vector3f& xy1) {
     // stop if no intersection
     if (!rpath.has_value())
       return rpaths;
-    auto lpath = m_light_sampler.Run(rpath.value().point, rpath.value().normal);
-    rpaths.push_back({rpath.value(), lpath});
-
     // stop if hit a light source
-    if (Material::IsLightSource(rpath.value().material))
+    if (Material::Type(rpath.value().material) == Material::EM) {
+      rpaths.push_back({rpath.value(), std::nullopt});
       return rpaths;
+    }
+
+    rpaths.push_back(
+        {rpath.value(), m_light_sampler.Run(rpath.value().point, rpath.value().normal)});
+
     // stop if russian roulette fail
     if (m_russian_roulette.Random() >= m_options.rr_continue_prob)
       return rpaths;
@@ -84,7 +87,7 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
       wo = -(rit + 1)->rpath.exit_dir;
 
     // eye ray hit the light source directly
-    if (Material::IsLightSource(rpath.material) && rpaths.size() == 1) {
+    if (Material::Type(rpath.material) == Material::EM && rpaths.size() == 1) {
       DASSERT(rit == rpaths.crbegin());
       radiance = shade_light(wo, rpath);
       break;
@@ -97,7 +100,7 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
 
     // contribution from other reflectors & refractors
     Eigen::Vector3f r_indirect = Eigen::Vector3f::Zero();
-    if (rit != rpaths.crbegin() && !Material::IsLightSource((rit - 1)->rpath.material))
+    if (rit != rpaths.crbegin() && Material::Type((rit - 1)->rpath.material) != Material::EM)
       r_indirect = shade_indirect(radiance, wo, rpath);
 
     radiance = r_direct + r_indirect;

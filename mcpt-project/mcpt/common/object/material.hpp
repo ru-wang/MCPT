@@ -6,6 +6,8 @@ namespace mcpt {
 
 // http://paulbourke.net/dataformats/mtl/
 struct Material {
+  enum TypeEnum { EM, TR, SPEC, DIFF };
+
   // illumination type
   //
   // currently we only allow 4, meaning
@@ -88,7 +90,17 @@ struct Material {
   // nontransparency is simply a matter of user convenience.
   float Tr = 0.0F;
 
-  static bool IsLightSource(const Material& mtl) { return (mtl.Ke.array() != 0.0F).any(); }
+  static TypeEnum Type(const Material& mtl) {
+    if ((mtl.Ke.array() != 0.0F).any())
+      return EM;
+    else if (mtl.Tr != 0.0F)
+      return TR;
+    else if ((mtl.Kd.array() == 0.0F).all() && (mtl.Ks.array() != 0.0F).any())
+      return SPEC;
+    else
+      return DIFF;
+  }
+
   static const Eigen::Vector3f& AsEmission(const Material& mtl) { return mtl.Ke; }
 };
 

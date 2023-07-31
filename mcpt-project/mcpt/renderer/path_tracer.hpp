@@ -36,8 +36,8 @@ public:
 
 private:
   struct sample {
-    Eigen::Vector3f direction;
     Eigen::Vector3f normal;
+    Eigen::Vector3f direction;
     double pdf;
   };
 

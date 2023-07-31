@@ -18,8 +18,7 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
   const Material& mtl = m_associated_object.get().GetMaterialByName(mesh.material);
 
   // sample a new direction
-  auto [exit_dir, exit_normal, exit_pdf] = NextDirection(incident_ray.direction, mesh.normal, mtl);
-  DASSERT(exit_pdf > 0.0);
+  auto [exit_normal, exit_dir, exit_pdf] = NextDirection(incident_ray.direction, mesh.normal, mtl);
   return ReversePath{
       mtl, intersection.distance, intersection.point, exit_normal, exit_dir, exit_pdf};
 }
@@ -50,20 +49,27 @@ PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
   float cos_incident = incident.dot(normal);
   DASSERT(cos_incident != 0.0F, "incident parallel to the mesh should have been rejected");
 
-  if (material.Tr != 0.0) {
-    // refraction
-    // cos < 0: entering a transparent object
-    // cos > 0: leaving a transparent object
-    float k = cos_incident < 0.0F ? 1.0F / material.Ni : material.Ni;
-    Eigen::Vector3f refract = k * incident + (1.0F - k) * cos_incident * normal;
-    return {refract.normalized(), cos_incident < 0.0F ? -normal : normal, 1.0};
-  } else if (material.Kd == Eigen::Vector3f::Zero() && material.Ks != Eigen::Vector3f::Zero()) {
-    // ideal reflection
-    Eigen::Vector3f reflect = incident - 2.0F * cos_incident * normal;
-    return {reflect.normalized(), normal, 1.0};
-  } else {
-    // ideal diffusion
-    return SampleDirection(normal, material.Ns + 1.0F);
+  switch (Material::Type(material)) {
+    case Material::TR: {
+      // refraction
+      // cos < 0: entering a transparent object
+      // cos > 0: leaving a transparent object
+      float k = cos_incident < 0.0F ? 1.0F / material.Ni : material.Ni;
+      Eigen::Vector3f refract = k * incident + (1.0F - k) * cos_incident * normal;
+      return {cos_incident < 0.0F ? -normal : normal, refract.normalized(), 1.0};
+    } break;
+    case Material::SPEC: {
+      // ideal reflection
+      Eigen::Vector3f reflect = incident - 2.0F * cos_incident * normal;
+      return {normal, reflect.normalized(), 1.0};
+    } break;
+    case Material::DIFF: {
+      // ideal diffusion
+      return SampleDirection(normal, material.Ns + 1.0F);
+    } break;
+    default: {
+      return {normal, Eigen::Vector3f::Zero(), 0.0};
+    } break;
   }
 }
 
@@ -84,7 +90,7 @@ PathTracer::sample PathTracer::SampleDirection(const Eigen::Vector3f& normal, fl
   axes.col(1) = axes.col(2).cross(Eigen::Vector3f::Unit(x)).normalized();
   axes.col(0) = axes.col(1).cross(axes.col(2)).normalized();
 
-  return {axes * dir, normal, pdf};
+  return {normal, axes * dir, pdf};
 }
 
 }  // namespace mcpt

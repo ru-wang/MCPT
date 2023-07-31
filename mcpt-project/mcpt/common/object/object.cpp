@@ -49,7 +49,7 @@ BVHTree<float> Object::CreateBVHTree() {
   }
 
   for (const auto& mesh : m_meshes) {
-    if (Material::IsLightSource(GetMaterialByName(mesh.material)))
+    if (Material::Type(GetMaterialByName(mesh.material)) == Material::EM)
       m_light_sources.emplace_back(mesh);
   }
 
