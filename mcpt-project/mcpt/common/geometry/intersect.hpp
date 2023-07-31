@@ -20,7 +20,7 @@ public:
   using Vector3 = Eigen::Matrix<T, 3, 1>;
   using Vector4 = Eigen::Matrix<T, 4, 1>;
 
-  explicit Intersect(T parallel_prec) : m_parallel_prec(parallel_prec) {}
+  explicit Intersect(T precision) : m_precision(precision) { ASSERT(precision > 0.0); }
 
   // return the homogeneous intersection of a line and a plane
   // return point at infinity if not intersectant
@@ -66,7 +66,7 @@ private:
   std::tuple<bool, T, T> TestParallel(const Line<T>& l, const Plane<T>& pi) const {
     T d_a = l.point_a.homogeneous().dot(pi.coeffs);
     T d_b = l.point_b.homogeneous().dot(pi.coeffs);
-    if (std::abs(d_a - d_b) <= m_parallel_prec)
+    if (std::abs(d_a - d_b) <= m_precision)
       return std::make_tuple(true, d_a, d_b);
     else
       return std::make_tuple(false, d_a, d_b);
@@ -77,7 +77,9 @@ private:
   template <typename U>
   bool Inside(const Eigen::MatrixBase<U>& p, const ConvexPolygon<T>& ply) const;
 
-  T m_parallel_prec;
+  // epsilon for line-plane parallelism test and point-in-polyon test
+  // should be non-negative
+  T m_precision;
 };
 
 /**
@@ -198,14 +200,14 @@ bool Intersect<T>::Inside(const Eigen::MatrixBase<U>& p, const ConvexPolygon<T>&
   std::vector<Vector3> cross;
   for (size_t a = 0; a < ply.vertices.size(); ++a) {
     size_t b = a + 1 < ply.vertices.size() ? a + 1 : 0;
-    Vector3 ab(ply.vertices.at(b) - ply.vertices.at(a));
-    Vector3 ax(p - ply.vertices.at(a));
+    Vector3 ab(ply.vertices[b] - ply.vertices[a]);
+    Vector3 ax(p - ply.vertices[a]);
     cross.push_back(ab.cross(ax));
   }
   for (size_t a = 0; a < ply.vertices.size(); ++a) {
     size_t b = a + 1 < ply.vertices.size() ? a + 1 : 0;
-    const auto& ab_x_ax = cross.at(a);
-    const auto& bc_x_bx = cross.at(b);
+    const auto& ab_x_ax = cross[a];
+    const auto& bc_x_bx = cross[b];
     // at different sides
     if (ab_x_ax.dot(bc_x_bx) < 0.0)
       return false;
