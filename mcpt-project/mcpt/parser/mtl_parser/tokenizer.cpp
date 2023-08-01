@@ -73,7 +73,7 @@ void Tokenizer::Proc(std::string_view identifier, std::string_view declaration) 
   } else if (identifier == "Ni") {
     auto& Ni = ctx().associated_material->Ni;
     ProcNumber(declaration, Ni);
-    ASSERT_PARSE(Ni >= 0.001F && Ni <= 10.0F, "`Ni' out of range");
+    ASSERT_PARSE(Ni >= 1.0F && Ni <= 10.0F, "`Ni' out of range");
   } else if (identifier == "Tr") {
     auto& Tr = ctx().associated_material->Tr;
     ProcNumber(declaration, Tr);
