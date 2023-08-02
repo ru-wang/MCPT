@@ -14,6 +14,8 @@ public:
     m_grid_size = ImGui::GetTextLineHeight();
     m_grids_per_row = (ImGui::GetContentRegionAvail().x + ImGui::GetStyle().ItemSpacing.x) /
                       (ImGui::GetTextLineHeight() + ImGui::GetStyle().ItemSpacing.x);
+    if (m_grids_per_row == 0)
+      m_grids_per_row = 1;
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, m_grid_size / 4.0F);
   }
 
