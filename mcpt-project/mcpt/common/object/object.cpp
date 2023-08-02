@@ -1,9 +1,10 @@
 #include "mcpt/common/object/object.hpp"
 
-#include <functional>
 #include <limits>
 
 #include <spdlog/spdlog.h>
+
+#include "mcpt/common/assert.hpp"
 
 namespace mcpt {
 
@@ -28,6 +29,10 @@ BVHTree<float> Object::CreateBVHTree() {
     num_meshes += mesh_index.size();
 
     for (const auto& [vindex, tindex, nindex] : mesh_index) {
+      ASSERT(vindex.size() == tindex.size());
+      ASSERT(vindex.size() == nindex.size());
+      ASSERT(vindex.size() >= 3);
+
       std::vector<Eigen::Vector3f> vertices;
       for (size_t index : vindex) {
         min_mesh_vertex = min_mesh_vertex.cwiseMin(m_vertices.at(index));
@@ -39,12 +44,14 @@ BVHTree<float> Object::CreateBVHTree() {
       for (size_t index : tindex)
         text_coords.push_back(m_text_coords.at(index));
 
-      Eigen::Vector3f avg_normal = Eigen::Vector3f::Zero();
-      for (size_t index : nindex)
-        avg_normal += m_normals.at(index);
-      avg_normal.normalize();
+      Eigen::Vector3f normal =
+          (vertices[1] - vertices[0]).cross(vertices[vertices.size() - 1] - vertices[0]);
+      if (m_normals.at(nindex.front()).dot(normal) > 0.0F)
+        normal.normalize();
+      else
+        normal = -normal.normalized();
 
-      m_meshes.push_back({material, ConvexPolygon{vertices}, Polygon2D{text_coords}, avg_normal});
+      m_meshes.push_back({material, ConvexPolygon{vertices}, Polygon2D{text_coords}, normal});
     }
   }
 

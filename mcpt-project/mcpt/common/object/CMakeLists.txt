@@ -18,6 +18,7 @@ bottle_library(
   DEPS @eigen
        @spdlog
        //mcpt/common/geometry:bvh_tree
+       //mcpt/common:assert
        :material
        :mesh
 )

@@ -7,10 +7,10 @@
 
 #include <Eigen/Eigen>
 
+#include "mcpt/common/geometry/bvh_tree.hpp"
+
 #include "mcpt/common/object/material.hpp"
 #include "mcpt/common/object/mesh.hpp"
-
-#include "mcpt/common/geometry/bvh_tree.hpp"
 
 namespace mcpt {
 
