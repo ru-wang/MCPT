@@ -106,8 +106,6 @@ int main(int argc, char* argv[]) {
         path_layer->AddPaths(mc_opts.t, result.rpaths);
     }
 
-    double elapsed = sw_k.elapsed().count();
-
 #ifdef NDEBUG
 #pragma omp critical
 #endif
@@ -117,8 +115,8 @@ int main(int argc, char* argv[]) {
         integral[i * 3 + 1] += radiance[i].y();
         integral[i * 3 + 2] += radiance[i].z();
       }
+      ++spp;
 
-      spdlog::info("spp: {}/{}, elapsed(s): {:.1f}/{:.1f}", ++spp, arg_spp, elapsed, sw);
       if (spp == arg_spp || spp % arg_spp_save_interval == 0) {
         auto export_fname = fmt::format("spp_{}.ppm", spp);
         spdlog::info("saving to PPM image {}/{}", export_dir, export_fname);
@@ -131,6 +129,8 @@ int main(int argc, char* argv[]) {
         ASSERT(fs_out.OpenTextWrite(export_fname, ofs));
         RawToPPM(arg_w, arg_h, 2.2F, im.data(), ofs);
       }
+
+      spdlog::info("spp: {}/{}, {:%M:%Ss}({:%M:%Ss})", spp, arg_spp, sw_k.elapsed(), sw.elapsed());
     }
   }
 
