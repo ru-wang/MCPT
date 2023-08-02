@@ -45,7 +45,13 @@ private:
                        const Eigen::Vector3f& normal,
                        const Material& material);
 
-  sample SampleDirection(const Eigen::Vector3f& normal, float alpha);
+  sample SampleReflection(const Eigen::Vector3f& incident, const Eigen::Vector3f& normal);
+
+  sample SampleRefraction(const Eigen::Vector3f& incident,
+                          const Eigen::Vector3f& normal,
+                          float refr_k);
+
+  sample SampleDiffusion(const Eigen::Vector3f& normal, float alpha);
 
 private:
   std::reference_wrapper<const Object> m_associated_object;

@@ -46,34 +46,56 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
 PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
                                              const Eigen::Vector3f& normal,
                                              const Material& material) {
-  float cos_incident = incident.dot(normal);
-  DASSERT(cos_incident != 0.0F, "incident parallel to the mesh should have been rejected");
-
+  DASSERT(normal.dot(incident) != 0.0F, "incident parallel to the mesh should have been rejected");
   switch (Material::Type(material)) {
-    case Material::TR: {
+    case Material::TR:
       // refraction
-      // cos < 0: entering a transparent object
-      // cos > 0: leaving a transparent object
-      float k = cos_incident < 0.0F ? 1.0F / material.Ni : material.Ni;
-      Eigen::Vector3f refract = k * incident + (1.0F - k) * cos_incident * normal;
-      return {cos_incident < 0.0F ? -normal : normal, refract.normalized(), 1.0};
-    } break;
-    case Material::SPEC: {
+      return SampleRefraction(incident, normal, material.Ni);
+      break;
+    case Material::SPEC:
       // ideal reflection
-      Eigen::Vector3f reflect = incident - 2.0F * cos_incident * normal;
-      return {normal, reflect.normalized(), 1.0};
-    } break;
-    case Material::DIFF: {
-      // ideal diffusion
-      return SampleDirection(normal, material.Ns + 1.0F);
-    } break;
-    default: {
-      return {normal, Eigen::Vector3f::Zero(), 0.0};
-    } break;
+      return SampleReflection(incident, normal);
+      break;
+    case Material::DIFF:
+      // diffusion
+      return SampleDiffusion(normal, material.Ns + 1.0F);
+      break;
+    default: return {normal, Eigen::Vector3f::Zero(), 0.0}; break;
   }
 }
 
-PathTracer::sample PathTracer::SampleDirection(const Eigen::Vector3f& normal, float alpha) {
+PathTracer::sample PathTracer::SampleReflection(const Eigen::Vector3f& incident,
+                                                const Eigen::Vector3f& normal) {
+  Eigen::Vector3f refl = incident - 2.0F * normal.dot(incident) * normal;
+  return {normal, refl.normalized(), 1.0};
+}
+
+PathTracer::sample PathTracer::SampleRefraction(const Eigen::Vector3f& incident,
+                                                const Eigen::Vector3f& normal,
+                                                float refr_k) {
+  // cos < 0: entering a transparent object
+  // cos > 0: leaving a transparent object
+  // cos = 0: impossible since parallel is rejected already
+  float cos = normal.dot(incident);
+  if (cos < 0.0F) {
+    float sin2_k = (1.0F - cos * cos) / (refr_k * refr_k);
+    Eigen::Vector3f refr = (incident - cos * normal) / refr_k - std::sqrt(1.0 - sin2_k) * normal;
+    return {-normal, refr.normalized(), 1.0};
+  } else {
+    float sin2_k = (1.0F - cos * cos) * (refr_k * refr_k);
+    if (sin2_k >= 1.0F) {
+      // total reflection
+      Eigen::Vector3f refl = incident - 2.0F * cos * normal;
+      return {-normal, refl.normalized(), 1.0};
+    } else {
+      // refraction
+      Eigen::Vector3f refr = (incident - cos * normal) * refr_k + std::sqrt(1.0 - sin2_k) * normal;
+      return {normal, refr.normalized(), 1.0};
+    }
+  }
+}
+
+PathTracer::sample PathTracer::SampleDiffusion(const Eigen::Vector3f& normal, float alpha) {
   auto [azimuth, depression, pdf] = m_cos_pow_hemi.Random(alpha);
   DASSERT(depression < M_PI_2, "depression can not reach pi/2");
 
