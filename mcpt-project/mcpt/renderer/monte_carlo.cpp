@@ -41,14 +41,18 @@ MonteCarlo::RPaths MonteCarlo::Backtrace(const Eigen::Vector3f& xy1) {
     // stop if no intersection
     if (!rpath.has_value())
       return rpaths;
-    // stop if hit a light source
-    if (Material::Type(rpath.value().material) == Material::EM) {
-      rpaths.push_back({rpath.value(), std::nullopt});
-      return rpaths;
+
+    // only sample direct lighting for diffusion material
+    if (Material::Type(rpath.value().material) == Material::DIFF) {
+      auto lpath = m_light_sampler.Run(rpath.value().point, rpath.value().normal);
+      rpaths.push_back({rpath.value(), lpath});
+    } else {
+      rpaths.push_back({rpath.value()});
     }
 
-    rpaths.push_back(
-        {rpath.value(), m_light_sampler.Run(rpath.value().point, rpath.value().normal)});
+    // stop if hit a light source
+    if (Material::Type(rpath.value().material) == Material::EM)
+      return rpaths;
 
     // stop if russian roulette fail
     if (m_russian_roulette.Random() >= m_options.rr_cont_prob)
