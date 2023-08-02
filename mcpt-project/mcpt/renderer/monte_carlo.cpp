@@ -8,7 +8,7 @@
 namespace mcpt {
 
 MonteCarlo::Result MonteCarlo::Run(unsigned int u, unsigned int v) {
-  Eigen::Vector2f uv(u, v);
+  Eigen::Vector2f uv(u + m_uni_subpixel.Random(), v + m_uni_subpixel.Random());
   Eigen::Vector3f xy1 = m_intrin_inv * uv.homogeneous();
 
   Result result;

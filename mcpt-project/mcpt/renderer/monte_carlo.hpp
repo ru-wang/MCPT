@@ -78,6 +78,8 @@ private:
   Eigen::Matrix3f m_intrin_inv;
   PathTracer m_path_tracer;
   LightSampler m_light_sampler;
+
+  Uniform<float> m_uni_subpixel;
   Uniform<double> m_russian_roulette;
 };
 
