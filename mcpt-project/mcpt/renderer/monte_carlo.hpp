@@ -32,7 +32,7 @@ public:
   };
 
   struct Options {
-    double rr_continue_prob = 0.5;
+    double rr_cont_prob = 0.5;
     // camera options
     Eigen::Vector4f intrin{Eigen::Vector4f::Zero()};
     Eigen::Matrix3f R{Eigen::Matrix3f::Zero()};

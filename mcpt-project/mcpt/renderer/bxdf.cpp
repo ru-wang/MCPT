@@ -8,7 +8,7 @@ Eigen::Vector3f BlinnPhongBxDF::Shade(const Material& p_mtl,
                                       const Eigen::Vector3f& n,
                                       const Eigen::Vector3f& wi,
                                       const Eigen::Vector3f& wo) const {
-  if (p_mtl.Tr)
+  if (Material::Type(p_mtl) == Material::TR)
     return Eigen::Vector3f::Constant(p_mtl.Tr);
 
   Eigen::Vector3f halfway = (wi + wo).normalized();
