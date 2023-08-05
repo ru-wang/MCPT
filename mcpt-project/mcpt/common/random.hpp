@@ -129,8 +129,8 @@ public:
 
   static constexpr double TWO_PI = 2.0 * M_PI;
 
-  SolidAngle<T> Random(float alpha) {
-    float alpha_1 = alpha + 1.0F;
+  SolidAngle<T> Random(T alpha) {
+    T alpha_1 = alpha + 1.0;
     // sample uniformly [0,2pi), PDF=1/(2pi)
     T azimuth = TWO_PI * m_u1.Random();
     // sample [0, pi/2)

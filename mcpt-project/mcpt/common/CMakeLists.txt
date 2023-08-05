@@ -23,3 +23,9 @@ bottle_library(
   NAME random
   HDRS random.hpp
 )
+
+bottle_library(
+  NAME uniform_ust
+  HDRS uniform_ust.hpp
+  DEPS :random
+)
