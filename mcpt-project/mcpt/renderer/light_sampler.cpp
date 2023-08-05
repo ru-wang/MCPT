@@ -6,6 +6,14 @@
 
 namespace mcpt {
 
+namespace {
+
+constexpr bool CosineCloseToPlusMinus1(float val, float epsilon) {
+  return val >= 1.0F - epsilon || val <= -1.0F + epsilon;
+}
+
+}  // namespace
+
 LightSampler::LightSampler(const Object& object, const BVHTree<float>& bvh_tree)
     : m_associated_object(object), m_ray_caster(bvh_tree) {
   for (const Mesh& mesh : object.light_sources()) {
@@ -25,14 +33,11 @@ LightSampler::LightSampler(const Object& object, const BVHTree<float>& bvh_tree)
 
 std::optional<LightSampler::PathToLight> LightSampler::Run(const Eigen::Vector3f& incident_point,
                                                            const Eigen::Vector3f& incident_normal) {
-  // threshold for rejecting self and too close light sources
-  static constexpr float MIN_PROJECTION_LENGTH = 0.001F;
+  // threshold for rejecting self or invisible light sources or small projected light sources
+  static constexpr float COSINE_EPSILON = 0.001F;
 
   if (m_mesh_lights.empty())
     return std::nullopt;
-
-  double hit_pdf = 1.0 / m_mesh_lights.back().accum_area;
-  DASSERT(hit_pdf > 0.0);
 
   // first select a triangle
   float area = m_uni_area.Random() * m_mesh_lights.back().accum_area;
@@ -40,27 +45,66 @@ std::optional<LightSampler::PathToLight> LightSampler::Run(const Eigen::Vector3f
   while (sel < m_mesh_lights.size() && area >= m_mesh_lights[sel].accum_area)
     ++sel;
   DASSERT(sel < m_mesh_lights.size());
+  const auto& light = m_mesh_lights[sel];
 
   // sample a vertex in the selected triangle
-  const auto& vs = m_mesh_lights[sel].triangle.vertices;
-  Eigen::Vector3f hit_point(m_uni_tri.Random(vs[0], vs[1], vs[2]).data());
-  Eigen::Vector3f hit_path = hit_point - incident_point;
-
-  Ray<float> hit_ray(incident_point, hit_path);
+  auto sample = SampleSphericalTriangle(incident_point, light.triangle);
+  if (!sample.has_value())
+    return std::nullopt;
+  auto [hit_dir, hit_pdf] = sample.value();
+  hit_pdf *= light.area / m_mesh_lights.back().accum_area;
 
   // check light visibility
-  const auto& mesh = m_mesh_lights[sel].mesh.get();
+  const auto& mesh = light.mesh.get();
   const auto& normal = mesh.normal;
-  if (incident_normal.dot(hit_path) <= MIN_PROJECTION_LENGTH)
+  if (incident_normal.dot(hit_dir) <= COSINE_EPSILON)
     return std::nullopt;
-  if (normal.dot(-hit_path) <= MIN_PROJECTION_LENGTH)
+  if (normal.dot(-hit_dir) <= COSINE_EPSILON)
     return std::nullopt;
+
   // check if light is blocked by other meshes
-  if (m_ray_caster.FastCheckOcclusion(hit_ray, hit_path.norm(), mesh))
+  Eigen::Vector4f inter_p = m_ray_caster.IsVisible(Ray<float>(incident_point, hit_dir), mesh);
+  if (inter_p.w() == 0.0F)
     return std::nullopt;
 
   const auto& mtl = m_associated_object.get().GetMaterialByName(mesh.material);
-  return PathToLight{mtl, hit_point, normal, hit_ray.direction, hit_pdf};
+  return PathToLight{mtl, inter_p.head<3>(), normal, hit_dir, hit_pdf};
+}
+
+std::optional<Direction<float>> LightSampler::SampleSphericalTriangle(
+    const Eigen::Vector3f& center, const ConvexPolygon<float>& tri) {
+  // threshold for rejecting close light sources
+  static constexpr float LENGTH_EPSILON = 0.001F;
+  // threshold for rejecting small spherical triangle areas
+  static constexpr float COSINE_EPSILON = 1.0e-07F;
+
+  // project the triangle onto the unit sphere
+  Eigen::Vector3f va = tri.vertices[0] - center;
+  Eigen::Vector3f vb = tri.vertices[1] - center;
+  Eigen::Vector3f vc = tri.vertices[2] - center;
+
+  if (va.lpNorm<Eigen::Infinity>() <= LENGTH_EPSILON ||
+      vb.lpNorm<Eigen::Infinity>() <= LENGTH_EPSILON ||
+      vc.lpNorm<Eigen::Infinity>() <= LENGTH_EPSILON)
+    return std::nullopt;
+
+  va.normalize();
+  vb.normalize();
+  vc.normalize();
+
+  Eigen::Vector3f na = vb.cross(vc).normalized();
+  Eigen::Vector3f nb = vc.cross(va).normalized();
+  Eigen::Vector3f nc = va.cross(vb).normalized();
+
+  float cos_alpha = -nb.dot(nc);
+  float cos_beta = -na.dot(nc);
+  float cos_gamma = -na.dot(nb);
+
+  if (CosineCloseToPlusMinus1(cos_alpha, COSINE_EPSILON) ||
+      CosineCloseToPlusMinus1(cos_beta, COSINE_EPSILON) ||
+      CosineCloseToPlusMinus1(cos_gamma, COSINE_EPSILON))
+    return std::nullopt;
+  return m_uni_ust.Random(va, vb, vc, cos_alpha, cos_beta, cos_gamma);
 }
 
 }  // namespace mcpt

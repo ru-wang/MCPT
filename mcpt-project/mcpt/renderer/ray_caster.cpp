@@ -60,7 +60,11 @@ RayCaster::Intersection RayCaster::Run(const Ray<float>& ray) const {
   return ret;
 }
 
-bool RayCaster::FastCheckOcclusion(const Ray<float>& ray, float length, const Mesh& target) const {
+Eigen::Vector4f RayCaster::IsVisible(const Ray<float>& ray, const Mesh& target) const {
+  Eigen::Vector4f inter_p = m_intersect.Get(ray, static_cast<const Plane<float>&>(target.polygon));
+  float dist = (inter_p.head<3>() - ray.point_a).norm();
+  DASSERT(inter_p.w() != 0.0F && dist != 0.0F);
+
   // compute intersection with all the meshes and select the closest one
   for (std::deque queue{m_bvh_tree.get().root.get()}; !queue.empty(); queue.pop_front()) {
     auto node = queue.front();
@@ -88,12 +92,12 @@ bool RayCaster::FastCheckOcclusion(const Ray<float>& ray, float length, const Me
       if (std::abs(segment.dot(mesh.normal)) <= MIN_PROJECTION_LENGTH)
         continue;
 
-      if (segment.norm() <= length - MIN_PROJECTION_LENGTH)
-        return true;
+      if (segment.norm() <= dist - MIN_PROJECTION_LENGTH)
+        return Eigen::Vector4f::Zero();
     }
   }
 
-  return false;
+  return inter_p;
 }
 
 }  // namespace mcpt

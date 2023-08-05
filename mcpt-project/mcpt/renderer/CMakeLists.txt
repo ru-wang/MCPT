@@ -18,6 +18,7 @@ bottle_library(
        //mcpt/common/object
        //mcpt/common:assert
        //mcpt/common:random
+       //mcpt/common:uniform_ust
 )
 
 bottle_library(

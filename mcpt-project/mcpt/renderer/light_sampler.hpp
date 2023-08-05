@@ -11,6 +11,7 @@
 #include "mcpt/common/object/mesh.hpp"
 #include "mcpt/common/object/object.hpp"
 #include "mcpt/common/random.hpp"
+#include "mcpt/common/uniform_ust.hpp"
 
 #include "mcpt/renderer/ray_caster.hpp"
 
@@ -41,12 +42,15 @@ private:
     float accum_area;
   };
 
+  std::optional<Direction<float>> SampleSphericalTriangle(const Eigen::Vector3f& center,
+                                                          const ConvexPolygon<float>& tri);
+
   std::reference_wrapper<const Object> m_associated_object;
   std::vector<mesh_light> m_mesh_lights;
 
   RayCaster m_ray_caster;
   Uniform<float> m_uni_area;
-  UniformTriangle<float> m_uni_tri;
+  UniformUST<float> m_uni_ust;
 };
 
 }  // namespace mcpt
