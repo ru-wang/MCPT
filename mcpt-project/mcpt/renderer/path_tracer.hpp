@@ -20,7 +20,6 @@ public:
   struct ReversePath {
     std::reference_wrapper<const Material> material;  // surface material at the intersection
 
-    float distance;          // intersection distance
     Eigen::Vector3f point;   // intersection point
     Eigen::Vector3f normal;  // surface normal at the intersection
 

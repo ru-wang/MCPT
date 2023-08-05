@@ -19,8 +19,7 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
 
   // sample a new direction
   auto [exit_normal, exit_dir, exit_pdf] = NextDirection(incident_ray.direction, mesh.normal, mtl);
-  return ReversePath{
-      mtl, intersection.distance, intersection.point, exit_normal, exit_dir, exit_pdf};
+  return ReversePath{mtl, intersection.point, exit_normal, exit_dir, exit_pdf};
 }
 
 /**

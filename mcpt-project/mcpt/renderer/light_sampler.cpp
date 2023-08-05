@@ -60,7 +60,7 @@ std::optional<LightSampler::PathToLight> LightSampler::Run(const Eigen::Vector3f
     return std::nullopt;
 
   const auto& mtl = m_associated_object.get().GetMaterialByName(mesh.material);
-  return PathToLight{mtl, hit_path.squaredNorm(), hit_point, normal, hit_ray.direction, hit_pdf};
+  return PathToLight{mtl, hit_point, normal, hit_ray.direction, hit_pdf};
 }
 
 }  // namespace mcpt

@@ -21,7 +21,6 @@ public:
   struct PathToLight {
     std::reference_wrapper<const Material> material;  // light source material
 
-    float distance_sq;       // intersection squared distance
     Eigen::Vector3f point;   // intersection point
     Eigen::Vector3f normal;  // surface normal at the intersection
 
