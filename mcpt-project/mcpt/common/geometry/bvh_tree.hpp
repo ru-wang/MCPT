@@ -36,7 +36,6 @@ void BVHTree<T>::Construct(InputIt first, InputIt last) {
     AABB<T> leaf_aabb;
     for (const auto& v : first->polygon.vertices)
       leaf_aabb.Update(v);
-    leaf_aabb.Finish();
 
     auto node = std::make_unique<BVHNode<T>>(leaf_aabb);
     node->mesh = std::cref(*first);
@@ -51,7 +50,6 @@ void BVHTree<T>::Construct(InputIt first, InputIt last) {
   AABB<T> root_aabb;
   for (const auto& leaf : leaves)
     root_aabb.Update(leaf->aabb);
-  root_aabb.Finish();
 
   auto node = std::make_unique<BVHNode<T>>(root_aabb);
   node->Split(leaves.begin(), leaves.end());

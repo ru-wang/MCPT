@@ -45,7 +45,7 @@ void BVHNode<T>::Split(InputIt first, InputIt last) {
 
   // split the space into two partitions
   Eigen::Index sort_axis;
-  aabb.diagonal().maxCoeff(&sort_axis);
+  aabb.GetDiagonal().maxCoeff(&sort_axis);
   std::nth_element(first, first + l, last, [sort_axis](const auto& lhs, const auto& rhs) {
     if (lhs->aabb.min_vertex().coeff(sort_axis) > rhs->aabb.min_vertex().coeff(sort_axis))
       return false;
@@ -59,7 +59,6 @@ void BVHNode<T>::Split(InputIt first, InputIt last) {
     AABB<T> parent_aabb;
     for (auto it = first; it != first + l; ++it)
       parent_aabb.Update((*it)->aabb);
-    parent_aabb.Finish();
 
     auto node = std::make_unique<BVHNode>(parent_aabb);
     node->Split(first, first + l);
@@ -72,7 +71,6 @@ void BVHNode<T>::Split(InputIt first, InputIt last) {
     AABB<T> parent_aabb;
     for (auto it = first + l; it != last; ++it)
       parent_aabb.Update((*it)->aabb);
-    parent_aabb.Finish();
 
     auto node = std::make_unique<BVHNode>(parent_aabb);
     node->Split(first + l, last);
