@@ -137,7 +137,7 @@ Eigen::Vector3f MonteCarlo::shade_direct(const Eigen::Vector3f& wo,
                                          const LightSampler::PathToLight& lpath) const {
   Eigen::Vector3f fr = m_bxdf->Shade(rpath.material, rpath.normal, lpath.hit_dir, wo);
   float cos_wi = std::max(0.0F, rpath.normal.dot(lpath.hit_dir));
-  return fr.cwiseProduct(Material::AsEmission(lpath.material)) * cos_wi;
+  return fr.cwiseProduct(Material::AsEmission(lpath.material)) * (cos_wi / lpath.hit_pdf);
 }
 
 Eigen::Vector3f MonteCarlo::shade_indirect(const Eigen::Vector3f& radiance,
