@@ -35,11 +35,6 @@ public:
 
   Eigen::Matrix<T, 3, 1> GetDiagonal() const { return m_max_vertex - m_min_vertex; };
 
-  template <typename U>
-  bool Envelop(const Eigen::MatrixBase<U>& v) const {
-    return (v.array() >= m_min_vertex.array()).all() && (v.array() <= m_max_vertex.array()).all();
-  }
-
 private:
   using Vector3 = Eigen::Matrix<T, 3, 1>;
 

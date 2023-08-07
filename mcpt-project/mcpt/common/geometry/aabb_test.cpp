@@ -81,13 +81,6 @@ SECTION("test envelop") {
   REQUIRE(aabb.min_vertex() == -Vector3::Ones());
   REQUIRE(aabb.max_vertex() == Vector3::Ones());
   REQUIRE(aabb.GetDiagonal() == Vector3::Constant(2.0));
-
-  CHECK(aabb.Envelop(Vector3::Zero()));
-  CHECK(aabb.Envelop(-Vector3::Ones()));
-  CHECK(aabb.Envelop(Vector3::Ones()));
-
-  CHECK_FALSE(aabb.Envelop(Vector3(0.0, 0.0, 2.0)));
-  CHECK_FALSE(aabb.Envelop(Vector3(-2.0, 0.0, 0.0)));
 }
 
 }

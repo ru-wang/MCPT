@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 #include <tuple>
 #include <vector>
 
@@ -72,30 +73,39 @@ private:
       return std::make_tuple(false, d_a, d_b);
   }
 
-  bool TestDegenerated(const Ray<T>& r, const AABB<T>& aabb) const;
-
   template <typename U>
   bool Inside(const Eigen::MatrixBase<U>& p, const ConvexPolygon<T>& ply) const;
 
-  // epsilon for line-plane parallelism test and point-in-polyon test
-  // should be non-negative
+  // epsilon for line-plane parallelism test, should be non-negative
   T m_precision;
 };
 
 /**
- *          b4______________b3(max)
- *           /|            /|
- *          / |           / |
- *       b1/__|__________/b2|
- *         |  |          |  |
- *         |  |          |  |
- *         |  |          |  |
- *  Z      |  |          |  |
- *  |      |  |__________|__|
- *  |   Y  | /a4         | /a3
- *  |  /   |/____________|/
- *  | /    a1(min)       a2
- *  |/_______ X
+ * AABB: three pairs of slabs        compute t_min/t_max for each pair of slabs
+ *           |              |              |            |   /
+ *      _____|______________|____      ____|____________|__/__
+ *          /|             /|              |            | /t_max(Y)
+ *       | / |          | / |              |            |/
+ *   ____|/__|__________|/__|___           |       t_max/
+ *       |   |          |   |              |       (X) /|
+ *       |   |          |   |              |          / |
+ *       |   | /        |   | /            |     dir /  |
+ *       |   |/         |   |/             |        /   |
+ *    ___|___|__________|___|______        |       /    |
+ *       |  /|          |  /|              |      /     |
+ *       | / |          | / |          ____|_____/______|_____
+ *   ____|/_____________|/_______          |    /t_min  |
+ *       /              /                  |   / (Y)    |
+ *      /|             /|                  |  o         |
+ *     / |            / |                  | / ray      |
+ *                                         |/           |
+ *   Z                                t_min/            |
+ *   |    Y                           (X) /|            |
+ *   |   /                               / |            |
+ *   |  /
+ *   | /                t_enter = max{t_min}, t_exit = min{t_max}
+ *   |/________X        intersectant: t_enter <= t_exit and t_exit >= 0
+ *   O
  */
 template <typename T>
 bool Intersect<T>::Test(const Ray<T>& r, const AABB<T>& aabb) const {
@@ -109,73 +119,29 @@ bool Intersect<T>::Test(const Ray<T>& r, const AABB<T>& aabb) const {
 
   const auto& v_min = aabb.min_vertex();
   const auto& v_max = aabb.max_vertex();
-  size_t dim = (v_min.array() < v_max.array()).count();
-
-  if (dim <= 1) {
+  if ((v_min.array() < v_max.array()).count() <= 1) {
     spdlog::error("invalid AABB: min = {}, max = {}", v_min.format(FMT), v_max.format(FMT));
     return false;
-  } else if (dim == 2) {
-    return TestDegenerated(r, aabb);
   }
 
-  // start point inside AABB
-  if (aabb.Envelop(r.point_a))
-    return true;
+  Vector3 slab_t_min = (v_min - r.point_a).cwiseProduct(r.direction_r);
+  Vector3 slab_t_max = (v_max - r.point_a).cwiseProduct(r.direction_r);
 
-  const auto& a1 = v_min;
-  Vector3 a2(v_max.x(), v_min.y(), v_min.z());
-  Vector3 a3(v_max.x(), v_max.y(), v_min.z());
-  Vector3 a4(v_min.x(), v_max.y(), v_min.z());
-
-  Vector3 b1(v_min.x(), v_min.y(), v_max.z());
-  Vector3 b2(v_max.x(), v_min.y(), v_max.z());
-  const auto& b3 = v_max;
-  Vector3 b4(v_min.x(), v_max.y(), v_max.z());
-
-  ConvexPolygon<T> ply_d(a1, a2, a3, a4);
-  ConvexPolygon<T> ply_u(b1, b2, b3, b4);
-
-  ConvexPolygon<T> ply_l(a1, b1, b4, a4);
-  ConvexPolygon<T> ply_r(a2, b2, b3, a3);
-
-  ConvexPolygon<T> ply_b(a1, a2, b2, b1);
-  ConvexPolygon<T> ply_f(a4, b3, b3, b4);
-
-  return Get(r, ply_u).w() != 0.0 || Get(r, ply_l).w() != 0.0 || Get(r, ply_f).w() != 0.0 ||
-         Get(r, ply_d).w() != 0.0 || Get(r, ply_r).w() != 0.0 || Get(r, ply_b).w() != 0.0;
-}
-
-template <typename T>
-bool Intersect<T>::TestDegenerated(const Ray<T>& r, const AABB<T>& aabb) const {
-  const auto& v_min = aabb.min_vertex();
-  const auto& v_max = aabb.max_vertex();
-
-  Eigen::Index null_dim = 0;
-  for (;; ++null_dim) {
-    if (v_min[null_dim] == v_max[null_dim])
-      break;
+  T t_en = std::numeric_limits<T>::lowest();
+  T t_ex = std::numeric_limits<T>::max();
+  for (Eigen::Index i = 0; i < 3; ++i) {
+    if (r.direction.coeff(i) == 0.0) {
+      // parallel or outside box
+      if (r.point_a.coeff(i) < v_min.coeff(i) || r.point_a.coeff(i) > v_max.coeff(i))
+        return false;
+    } else {
+      DASSERT(std::isfinite(slab_t_min.coeff(i)) && std::isfinite(slab_t_max.coeff(i)));
+      auto [t_min, t_max] = std::minmax(slab_t_min.coeff(i), slab_t_max.coeff(i));
+      t_en = std::max(t_en, t_min);
+      t_ex = std::min(t_ex, t_max);
+    }
   }
-  switch (null_dim) {
-    case 0: {
-      Vector3 a4(v_min.x(), v_max.y(), v_min.z());
-      Vector3 b1(v_min.x(), v_min.y(), v_max.z());
-      Vector3 b4(v_min.x(), v_max.y(), v_max.z());
-      return Get(r, ConvexPolygon<T>(v_min, b1, b4, a4)).w() != 0.0;
-    }
-    case 1: {
-      Vector3 a2(v_max.x(), v_min.y(), v_min.z());
-      Vector3 b1(v_min.x(), v_min.y(), v_max.z());
-      Vector3 b2(v_max.x(), v_min.y(), v_max.z());
-      return Get(r, ConvexPolygon<T>(v_min, a2, b2, b1)).w() != 0.0;
-    }
-    case 2: {
-      Vector3 a2(v_max.x(), v_min.y(), v_min.z());
-      Vector3 a3(v_max.x(), v_max.y(), v_min.z());
-      Vector3 a4(v_min.x(), v_max.y(), v_min.z());
-      return Get(r, ConvexPolygon<T>(v_min, a2, a3, a4)).w() != 0.0;
-    }
-    default: DASSERT_FAIL(); return false;
-  }
+  return t_en <= t_ex && t_ex >= 0.0;
 }
 
 /**
