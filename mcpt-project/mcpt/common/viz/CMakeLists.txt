@@ -4,6 +4,7 @@ bottle_library(
   NAME mask_grids
   HDRS mask_grids.hpp
   DEPS @cheers
+       //mcpt/common:assert
 )
 
 bottle_library(

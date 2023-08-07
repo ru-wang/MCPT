@@ -5,6 +5,8 @@
 
 #include <cheers/utils/im_export.hpp>
 
+#include "mcpt/common/assert.hpp"
+
 namespace mcpt {
 
 class MaskGrids {
@@ -64,6 +66,8 @@ private:
 
 inline void ImMaskGrids(
     unsigned int img_w, int& min, int& max, const std::vector<int>& len, std::vector<bool>& mask) {
+  DASSERT(len.size() == mask.size());
+
   ImGui::TextUnformatted("Paths");
   ImGui::SameLine();
   if (ImGui::SmallButton("All")) {
@@ -82,9 +86,12 @@ inline void ImMaskGrids(
   }
   ImGui::Spacing();
 
-  int max_len = *std::max_element(len.cbegin(), len.cend());
+  if (len.empty())
+    return;
+  size_t max_len = *std::max_element(len.cbegin(), len.cend());
+
   if (ImGui::DragIntRange2("Length Range", &min, &max, 1.0F, 0, max_len, "Min: %d", "Max: %d")) {
-    for (size_t i = 0; i < len.size(); ++i)
+    for (size_t i = 0; i < mask.size(); ++i)
       mask[i] = (len[i] >= min && len[i] <= max);
   }
   ImGui::Spacing();
