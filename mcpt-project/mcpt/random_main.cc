@@ -4,15 +4,13 @@
 #include <vector>
 
 #include <Eigen/Eigen>
-#include <cheers/window/window.hpp>
 
 #include "mcpt/common/assert.hpp"
 #include "mcpt/common/geometry/types.hpp"
 #include "mcpt/common/random.hpp"
 #include "mcpt/common/uniform_ust.hpp"
-#include "mcpt/common/viz/shape_layer.hpp"
-
-#include "mcpt/misc.hpp"
+#include "mcpt/misc/logging.hpp"
+#include "mcpt/misc/visualizing.hpp"
 
 using namespace mcpt;
 
@@ -83,7 +81,8 @@ std::vector<Eigen::Vector3f> SampleSphericalTriangle(const Eigen::Vector3f& a,
 }
 
 int main(int argc, char* argv[]) {
-  MakeLogger("random");
+  misc::InitLogger("random", ".", false);
+  auto viz = misc::InitVisualizer(true);
 
   ASSERT(argc == 3);
   float arg_cos_pow = std::stof(argv[1]);
@@ -113,13 +112,10 @@ int main(int argc, char* argv[]) {
   lines.emplace_back(Eigen::Vector3f::Zero(), b);
   lines.emplace_back(Eigen::Vector3f::Zero(), c);
 
-  auto layer = cheers::Window::Instance().InstallSharedLayer<ShapeLayer>();
-  layer->AddLines(lines);
-  layer->AddPoints(points);
-  layer->AddPoints(directions);
-  cheers::Window::Instance().CreateContext();
-  while (cheers::Window::Instance().WaitForWindowExiting())
-    ;
-  cheers::Window::Instance().DestroyContext();
+  viz.shape_layer->AddLines(lines);
+  viz.shape_layer->AddPoints(points);
+  viz.shape_layer->AddPoints(directions);
+  viz.Run();
+
   return 0;
 }
