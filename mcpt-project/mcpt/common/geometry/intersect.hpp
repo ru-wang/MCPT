@@ -112,7 +112,7 @@ bool Intersect<T>::Test(const Ray<T>& r, const AABB<T>& aabb) const {
   static const Eigen::IOFormat FMT{Eigen::StreamPrecision, Eigen::DontAlignCols, " ", " "};
 
   // avoid computing invalid ray or AABB
-  if ((r.direction.array() == 0.0).all()) {
+  if (!r.direction.allFinite() || (r.direction.array() == 0.0).all()) {
     spdlog::error("invalid ray: direction = {}", r.direction.format(FMT));
     return false;
   }
