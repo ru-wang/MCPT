@@ -1,3 +1,5 @@
+import sys
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +17,8 @@ def UniformTriangle(n: int, vs):
 
 
 def main():
-    COUNT = 3000
+    assert len(sys.argv) == 2
+    n = int(sys.argv[1])
 
     mpl.use("Qt5Agg")
 
@@ -27,8 +30,8 @@ def main():
     ax.plot_trisurf(pts[0], pts[1], pts[2], alpha=0.1)
 
     # plot uniform triangle samples
-    xs, ys, zs = UniformTriangle(COUNT, pts)
-    ax.scatter(xs, ys, zs, marker=".")
+    xs, ys, zs = UniformTriangle(n, pts)
+    ax.scatter(xs, ys, zs, s=0.5, marker=".")
 
     # show plot
     ax.set(xlabel="X", ylabel="Y", zlabel="Z", aspect="equal")
