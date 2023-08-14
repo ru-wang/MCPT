@@ -43,8 +43,8 @@ void DepthToPPM(unsigned int w, unsigned int h, const float im[], std::ofstream&
   // remap to [0, 255]
   std::vector<unsigned char> remap(w * h);
   for (size_t i = 0; i < remap.size(); ++i) {
+    ASSERT(im[i] >= 0.0F, "wrong depth value: ({},{}) {}", i % w, i / w, im[i]);
     float val = (im[i] - *d_min) / (*d_max);
-    ASSERT(val >= 0.0F && val <= 1.0F, "wrong depth value: ({},{}) {}", i % w, i / w, im[i]);
     remap.at(i) = std::clamp<unsigned int>(val * 255.0F, 0, 255);
   }
 
@@ -68,8 +68,8 @@ void RawToPPM(unsigned int w, unsigned int h, float gamma, const float im[], std
     size_t v = i / 3 / w;
     size_t ch = i % 3;
 
+    ASSERT(im[i] >= 0.0F, "wrong channel value: ({},{},{}) {}", u, v, ch, im[i]);
     float val = std::pow(std::clamp(im[i], 0.0F, 1.0F), 1.0F / gamma);
-    ASSERT(val >= 0.0F && val <= 1.0F, "wrong channel value: ({},{},{}) {}", u, v, ch, im[i]);
     remap.at(i) = std::clamp<unsigned int>(std::round(val * 255.0F), 0, 255);
   }
 
