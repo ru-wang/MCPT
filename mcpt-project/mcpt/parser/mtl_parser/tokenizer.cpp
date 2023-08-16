@@ -1,5 +1,6 @@
 #include "mcpt/parser/mtl_parser/tokenizer.hpp"
 
+#include <cstdlib>
 #include <charconv>
 #include <regex>
 #include <string>
@@ -29,6 +30,42 @@ bool as_number(const std::string_view& token, T& number) {
   auto ret = std::from_chars(token.cbegin(), token.cend(), number);
   return ret.ec == std::errc{};
 }
+
+#ifdef __clang__
+
+template <>
+bool as_number<float>(const std::sub_match<const char*>& match, float& number) {
+  number = std::strtof(match.first, nullptr);
+  return true;
+}
+template <>
+bool as_number<double>(const std::sub_match<const char*>& match, double& number) {
+  number = std::strtod(match.first, nullptr);
+  return true;
+}
+template <>
+bool as_number<long double>(const std::sub_match<const char*>& match, long double& number) {
+  number = std::strtold(match.first, nullptr);
+  return true;
+}
+
+template <>
+bool as_number<float>(const std::string_view& token, float& number) {
+  number = std::strtof(token.cbegin(), nullptr);
+  return true;
+}
+template <>
+bool as_number<double>(const std::string_view& token, double& number) {
+  number = std::strtod(token.cbegin(), nullptr);
+  return true;
+}
+template <>
+bool as_number<long double>(const std::string_view& token, long double& number) {
+  number = std::strtold(token.cbegin(), nullptr);
+  return true;
+}
+
+#endif
 
 }  // namespace
 
