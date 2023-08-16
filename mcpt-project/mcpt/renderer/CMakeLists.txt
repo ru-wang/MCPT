@@ -19,6 +19,7 @@ bottle_library(
        //mcpt/common:assert
        //mcpt/common:random
        //mcpt/common:uniform_ust
+       :ray_caster
 )
 
 bottle_library(
