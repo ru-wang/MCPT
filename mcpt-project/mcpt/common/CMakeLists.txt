@@ -9,6 +9,7 @@ bottle_library(
   NAME assert
   HDRS assert.hpp
   DEPS @spdlog
+  OPTS -Wno-gnu-zero-variadic-macro-arguments
 )
 
 bottle_library(
