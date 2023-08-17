@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string_view>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include "mcpt/common/object/object.hpp"
 #include "mcpt/parser/obj_parser/parser.hpp"
