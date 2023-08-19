@@ -1,10 +1,8 @@
 #include <ctime>
 #include <filesystem>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <thread>
-#include <vector>
 
 #include <Eigen/Eigen>
 #include <cheers/window/window.hpp>
@@ -12,13 +10,12 @@
 #include <spdlog/fmt/chrono.h>
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
-#include <spdlog/stopwatch.h>
 
 #include "mcpt/common/assert.hpp"
 #include "mcpt/common/fileserver/fileserver.hpp"
-#include "mcpt/common/misc.hpp"
 #include "mcpt/common/viz/object_layer.hpp"
 #include "mcpt/common/viz/path_layer.hpp"
+#include "mcpt/misc/dispatcher.hpp"
 #include "mcpt/parser/obj_parser/parser.hpp"
 #include "mcpt/renderer/bxdf.hpp"
 #include "mcpt/renderer/monte_carlo.hpp"
@@ -68,16 +65,13 @@ int main(int argc, char* argv[]) {
   spdlog::info("camera intrinsics: {}", mc_opts.intrin.format(FMT));
 
   spdlog::info("making MCPT renderer");
-  MonteCarlo mcpt(mc_opts, obj, bvh);
-  mcpt.SetBxDF(std::make_unique<BlinnPhongBxDF>());
+  auto mcpt_runner = std::make_shared<MonteCarlo>(mc_opts, obj, bvh);
+  mcpt_runner->SetBxDF(std::make_unique<BlinnPhongBxDF>());
 
   auto object_layer = cheers::Window::Instance().InstallSharedLayer<ObjectLayer>();
   auto path_layer = cheers::Window::Instance().InstallSharedLayer<PathLayer>(arg_w);
   auto viz_thread = std::thread{VizThread{mc_opts.t * 2.0F}};
   object_layer->UpdateObject(obj, mc_opts.R, mc_opts.t);
-
-  size_t spp = 0;
-  std::vector integral(arg_w * arg_h * 3, 0.0F);
 
   auto t = fmt::localtime(std::time(nullptr));
   auto export_dir =
@@ -85,54 +79,12 @@ int main(int argc, char* argv[]) {
   SandboxFileserver fs_out(export_dir);
   spdlog::info("results will be saved in {}", fs_out.GetAbsolutePath());
 
+  unsigned int num_threads = std::thread::hardware_concurrency();
+  Dispatcher dispatcher(fs_out, num_threads, arg_spp, arg_spp_save_interval);
+
   spdlog::info("running MCPT for spp: {}", arg_spp);
-  spdlog::stopwatch sw;
-
-#ifdef NDEBUG
-#pragma omp parallel for
-#endif
-  for (size_t k = 0; k < arg_spp; ++k) {
-    spdlog::stopwatch sw_k;
-
-    std::vector<Eigen::Vector3f> radiance(arg_w * arg_h);
-    for (size_t i = 0; i < arg_w * arg_h; ++i) {
-      unsigned int x = i % arg_w;
-      unsigned int y = i / arg_w;
-
-      auto result = mcpt.Run(x, y);
-      radiance[i] = result.radiance;
-
-      if (k == 0 && !result.rpaths.empty())
-        path_layer->AddPaths(mc_opts.t, result.rpaths);
-    }
-
-#ifdef NDEBUG
-#pragma omp critical
-#endif
-    {
-      for (size_t i = 0; i < radiance.size(); ++i) {
-        integral[i * 3 + 0] += radiance[i].x();
-        integral[i * 3 + 1] += radiance[i].y();
-        integral[i * 3 + 2] += radiance[i].z();
-      }
-      ++spp;
-
-      if (spp == arg_spp || spp % arg_spp_save_interval == 0) {
-        auto export_fname = fmt::format("spp_{}.ppm", spp);
-        spdlog::info("saving to PPM image {}/{}", export_dir, export_fname);
-
-        std::vector<float> im(integral.size());
-        for (size_t i = 0; i < integral.size(); ++i)
-          im[i] = integral[i] / spp;
-
-        std::ofstream ofs;
-        ASSERT(fs_out.OpenTextWrite(export_fname, ofs));
-        RawToPPM(arg_w, arg_h, 2.2F, im.data(), ofs);
-      }
-
-      spdlog::info("spp: {}/{}, {:%M:%Ss}({:%M:%Ss})", spp, arg_spp, sw_k.elapsed(), sw.elapsed());
-    }
-  }
+  dispatcher.Dispatch(mcpt_runner, path_layer, arg_w, arg_h);
+  dispatcher.JoinAll();
 
   spdlog::info("saved results in {}", fs_out.GetAbsolutePath());
   viz_thread.join();

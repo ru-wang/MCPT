@@ -1,6 +1,7 @@
 bottle_package()
 
 bottle_subdir(NAME common)
+bottle_subdir(NAME misc)
 bottle_subdir(NAME parser)
 bottle_subdir(NAME renderer)
 
@@ -17,9 +18,9 @@ bottle_binary(
   SRCS mcpt_main.cc
   DEPS @cheers
        @eigen
-       @openmp
        @spdlog
        /common
+       /misc
        /parser
        /renderer
        :misc
