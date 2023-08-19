@@ -52,6 +52,8 @@ public:
 
   Result Run(unsigned int u, unsigned int v);
 
+  auto& options() const noexcept { return m_options; }
+
 private:
   using RPaths = std::vector<RPath>;
 
