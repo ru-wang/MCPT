@@ -4,32 +4,22 @@
 
 namespace mcpt::misc {
 
-Visualizer::~Visualizer() noexcept {
-  if (thread)
-    thread->join();
-}
-
 void Visualizer::Run() {
   if (enable) {
-    thread = std::make_unique<std::thread>([] {
-      cheers::Window::Instance().CreateContext();
-      while (cheers::Window::Instance().WaitForWindowExiting())
-        ;
-      cheers::Window::Instance().DestroyContext();
-    });
+    cheers::Window::Instance().CreateContext();
+    while (cheers::Window::Instance().WaitForWindowExiting())
+      ;
+    cheers::Window::Instance().DestroyContext();
   }
 }
 
-void Visualizer::Run(
-    float eye_x, float eye_y, float eye_z, float up_x, float up_y, float up_z) {
+void Visualizer::Run(float eye_x, float eye_y, float eye_z, float up_x, float up_y, float up_z) {
   if (enable) {
-    thread = std::make_unique<std::thread>([eye_x, eye_y, eye_z, up_x, up_y, up_z] {
-      cheers::Window::Instance().CreateContext();
-      cheers::Window::Instance().SetInitEyeAndUp(eye_x, eye_y, eye_z, up_x, up_y, up_z);
-      while (cheers::Window::Instance().WaitForWindowExiting())
-        ;
-      cheers::Window::Instance().DestroyContext();
-    });
+    cheers::Window::Instance().CreateContext();
+    cheers::Window::Instance().SetInitEyeAndUp(eye_x, eye_y, eye_z, up_x, up_y, up_z);
+    while (cheers::Window::Instance().WaitForWindowExiting())
+      ;
+    cheers::Window::Instance().DestroyContext();
   }
 }
 

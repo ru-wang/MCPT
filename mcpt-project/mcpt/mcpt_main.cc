@@ -1,7 +1,6 @@
 #include <ctime>
 #include <filesystem>
 #include <memory>
-#include <string>
 #include <thread>
 
 #include <Eigen/Eigen>
@@ -59,7 +58,7 @@ int main(int argc, char* argv[]) {
   auto args = misc::InitArgParser("mcpt_main", argc, argv);
 
   auto launch_time = fmt::localtime(std::time(nullptr));
-  std::string scene_name = args.scene_path.stem().string();
+  auto scene_name = args.scene_path.stem().string();
   auto export_root =
       args.output_path /
       fmt::format("{:%Y%m%d_%H%M%S}_{}_{}x{}", launch_time, scene_name, args.width, args.height);
@@ -67,8 +66,6 @@ int main(int argc, char* argv[]) {
   SandboxFileserver fs_out(export_root);
   misc::InitLogger("mcpt_main", export_root, args.enable_verbose);
   spdlog::info("results will be saved in {}", fs_out.GetAbsolutePath());
-
-  auto viz = misc::InitVisualizer(args.enable_gui, args.width);
 
   spdlog::info("loading object from {}", args.scene_path);
   SandboxFileserver fserver(args.scene_path.parent_path());
@@ -88,8 +85,8 @@ int main(int argc, char* argv[]) {
   // mc_opts.t << 2.0F, 9.0F, 16.0F;
   spdlog::info("camera intrinsics: {}", mc_opts.intrin.format(FMT));
 
+  auto viz = misc::InitVisualizer(args.enable_gui, args.width);
   viz.object_layer->UpdateObject(obj, mc_opts.R, mc_opts.t);
-  viz.Run(mc_opts.t.x() * 2.0F, mc_opts.t.y() * 2.0F, mc_opts.t.z() * 2.0F);
 
   spdlog::info("making MCPT renderer");
   auto mcpt_runner = std::make_shared<MonteCarlo>(mc_opts, obj, bvh);
@@ -100,8 +97,10 @@ int main(int argc, char* argv[]) {
 
   spdlog::info("running MCPT for spp: {}", args.spp);
   dispatcher.Dispatch(mcpt_runner, viz.path_layer, args.width, args.height);
-  dispatcher.JoinAll();
 
+  viz.Run(mc_opts.t.x() * 2.0F, mc_opts.t.y() * 2.0F, mc_opts.t.z() * 2.0F);
+
+  dispatcher.JoinAll();
   spdlog::info("saved results in {}", fs_out.GetAbsolutePath());
   return 0;
 }
