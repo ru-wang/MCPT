@@ -23,6 +23,8 @@ T Get(const argparse::ArgumentParser& parser,
 }  // namespace
 
 RuntimeArgs InitArgParser(const std::string& name, int argc, char* argv[]) {
+  using namespace std::string_literals;
+
   argparse::ArgumentParser parser(name, "1.0", argparse::default_arguments::help);
 
   parser.add_argument("scene").required().help("path to the scene object (.obj)").metavar("SCENE");
@@ -45,13 +47,13 @@ RuntimeArgs InitArgParser(const std::string& name, int argc, char* argv[]) {
   parser.add_argument("-n", "--save-every-n")
       .help("save intermediate results every N spp (zero means don't save)")
       .metavar("N")
-      .default_value(0)
+      .default_value(0U)
       .scan<'u', unsigned int>();
 
   parser.add_argument("-o", "--output")
       .help("output root directory")
       .metavar("OUTPUT")
-      .default_value(std::string("./out"));
+      .default_value("./out"s);
   parser.add_argument("-v", "--verbose")
       .help("enable verbose logging")
       .default_value(false)
