@@ -81,7 +81,7 @@ std::vector<Eigen::Vector3f> SampleSphericalTriangle(const Eigen::Vector3f& a,
 }
 
 int main(int argc, char* argv[]) {
-  misc::InitLogger("random", ".", false);
+  misc::InitLogger("random_main", ".", false);
   auto viz = misc::InitVisualizer(true);
 
   ASSERT(argc == 3);

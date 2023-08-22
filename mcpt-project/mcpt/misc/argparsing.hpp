@@ -12,7 +12,7 @@ struct RuntimeArgs {
   unsigned int width;
   unsigned int height;
   unsigned int spp;
-  unsigned int interval;
+  unsigned int save_every_n;
 
   std::filesystem::path output_path;
   bool enable_gui;

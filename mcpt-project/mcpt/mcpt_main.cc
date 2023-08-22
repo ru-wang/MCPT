@@ -56,7 +56,7 @@ Eigen::Vector4f MakeCamera(unsigned int w, unsigned int h, float focal_length, f
 }
 
 int main(int argc, char* argv[]) {
-  auto args = misc::InitArgParser("default", argc, argv);
+  auto args = misc::InitArgParser("mcpt_main", argc, argv);
 
   auto launch_time = fmt::localtime(std::time(nullptr));
   std::string scene_name = args.scene_path.stem().string();
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
       fmt::format("{:%Y%m%d_%H%M%S}_{}_{}x{}", launch_time, scene_name, args.width, args.height);
 
   SandboxFileserver fs_out(export_root);
-  misc::InitLogger("default", export_root, args.enable_verbose);
+  misc::InitLogger("mcpt_main", export_root, args.enable_verbose);
   spdlog::info("results will be saved in {}", fs_out.GetAbsolutePath());
 
   auto viz = misc::InitVisualizer(args.enable_gui, args.width);
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
   mcpt_runner->SetBxDF(std::make_unique<BlinnPhongBxDF>());
 
   unsigned int num_threads = std::thread::hardware_concurrency();
-  Dispatcher dispatcher(fs_out, num_threads, args.spp, args.interval);
+  Dispatcher dispatcher(fs_out, num_threads, args.spp, args.save_every_n);
 
   spdlog::info("running MCPT for spp: {}", args.spp);
   dispatcher.Dispatch(mcpt_runner, viz.path_layer, args.width, args.height);

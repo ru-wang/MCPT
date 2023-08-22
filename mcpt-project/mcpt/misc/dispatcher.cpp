@@ -73,7 +73,7 @@ void Dispatcher::Dispatch(const std::shared_ptr<mcpt::MonteCarlo>& mcpt_runner,
 
       std::lock_guard lock(mutex);
       reduce(radiance, integral);
-      if (spp_idx == m_spp || spp_idx % m_save_interval == 0)
+      if (spp_idx == m_spp || (m_save_every_n && spp_idx % m_save_every_n == 0))
         m_saving_tasks.push_back(save(integral, m_fs_out, spp_idx, width, height));
       spdlog::info(
           "spp: {}/{}, {:%M:%Ss}({:%M:%Ss})", spp_idx, m_spp, sw_spp.elapsed(), sw.elapsed());

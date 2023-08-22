@@ -42,10 +42,10 @@ RuntimeArgs InitArgParser(const std::string& name, int argc, char* argv[]) {
       .help("samples per pixel")
       .metavar("SAPMLES_PER_PIXEL")
       .scan<'u', unsigned int>();
-  parser.add_argument("-i", "--interval")
-      .help("save intermediate results every N spp")
-      .metavar("INTERVAL")
-      .default_value(16)
+  parser.add_argument("-n", "--save-every-n")
+      .help("save intermediate results every N spp (zero means don't save)")
+      .metavar("N")
+      .default_value(0)
       .scan<'u', unsigned int>();
 
   parser.add_argument("-o", "--output")
@@ -79,7 +79,8 @@ RuntimeArgs InitArgParser(const std::string& name, int argc, char* argv[]) {
   args.height = Get<unsigned int>(parser, "height", [](auto v) { return v > 0; });
 
   args.spp = Get<unsigned int>(parser, "-s", [](auto v) { return v > 0; });
-  args.interval = Get<unsigned int>(parser, "-i", [spp = args.spp](auto v) { return v <= spp; });
+  args.save_every_n =
+      Get<unsigned int>(parser, "-n", [spp = args.spp](auto v) { return v <= spp; });
 
   args.output_path = Get<std::string>(parser, "-o");
   args.enable_gui = Get<bool>(parser, "-g");
