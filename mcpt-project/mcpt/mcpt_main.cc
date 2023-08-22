@@ -92,8 +92,12 @@ int main(int argc, char* argv[]) {
   auto mcpt_runner = std::make_shared<MonteCarlo>(mc_opts, obj, bvh);
   mcpt_runner->SetBxDF(std::make_unique<BlinnPhongBxDF>());
 
+#ifndef NDEBUG
+  Dispatcher dispatcher(fs_out, 1, args.spp, args.save_every_n);
+#else
   unsigned int num_threads = std::thread::hardware_concurrency();
   Dispatcher dispatcher(fs_out, num_threads, args.spp, args.save_every_n);
+#endif
 
   spdlog::info("running MCPT for spp: {}", args.spp);
   dispatcher.Dispatch(mcpt_runner, viz.path_layer, args.width, args.height);
