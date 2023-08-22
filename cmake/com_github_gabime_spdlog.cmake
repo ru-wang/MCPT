@@ -1,3 +1,4 @@
+set(SPDLOG_BUILD_SHARED ON CACHE INTERNAL "")
 FetchContent_Declare(com.github.gabime.spdlog
   GIT_REPOSITORY https://github.com/gabime/spdlog.git
   GIT_TAG        v1.11.0
@@ -6,6 +7,5 @@ FetchContent_MakeAvailable(com.github.gabime.spdlog)
 
 bottle_library(
   NAME spdlog
-  OPTS -Wno-dangling-reference
   DEPS spdlog::spdlog
 )
