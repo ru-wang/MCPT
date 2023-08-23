@@ -1,5 +1,6 @@
 set(CATCH_INSTALL_DOCS OFF CACHE INTERNAL "")
 set(CATCH_INSTALL_EXTRAS OFF CACHE INTERNAL "")
+set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
 FetchContent_Declare(com.github.catchorg.Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG        devel
