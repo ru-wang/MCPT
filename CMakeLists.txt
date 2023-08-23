@@ -13,7 +13,7 @@ if(CCACHE)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE})
 endif(CCACHE)
 
-add_compile_options(-fdiagnostics-color=always -pedantic -Wall -Wno-unknown-warning-option
+add_compile_options(-fdiagnostics-color=always -pedantic -Wall
   $<$<CONFIG:Debug>:-Og> $<$<CONFIG:Debug>:-g>
   $<$<CONFIG:Release>:-O3> $<$<CONFIG:Release>:-DNDASSERT>)
 
