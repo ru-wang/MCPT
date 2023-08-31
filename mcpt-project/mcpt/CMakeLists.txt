@@ -5,34 +5,24 @@ bottle_subdir(NAME misc)
 bottle_subdir(NAME parser)
 bottle_subdir(NAME renderer)
 
-bottle_library(
-  NAME misc
-  HDRS misc.hpp
-  DEPS @cheers
-       @eigen
-       @spdlog
-)
-
 bottle_binary(
   NAME mcpt_main
   SRCS mcpt_main.cc
-  DEPS @cheers
-       @eigen
+  DEPS @eigen
        @spdlog
        /common
        /misc
        /parser
        /renderer
-       :misc
 )
 
 bottle_binary(
   NAME random_main
   SRCS random_main.cc
-  DEPS @cheers
-       @eigen
+  DEPS @eigen
        /common
-       :misc
+       /misc:logging
+       /misc:visualizing
 )
 
 bottle_binary(
@@ -40,8 +30,8 @@ bottle_binary(
   SRCS catch2_main.cc
   DEPS @catch2
        /common/geometry:test
+       /misc:logging
        /parser/obj_parser:test
-       :misc
 )
 
 include(CTest)
