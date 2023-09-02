@@ -16,18 +16,18 @@
 
 namespace mcpt {
 
+struct PathToLight {
+  std::reference_wrapper<const Material> material;  // light source material
+
+  Eigen::Vector3f point;   // intersection point at the light surface
+  Eigen::Vector3f normal;  // surface normal at the intersection
+
+  Eigen::Vector3f hit_dir;
+  double hit_pdf;
+};
+
 class LightSampler {
 public:
-  struct PathToLight {
-    std::reference_wrapper<const Material> material;  // light source material
-
-    Eigen::Vector3f point;   // intersection point at the light surface
-    Eigen::Vector3f normal;  // surface normal at the intersection
-
-    Eigen::Vector3f hit_dir;
-    double hit_pdf;
-  };
-
   LightSampler(const Object& object, const BVHTree<float>& bvh_tree);
 
   std::optional<PathToLight> Run(const Eigen::Vector3f& start_point,

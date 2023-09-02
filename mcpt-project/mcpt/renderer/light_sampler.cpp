@@ -25,8 +25,8 @@ LightSampler::LightSampler(const Object& object, const BVHTree<float>& bvh_tree)
   ASSERT(!m_triangle_lights.empty(), "no light source mesh in the scene");
 }
 
-std::optional<LightSampler::PathToLight> LightSampler::Run(const Eigen::Vector3f& start_point,
-                                                           const Eigen::Vector3f& start_normal) {
+std::optional<PathToLight> LightSampler::Run(const Eigen::Vector3f& start_point,
+                                             const Eigen::Vector3f& start_normal) {
   // first select a triangle
   float area = Uniform<float>().Random() * m_triangle_lights.back().accum_area;
   size_t sel = 0;

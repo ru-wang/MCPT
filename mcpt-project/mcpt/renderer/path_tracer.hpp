@@ -9,24 +9,23 @@
 #include "mcpt/common/geometry/types.hpp"
 #include "mcpt/common/object/material.hpp"
 #include "mcpt/common/object/object.hpp"
-#include "mcpt/common/random.hpp"
 
 #include "mcpt/renderer/ray_caster.hpp"
 
 namespace mcpt {
 
+struct ReversePath {
+  std::reference_wrapper<const Material> material;  // surface material at the intersection
+
+  Eigen::Vector3f point;   // intersection point
+  Eigen::Vector3f normal;  // surface normal at the intersection
+
+  Eigen::Vector3f exit_dir;
+  double exit_pdf;
+};
+
 class PathTracer {
 public:
-  struct ReversePath {
-    std::reference_wrapper<const Material> material;  // surface material at the intersection
-
-    Eigen::Vector3f point;   // intersection point
-    Eigen::Vector3f normal;  // surface normal at the intersection
-
-    Eigen::Vector3f exit_dir;
-    double exit_pdf;
-  };
-
   PathTracer(const Object& object, const BVHTree<float>& bvh_tree)
       : m_associated_object(object), m_ray_caster(bvh_tree) {}
 
@@ -35,9 +34,9 @@ public:
 
 private:
   struct sample {
+    double pdf;
     Eigen::Vector3f normal;
     Eigen::Vector3f direction;
-    double pdf;
   };
 
   sample NextDirection(const Eigen::Vector3f& incident,
@@ -54,9 +53,7 @@ private:
 
 private:
   std::reference_wrapper<const Object> m_associated_object;
-
   RayCaster m_ray_caster;
-  CosPowHemisphere<float> m_cos_pow_hemi;
 };
 
 }  // namespace mcpt
