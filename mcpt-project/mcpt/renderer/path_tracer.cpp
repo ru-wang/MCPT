@@ -5,10 +5,11 @@
 
 #include "mcpt/common/assert.hpp"
 #include "mcpt/common/object/mesh.hpp"
+#include "mcpt/common/random.hpp"
 
 namespace mcpt {
 
-std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& incident_ray) {
+std::optional<ReversePath> PathTracer::Run(const Ray<float>& incident_ray) {
   auto intersection = m_ray_caster.Run(incident_ray);
   // not intersected
   if (intersection.node == nullptr)
@@ -18,7 +19,7 @@ std::optional<PathTracer::ReversePath> PathTracer::Run(const Ray<float>& inciden
   const Material& mtl = m_associated_object.get().GetMaterialByName(mesh.material);
 
   // sample a new direction
-  auto [exit_normal, exit_dir, exit_pdf] = NextDirection(incident_ray.direction, mesh.normal, mtl);
+  auto [exit_pdf, exit_normal, exit_dir] = NextDirection(incident_ray.direction, mesh.normal, mtl);
   return ReversePath{mtl, intersection.point, exit_normal, exit_dir, exit_pdf};
 }
 
@@ -59,14 +60,14 @@ PathTracer::sample PathTracer::NextDirection(const Eigen::Vector3f& incident,
       // diffusion
       return SampleDiffusion(normal, material.Ns + 1.0F);
       break;
-    default: return {normal, Eigen::Vector3f::Zero(), 0.0}; break;
+    default: return {0.0}; break;
   }
 }
 
 PathTracer::sample PathTracer::SampleReflection(const Eigen::Vector3f& incident,
                                                 const Eigen::Vector3f& normal) {
   Eigen::Vector3f refl = incident - 2.0F * normal.dot(incident) * normal;
-  return {normal, refl.normalized(), 1.0};
+  return {1.0, normal, refl.normalized()};
 }
 
 PathTracer::sample PathTracer::SampleRefraction(const Eigen::Vector3f& incident,
@@ -79,23 +80,23 @@ PathTracer::sample PathTracer::SampleRefraction(const Eigen::Vector3f& incident,
   if (cos < 0.0F) {
     float sin2_k = (1.0F - cos * cos) / (refr_k * refr_k);
     Eigen::Vector3f refr = (incident - cos * normal) / refr_k - std::sqrt(1.0 - sin2_k) * normal;
-    return {-normal, refr.normalized(), 1.0};
+    return {1.0, -normal, refr.normalized()};
   } else {
     float sin2_k = (1.0F - cos * cos) * (refr_k * refr_k);
     if (sin2_k >= 1.0F) {
       // total reflection
       Eigen::Vector3f refl = incident - 2.0F * cos * normal;
-      return {-normal, refl.normalized(), 1.0};
+      return {1.0, -normal, refl.normalized()};
     } else {
       // refraction
       Eigen::Vector3f refr = (incident - cos * normal) * refr_k + std::sqrt(1.0 - sin2_k) * normal;
-      return {normal, refr.normalized(), 1.0};
+      return {1.0, normal, refr.normalized()};
     }
   }
 }
 
 PathTracer::sample PathTracer::SampleDiffusion(const Eigen::Vector3f& normal, float alpha) {
-  auto [azimuth, depression, pdf] = m_cos_pow_hemi.Random(alpha);
+  auto [azimuth, depression, pdf] = CosPowHemisphere<float>().Random(alpha);
   DASSERT(depression < M_PI_2, "depression can not reach pi/2");
 
   Eigen::Vector3f dir(std::sin(depression) * std::cos(azimuth),
@@ -111,7 +112,7 @@ PathTracer::sample PathTracer::SampleDiffusion(const Eigen::Vector3f& normal, fl
   axes.col(1) = axes.col(2).cross(Eigen::Vector3f::Unit(x)).normalized();
   axes.col(0) = axes.col(1).cross(axes.col(2)).normalized();
 
-  return {normal, axes * dir, pdf};
+  return {pdf, normal, axes * dir};
 }
 
 }  // namespace mcpt
