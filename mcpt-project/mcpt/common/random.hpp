@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <algorithm>
-#include <array>
 #include <random>
 #include <type_traits>
 
@@ -22,8 +20,19 @@ public:
 #else
     static thread_local std::mt19937 gen{std::random_device{}()};
 #endif
-    // [0,1)
-    return std::uniform_real_distribution<T>{0, 1}(gen);
+    // according to:
+    // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution#Notes
+    //
+    // Most existing implementations have a bug where they may occasionally return b. This was
+    // originally only thought to happen when RealType is float and when LWG issue 2524 is present,
+    // but it has since been shown that neither is required to trigger the bug.
+    //
+    // workaround to guarantee range is right [0,1)
+    std::uniform_real_distribution<T> uniform(0.0, 1.0);
+    auto u = uniform(gen);
+    while (u == 1.0)
+      u = uniform(gen);
+    return u;
   }
 };
 
@@ -48,29 +57,6 @@ struct SolidAngle {
   T azimuth;     // [0, 2pi)
   T depression;  // [0, pi/2)
   double pdf;
-};
-
-template <typename T>
-class UniformTriangle {
-public:
-  using Scalar = T;
-
-  template <typename U>
-  std::array<T, 3> Random(const U& a, const U& b, const U& c) {
-    // first sample a point in a unit triangle
-    T sqrt_u1 = std::sqrt(m_u1.Random());
-    T u2 = m_u2.Random();
-    T x = 1.0 - sqrt_u1;
-    T y = sqrt_u1 * (1.0 - u2);
-    T z = sqrt_u1 * u2;
-    return {x * a[0] + y * b[0] + z * c[0],
-            x * a[1] + y * b[1] + z * c[1],
-            x * a[2] + y * b[2] + z * c[2]};
-  }
-
-private:
-  Uniform<T> m_u1;
-  Uniform<T> m_u2;
 };
 
 // uniform weigted distribution on a hemisphere
