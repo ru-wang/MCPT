@@ -124,8 +124,8 @@ bool Intersect<T>::Test(const Ray<T>& r, const AABB<T>& aabb) const {
     return false;
   }
 
-  Vector3 slab_t_min = (v_min - r.point_a).cwiseProduct(r.direction_r);
-  Vector3 slab_t_max = (v_max - r.point_a).cwiseProduct(r.direction_r);
+  Vector3 slab_t_min = (v_min - r.point_a).cwiseQuotient(r.direction);
+  Vector3 slab_t_max = (v_max - r.point_a).cwiseQuotient(r.direction);
 
   T t_en = std::numeric_limits<T>::lowest();
   T t_ex = std::numeric_limits<T>::max();
