@@ -26,7 +26,9 @@ public:
   RayCaster(const BVHTree<float>& bvh_tree, float prec) : m_bvh_tree(bvh_tree), m_intersect(prec) {}
 
   Intersection Run(const Ray<float>& ray) const;
-  Eigen::Vector4f IsVisible(const Ray<float>& ray, const Mesh& target) const;
+
+  Eigen::Vector4f IntersectPlane(const Ray<float>& ray, const Plane<float>& plane) const;
+  bool IsBlocked(const Ray<float>& ray, const Mesh& target, float distance) const;
 
 private:
   std::reference_wrapper<const BVHTree<float>> m_bvh_tree;
