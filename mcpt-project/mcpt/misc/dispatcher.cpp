@@ -53,33 +53,33 @@ void Dispatcher::Dispatch(const std::shared_ptr<mcpt::MonteCarlo>& mcpt_runner,
   static std::atomic_size_t shared_spp_idx = 0;
 
   static std::mutex mutex;
+  static size_t spp_completed = 0;
   static std::vector<float> integral;
   static spdlog::stopwatch sw;
 
   auto worker = [=]() {
-    size_t spp_idx = shared_spp_idx.fetch_add(1);
     std::vector<Eigen::Vector3f> radiance(width * height);
 
-    while (spp_idx < m_spp) {
+    for (size_t spp_idx = ++shared_spp_idx; spp_idx <= m_spp; spp_idx = ++shared_spp_idx) {
       spdlog::stopwatch sw_spp;
 
       for (size_t i = 0; i < width * height; ++i) {
         auto result = mcpt_runner->Run(i % width, i / width);
         radiance[i].noalias() = result.radiance;
-        if (spp_idx == 0 && !result.rpaths.empty())
+        if (spp_idx == 1 && !result.rpaths.empty())
           path_layer->AddPaths(mcpt_runner->options().t, result.rpaths);
       }
+
+      spdlog::info(
+          "spp: {}/{}, {:%M:%Ss} {{{:%M:%Ss}}}", spp_idx, m_spp, sw_spp.elapsed(), sw.elapsed());
 
       {
         std::lock_guard lock(mutex);
         reduce(radiance, integral);
-        if ((spp_idx + 1) == m_spp || (m_save_every_n && (spp_idx + 1) % m_save_every_n == 0))
-          m_saving_tasks.push_back(save(integral, m_fs_out, spp_idx + 1, width, height));
-        spdlog::info(
-            "spp: {}/{}, {:%M:%Ss}({:%M:%Ss})", spp_idx + 1, m_spp, sw_spp.elapsed(), sw.elapsed());
+        ++spp_completed;
+        if (spp_completed == m_spp || (m_save_every_n && spp_completed % m_save_every_n == 0))
+          m_saving_tasks.push_back(save(integral, m_fs_out, spp_completed, width, height));
       }
-
-      spp_idx = shared_spp_idx.fetch_add(1);
     }
   };
 
