@@ -1,0 +1,27 @@
+[cols=2*a]
+.Scene 01 1600*1200
+|===
+|.SPP 32
+image::scene01_1600x1200/spp_32.png[scene01_32]
+|.SPP 64
+image::scene01_1600x1200/spp_64.png[scene01_64]
+
+|.SPP 96
+image::scene01_1600x1200/spp_96.png[scene01_96]
+|.SPP 128
+image::scene01_1600x1200/spp_128.png[scene01_128]
+|===
+
+[cols=2*a]
+.Scene 02 1600*1200
+|===
+|.SPP 32
+image::scene02_1600x1200/spp_32.png[scene02_32]
+|.SPP 64
+image::scene02_1600x1200/spp_64.png[scene02_64]
+
+|.SPP 96
+image::scene02_1600x1200/spp_96.png[scene02_96]
+|.SPP 128
+image::scene02_1600x1200/spp_128.png[scene02_128]
+|===
