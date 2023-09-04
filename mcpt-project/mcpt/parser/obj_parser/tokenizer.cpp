@@ -26,6 +26,26 @@ bool as_number(const std::sub_match<const char*>& match, T& number) {
   return ret.ec == std::errc{};
 }
 
+#ifdef __clang__
+
+template <>
+bool as_number<float>(const std::sub_match<const char*>& match, float& number) {
+  number = std::strtof(match.first, nullptr);
+  return true;
+}
+template <>
+bool as_number<double>(const std::sub_match<const char*>& match, double& number) {
+  number = std::strtod(match.first, nullptr);
+  return true;
+}
+template <>
+bool as_number<long double>(const std::sub_match<const char*>& match, long double& number) {
+  number = std::strtold(match.first, nullptr);
+  return true;
+}
+
+#endif
+
 }  // namespace
 
 void Tokenizer::Process(std::string_view statement) {

@@ -4,15 +4,13 @@
 #include <vector>
 
 #include <Eigen/Eigen>
-#include <cheers/window/window.hpp>
 
 #include "mcpt/common/assert.hpp"
 #include "mcpt/common/geometry/types.hpp"
 #include "mcpt/common/random.hpp"
-#include "mcpt/common/uniform_ust.hpp"
-#include "mcpt/common/viz/shape_layer.hpp"
-
-#include "mcpt/misc.hpp"
+#include "mcpt/common/random_triangle.hpp"
+#include "mcpt/misc/logging.hpp"
+#include "mcpt/misc/visualizing.hpp"
 
 using namespace mcpt;
 
@@ -49,41 +47,14 @@ std::vector<Eigen::Vector3f> SampleTriangle(const Eigen::Vector3f& a,
                                             RndGen& gen,
                                             size_t num) {
   std::vector<Eigen::Vector3f> points;
-  while (num--) {
-    auto arr = gen.Random(a.data(), b.data(), c.data());
-    points.emplace_back(arr.data());
-  }
-  return points;
-}
-
-template <typename RndGen>
-std::vector<Eigen::Vector3f> SampleSphericalTriangle(const Eigen::Vector3f& a,
-                                                     const Eigen::Vector3f& b,
-                                                     const Eigen::Vector3f& c,
-                                                     RndGen& gen,
-                                                     size_t num) {
-  Eigen::Vector3f a_normalized = a.normalized();
-  Eigen::Vector3f b_normalized = b.normalized();
-  Eigen::Vector3f c_normalized = c.normalized();
-
-  Eigen::Vector3f na = b_normalized.cross(c_normalized).normalized();
-  Eigen::Vector3f nb = c_normalized.cross(a_normalized).normalized();
-  Eigen::Vector3f nc = a_normalized.cross(b_normalized).normalized();
-
-  float cos_alpha = -nb.dot(nc);
-  float cos_beta = -na.dot(nc);
-  float cos_gamma = -na.dot(nb);
-
-  std::vector<Eigen::Vector3f> points;
-  while (num--) {
-    auto dir = gen.Random(a_normalized, b_normalized, c_normalized, cos_alpha, cos_beta, cos_gamma);
-    points.emplace_back(dir.dir.data());
-  }
+  while (num--)
+    points.emplace_back(gen.Random(a, b, c));
   return points;
 }
 
 int main(int argc, char* argv[]) {
-  MakeLogger("random");
+  misc::InitLogger("random_main", ".", false);
+  auto viz = misc::InitVisualizer(true);
 
   ASSERT(argc == 3);
   float arg_cos_pow = std::stof(argv[1]);
@@ -107,19 +78,17 @@ int main(int argc, char* argv[]) {
   UniformTriangle<float> uni_tri;
   auto points = SampleTriangle(a, b, c, uni_tri, arg_samples);
 
-  UniformUST<float> uni_sph_tri;
-  auto directions = SampleSphericalTriangle(a, b, c, uni_sph_tri, arg_samples);
+  UniformUnitSphericalTriangle<float> uni_sph_tri;
+  auto directions =
+      SampleTriangle(a.normalized(), b.normalized(), c.normalized(), uni_sph_tri, arg_samples);
   lines.emplace_back(Eigen::Vector3f::Zero(), a);
   lines.emplace_back(Eigen::Vector3f::Zero(), b);
   lines.emplace_back(Eigen::Vector3f::Zero(), c);
 
-  auto layer = cheers::Window::Instance().InstallSharedLayer<ShapeLayer>();
-  layer->AddLines(lines);
-  layer->AddPoints(points);
-  layer->AddPoints(directions);
-  cheers::Window::Instance().CreateContext();
-  while (cheers::Window::Instance().WaitForWindowExiting())
-    ;
-  cheers::Window::Instance().DestroyContext();
+  viz.shape_layer->AddLines(lines);
+  viz.shape_layer->AddPoints(points);
+  viz.shape_layer->AddPoints(directions);
+  viz.Run();
+
   return 0;
 }

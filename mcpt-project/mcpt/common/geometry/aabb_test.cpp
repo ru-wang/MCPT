@@ -3,7 +3,7 @@
 #include <limits>
 
 #include <Eigen/Eigen>
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 TEMPLATE_TEST_CASE("axis-aligned bounding box", "[geometry][aabb]", float, double) {
 

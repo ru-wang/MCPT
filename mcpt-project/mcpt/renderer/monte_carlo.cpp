@@ -124,8 +124,7 @@ Eigen::Vector3f MonteCarlo::Propagate(const Eigen::Vector3f& eye, const RPaths& 
   return radiance;
 }
 
-Eigen::Vector3f MonteCarlo::shade_light(const Eigen::Vector3f& wo,
-                                        const PathTracer::ReversePath& rpath) const {
+Eigen::Vector3f MonteCarlo::shade_light(const Eigen::Vector3f& wo, const ReversePath& rpath) const {
   if (rpath.normal.dot(wo) > 0.0F)
     return Material::AsEmission(rpath.material);
   else
@@ -133,8 +132,8 @@ Eigen::Vector3f MonteCarlo::shade_light(const Eigen::Vector3f& wo,
 }
 
 Eigen::Vector3f MonteCarlo::shade_direct(const Eigen::Vector3f& wo,
-                                         const PathTracer::ReversePath& rpath,
-                                         const LightSampler::PathToLight& lpath) const {
+                                         const ReversePath& rpath,
+                                         const PathToLight& lpath) const {
   Eigen::Vector3f fr = m_bxdf->Shade(rpath.material, rpath.normal, lpath.hit_dir, wo);
   float cos_wi = std::max(0.0F, rpath.normal.dot(lpath.hit_dir));
   return fr.cwiseProduct(Material::AsEmission(lpath.material)) * (cos_wi / lpath.hit_pdf);
@@ -142,7 +141,7 @@ Eigen::Vector3f MonteCarlo::shade_direct(const Eigen::Vector3f& wo,
 
 Eigen::Vector3f MonteCarlo::shade_indirect(const Eigen::Vector3f& radiance,
                                            const Eigen::Vector3f& wo,
-                                           const PathTracer::ReversePath& rpath) const {
+                                           const ReversePath& rpath) const {
   Eigen::Vector3f fr = m_bxdf->Shade(rpath.material, rpath.normal, rpath.exit_dir, wo);
   float cos_wi = std::max(0.0F, rpath.normal.dot(rpath.exit_dir));
   return fr.cwiseProduct(radiance) * (cos_wi / rpath.exit_pdf);

@@ -9,6 +9,7 @@ bottle_library(
   NAME assert
   HDRS assert.hpp
   DEPS @spdlog
+  OPTS -Wno-gnu-zero-variadic-macro-arguments
 )
 
 bottle_library(
@@ -25,7 +26,9 @@ bottle_library(
 )
 
 bottle_library(
-  NAME uniform_ust
-  HDRS uniform_ust.hpp
-  DEPS :random
+  NAME random_triangle
+  HDRS random_triangle.hpp
+  DEPS @eigen
+       :assert
+       :random
 )

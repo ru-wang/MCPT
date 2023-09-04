@@ -1,7 +1,8 @@
 #include "mcpt/common/geometry/intersect.hpp"
 
 #include <Eigen/Eigen>
-#include <catch2/catch.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include "mcpt/common/geometry/aabb.hpp"
 #include "mcpt/common/geometry/types.hpp"
@@ -32,7 +33,7 @@ SECTION("intersection of line and plane") {
 
   SECTION("parallel") {
     Eigen::Vector3d point_c = (point_x + point_y + point_z) / 3.0;
-    REQUIRE(point_c.homogeneous().dot(pi.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(pi.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Line l(Eigen::Vector3d::Zero(), point_x - point_c);
     Eigen::Vector4d p = intersect.Get(l, pi);
@@ -62,7 +63,7 @@ SECTION("intersection of line and triangular") {
 
   SECTION("parallel") {
     Eigen::Vector3d point_c = (point_x + point_y + point_z) / 3.0;
-    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Line l(Eigen::Vector3d::Zero(), point_x - point_c);
     Eigen::Vector4d p = intersect.Get(l, tri);
@@ -71,7 +72,7 @@ SECTION("intersection of line and triangular") {
 
   SECTION("intersection inside") {
     Eigen::Vector3d point_c = (point_x + point_y + point_z) / 3.0;
-    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Line l(Eigen::Vector3d::Zero(), point_c);
     Eigen::Vector3d p = intersect.Get(l, tri).hnormalized();
@@ -80,7 +81,7 @@ SECTION("intersection of line and triangular") {
 
   SECTION("intersection outside") {
     Eigen::Vector3d point_c = point_x + point_x - point_y;
-    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Line l(Eigen::Vector3d::Zero(), point_c);
     Eigen::Vector4d p = intersect.Get(l, tri);
@@ -104,7 +105,7 @@ SECTION("intersection of ray and plane") {
 
   SECTION("parallel") {
     Eigen::Vector3d point_c = (point_x + point_y + point_z) / 3.0;
-    REQUIRE(point_c.homogeneous().dot(pi.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(pi.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Ray r(Eigen::Vector3d::Zero(), point_x - point_c);
     Eigen::Vector4d p = intersect.Get(r, pi);
@@ -140,7 +141,7 @@ SECTION("intersection of ray and triangular") {
 
   SECTION("parallel") {
     Eigen::Vector3d point_c = (point_x + point_y + point_z) / 3.0;
-    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Ray r(Eigen::Vector3d::Zero(), point_x - point_c);
     Eigen::Vector4d p = intersect.Get(r, tri);
@@ -149,7 +150,7 @@ SECTION("intersection of ray and triangular") {
 
   SECTION("intersection inside") {
     Eigen::Vector3d point_c = (point_x + point_y + point_z) / 3.0;
-    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Ray r(Eigen::Vector3d::Zero(), point_c);
     Eigen::Vector3d p = intersect.Get(r, tri).hnormalized();
@@ -158,7 +159,7 @@ SECTION("intersection of ray and triangular") {
 
   SECTION("intersection outside") {
     Eigen::Vector3d point_c = point_x + point_x - point_y;
-    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Approx(0.0).margin(PRECISION));
+    REQUIRE(point_c.homogeneous().dot(tri.coeffs) == Catch::Approx(0.0).margin(PRECISION));
 
     Ray r(Eigen::Vector3d::Zero(), point_c);
     Eigen::Vector4d p = intersect.Get(r, tri);

@@ -6,7 +6,7 @@
 #include <vector>
 
 #include <Eigen/Eigen>
-#include <catch2/catch.hpp>
+#include <catch2/matchers/catch_matchers_all.hpp>
 #include <spdlog/fmt/fmt.h>
 
 #include "mcpt/common/object/material.hpp"
@@ -113,7 +113,7 @@ struct Catch::StringMaker<mcpt::obj_parser::Context> {
   static std::string convert(const mcpt::obj_parser::Context& ctx);
 };
 
-struct Equals : public Catch::MatcherBase<mcpt::obj_parser::Context> {
+struct Equals : public Catch::Matchers::MatcherBase<mcpt::obj_parser::Context> {
   std::reference_wrapper<const mcpt::obj_parser::Context> rhs;
 
   Equals(std::reference_wrapper<const mcpt::obj_parser::Context> ctx) : rhs(ctx) {}

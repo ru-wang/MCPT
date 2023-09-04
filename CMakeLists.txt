@@ -11,10 +11,16 @@ if(CCACHE)
   message(STATUS "Found ccache: ${CCACHE}")
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE})
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE})
-endif(CCACHE)
+endif()
 
-add_compile_options(-fdiagnostics-color=always -pedantic -Wall
-  $<$<CONFIG:Debug>:-Og> $<$<CONFIG:Debug>:-g>
+if(APPLE)
+  set(EXTRA_COMPILE_OPTIONS -fcolor-diagnostics -pedantic -Wall)
+else()
+  set(EXTRA_COMPILE_OPTIONS -fdiagnostics-color=always -pedantic -Wall)
+endif()
+
+add_compile_options(${EXTRA_COMPILE_OPTIONS}
+  $<$<CONFIG:Debug>:-O0> $<$<CONFIG:Debug>:-g>
   $<$<CONFIG:Release>:-O3> $<$<CONFIG:Release>:-DNDASSERT>)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)

@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include "mcpt/common/object/object.hpp"
 
@@ -45,9 +45,9 @@ SECTION("parse example `.obj' file without constructing BVH tree") {
 
   REQUIRE(obj.mesh_groups().size() == MESH_GROUPS.size());
   for (auto [material, num_faces] : MESH_GROUPS) {
-    auto it = std::find_if(obj.mesh_groups().cbegin(), obj.mesh_groups().cend(), [&](auto& g) {
-      return g.material == material;
-    });
+    auto it = std::find_if(obj.mesh_groups().cbegin(),
+                           obj.mesh_groups().cend(),
+                           [mtl = material](auto& g) { return g.material == mtl; });
     bool found = (it != obj.mesh_groups().cend());
 
     CAPTURE(material, num_faces);

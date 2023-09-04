@@ -22,8 +22,8 @@ namespace mcpt {
 class MonteCarlo {
 public:
   struct RPath {
-    PathTracer::ReversePath rpath;
-    std::optional<LightSampler::PathToLight> lpath;
+    ReversePath rpath;
+    std::optional<PathToLight> lpath;
   };
 
   struct Result {
@@ -52,6 +52,8 @@ public:
 
   Result Run(unsigned int u, unsigned int v);
 
+  auto& options() const noexcept { return m_options; }
+
 private:
   using RPaths = std::vector<RPath>;
 
@@ -62,14 +64,13 @@ private:
   // propagate the light from the light source
   Eigen::Vector3f Propagate(const Eigen::Vector3f& eye, const RPaths& rpaths) const;
 
-  Eigen::Vector3f shade_light(const Eigen::Vector3f& wo,
-                              const PathTracer::ReversePath& rpath) const;
+  Eigen::Vector3f shade_light(const Eigen::Vector3f& wo, const ReversePath& rpath) const;
   Eigen::Vector3f shade_direct(const Eigen::Vector3f& wo,
-                               const PathTracer::ReversePath& rpath,
-                               const LightSampler::PathToLight& lpath) const;
+                               const ReversePath& rpath,
+                               const PathToLight& lpath) const;
   Eigen::Vector3f shade_indirect(const Eigen::Vector3f& radiance,
                                  const Eigen::Vector3f& wo,
-                                 const PathTracer::ReversePath& rpath) const;
+                                 const ReversePath& rpath) const;
 
 private:
   Options m_options;

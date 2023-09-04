@@ -23,13 +23,10 @@ template <typename T>
 struct Ray : Line<T> {
   using Scalar = T;
   Eigen::Matrix<T, 3, 1> direction;
-  Eigen::Matrix<T, 3, 1> direction_r;
 
   template <typename P, typename D>
   Ray(const Eigen::MatrixBase<P>& start_point, const Eigen::MatrixBase<D>& d)
-      : Line<T>(start_point, start_point + d), direction(d.normalized()) {
-    direction_r = (direction.array() == 0.0).select(0.0, direction.cwiseInverse());
-  }
+      : Line<T>(start_point, start_point + d), direction(d.normalized()) {}
 };
 
 template <typename T>

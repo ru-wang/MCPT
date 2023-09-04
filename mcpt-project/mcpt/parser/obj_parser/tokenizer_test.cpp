@@ -3,7 +3,7 @@
 #include <filesystem>
 
 #include <Eigen/Eigen>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include "mcpt/parser/obj_parser/context.hpp"
 #include "mcpt/parser/obj_parser/test_helper.hpp"
